@@ -9,6 +9,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_WPLMS extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'wplms';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Wplms';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/learning-management/wplms/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -17,8 +42,6 @@ class WPF_WPLMS extends WPF_Integrations_Base {
 
 	public function init() {
 
-		$this->slug = 'wplms';
-
 		// Meta boxes
 		add_action( 'wpf_meta_box_content', array( $this, 'meta_box_content' ), 40, 2 );
 
@@ -26,7 +49,6 @@ class WPF_WPLMS extends WPF_Integrations_Base {
 		add_action( 'wplms_start_course', array( $this, 'start_course' ), 10, 4 );
 		add_action( 'wplms_submit_course', array( $this, 'submit_course' ), 10, 2 );
 		add_action( 'wplms_unit_complete', array( $this, 'unit_complete' ), 10, 4 );
-
 
 	}
 
@@ -43,22 +65,33 @@ class WPF_WPLMS extends WPF_Integrations_Base {
 
 			echo '<p><label for="wpf-apply-tags-wplms"><small>Apply tags when course begun:</small></label>';
 
-			wpf_render_tag_multiselect( array( 'setting' => $settings['apply_tags_wplms_start'], 'meta_name' => 'wpf-settings', 'field_id' => 'apply_tags_wplms_start' ) );
+			wpf_render_tag_multiselect(
+				array(
+					'setting'   => $settings['apply_tags_wplms_start'],
+					'meta_name' => 'wpf-settings',
+					'field_id'  => 'apply_tags_wplms_start',
+				)
+			);
 
 			echo '</p>';
 
 		}
 
-		if( $post->post_type == 'unit' || $post->post_type == 'course' ) {
+		if ( $post->post_type == 'unit' || $post->post_type == 'course' ) {
 
 			echo '<p><label for="wpf-apply-tags-wplms"><small>Apply tags when marked complete:</small></label>';
 
-			wpf_render_tag_multiselect( array( 'setting' => $settings['apply_tags_wplms_complete'], 'meta_name' => 'wpf-settings', 'field_id' => 'apply_tags_wplms_complete' ) );
+			wpf_render_tag_multiselect(
+				array(
+					'setting'   => $settings['apply_tags_wplms_complete'],
+					'meta_name' => 'wpf-settings',
+					'field_id'  => 'apply_tags_wplms_complete',
+				)
+			);
 
 			echo '</p>';
 
 		}
-
 
 	}
 
@@ -116,4 +149,4 @@ class WPF_WPLMS extends WPF_Integrations_Base {
 
 }
 
-new WPF_WPLMS;
+new WPF_WPLMS();

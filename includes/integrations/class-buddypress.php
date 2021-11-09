@@ -8,18 +8,44 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_BuddyPress extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug;
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name;
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/buddypress/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
 	 * @return  void
 	 */
-
 	public function init() {
 
-		if ( function_exists( 'bp_rest_namespace' ) && 'buddyboss' == bp_rest_namespace() ) {
+		if ( function_exists( 'bp_rest_namespace' ) && 'buddyboss' === bp_rest_namespace() ) {
 			$this->slug = 'buddyboss';
+			$this->name = 'BuddyBoss';
 		} else {
 			$this->slug = 'buddypress';
+			$this->name = 'BuddyPress';
 		}
 
 		add_filter( 'wpf_redirect_post_id', array( $this, 'get_bb_page_id' ) );
@@ -46,6 +72,7 @@ class WPF_BuddyPress extends WPF_Integrations_Base {
 		add_action( 'bp_core_activated_user', array( $this, 'after_user_activation' ), 20, 3 ); // 20 so all the normal BP stuff has run
 
 		// Profile updates
+		add_action( 'xprofile_updated_profile', array( $this, 'updated_profile' ), 10, 5 );
 		add_action( 'profile_update', array( $this, 'sync_email_address_changes' ), 10, 2 );
 		add_action( 'xprofile_avatar_uploaded', array( $this, 'sync_avatars' ), 10, 3 );
 
@@ -103,7 +130,7 @@ class WPF_BuddyPress extends WPF_Integrations_Base {
 		add_action( 'add_meta_boxes', array( $this, 'add_profile_type_meta_box' ), 10, 2 );
 		add_action( 'save_post', array( $this, 'save_profile_type_meta_box_data' ), 10 );
 		add_action( 'wpf_tags_modified', array( $this, 'update_profile_types' ), 10, 2 );
-		add_action( 'bp_set_member_type', array( $this, 'set_member_type' ), 10, 3 );
+		add_action( 'set_object_terms', array( $this, 'set_member_type' ), 10, 6 );
 		add_action( 'bp_remove_member_type', array( $this, 'remove_member_type' ), 10, 2 );
 
 		// Filter activity stream for restricted items
@@ -131,8 +158,8 @@ class WPF_BuddyPress extends WPF_Integrations_Base {
 	 *
 	 * @since 3.38.9
 	 *
-	 * @param int   $group_id The group ID.
-	 * @param int   $user_id  The user ID.
+	 * @param int $group_id The group ID.
+	 * @param int $user_id  The user ID.
 	 */
 	public function remove_tags_from_organizer( $group_id, $user_id ) {
 		// If organizer tags empty then skip.
@@ -563,6 +590,32 @@ class WPF_BuddyPress extends WPF_Integrations_Base {
 
 	}
 
+	/**
+	 * Triggered when an XProfile is updated. Syncs the data to the CRM.
+	 *
+	 * @since 3.38.14
+	 *
+	 * @param int   $user_id    The user ID.
+	 * @param array $field_ids  The field IDs.
+	 * @param bool  $errors     The errors.
+	 * @param array $old_values The old values.
+	 * @param array $new_values The new values.
+	 */
+	public function updated_profile( $user_id, $field_ids = array(), $errors = false, $old_values = array(), $new_values = array() ) {
+
+		$user_meta = array();
+
+		foreach ( $new_values as $field_id => $value ) {
+			$user_meta[ "field_{$field_id}" ] = $value['value'];
+		}
+
+		wp_fusion()->user->push_user_meta( $user_id, $user_meta );
+
+		// With BuddyBoss only, profile_update is also triggered, so we'll remove that here.
+		remove_action( 'profile_update', array( wp_fusion()->user, 'profile_update' ), 10, 2 );
+
+	}
+
 
 	/**
 	 * Triggered when email changed
@@ -752,6 +805,7 @@ class WPF_BuddyPress extends WPF_Integrations_Base {
 			'setting'   => $settings['allow_tags'],
 			'meta_name' => 'wpf-settings',
 			'field_id'  => 'allow_tags',
+			'read_only' => true,
 		);
 
 		wpf_render_tag_multiselect( $args );
@@ -887,12 +941,12 @@ class WPF_BuddyPress extends WPF_Integrations_Base {
 
 	public function update_group_access( $user_id, $user_tags ) {
 
-		// Don't bother if groups component is disabled
+		// Don't bother if groups component is disabled.
 		if ( ! function_exists( 'groups_get_groups' ) ) {
 			return;
 		}
 
-		// Allow searching for hidden groups even if not logged in
+		// Allow searching for hidden groups even if not logged in.
 
 		add_filter(
 			'bp_groups_get_paged_groups_sql',
@@ -905,7 +959,7 @@ class WPF_BuddyPress extends WPF_Integrations_Base {
 			array(
 				'nopaging'    => true,
 				'show_hidden' => true,
-				'per_page'    => null, // show all groups
+				'per_page'    => null, // show all groups.
 				'meta_query'  => array(
 					array(
 						'key'     => 'wpf-settings-buddypress',
@@ -956,17 +1010,21 @@ class WPF_BuddyPress extends WPF_Integrations_Base {
 				}
 			}
 
-			// Tag link
+			// Tag link.
 			if ( ! empty( $settings['tag_link'] ) ) {
+
 				$tag_id = $settings['tag_link'][0];
 
-				if ( in_array( $tag_id, $user_tags ) && ! groups_is_user_member( $user_id, $group->id ) ) {
+				$user_groups    = bp_get_user_groups( $user_id );
+				$user_group_ids = wp_list_pluck( $user_groups, 'group_id' );
+
+				if ( in_array( $tag_id, $user_tags ) && ! in_array( $group->id, $user_group_ids ) ) {
 
 					wpf_log( 'info', $user_id, 'Adding user to BuddyPress group <a href="' . admin_url( 'admin.php?page=bp-groups&gid=' . $group->id . '&action=edit' ) . '">' . $group->name . '</a>, from linked tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>' );
 
 					groups_join_group( $group->id, $user_id );
 
-				} elseif ( ! in_array( $tag_id, $user_tags ) && groups_is_user_member( $user_id, $group->id ) ) {
+				} elseif ( ! in_array( $tag_id, $user_tags ) && in_array( $group->id, $user_group_ids ) ) {
 
 					wpf_log( 'info', $user_id, 'Removing user from BuddyPress group <a href="' . admin_url( 'admin.php?page=bp-groups&gid=' . $group->id . '&action=edit' ) . '">' . $group->name . '</a>, from linked tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>' );
 
@@ -1589,11 +1647,11 @@ class WPF_BuddyPress extends WPF_Integrations_Base {
 
 					// Prevent looping
 
-					remove_action( 'bp_set_member_type', array( $this, 'set_member_type' ), 10, 2 );
+					remove_action( 'set_object_terms', array( $this, 'set_member_type' ), 10, 2 );
 
 					bp_set_member_type( $user_id, $type->post_name );
 
-					add_action( 'bp_set_member_type', array( $this, 'set_member_type' ), 10, 3 );
+					add_action( 'set_object_terms', array( $this, 'set_member_type' ), 10, 3 );
 
 					return; // Someone can only be in one type at a time, so let's quit here
 
@@ -1632,9 +1690,9 @@ class WPF_BuddyPress extends WPF_Integrations_Base {
 
 					wpf_log( 'info', $user_id, $msg );
 
-					// Prevent looping
+					// Prevent looping.
 
-					remove_action( 'bp_set_member_type', array( $this, 'set_member_type' ), 10, 2 );
+					remove_action( 'set_object_terms', array( $this, 'set_member_type' ), 10, 2 );
 
 					if ( ! empty( $default ) ) {
 
@@ -1649,7 +1707,7 @@ class WPF_BuddyPress extends WPF_Integrations_Base {
 
 					}
 
-					add_action( 'bp_set_member_type', array( $this, 'set_member_type' ), 10, 2 );
+					add_action( 'set_object_terms', array( $this, 'set_member_type' ), 10, 2 );
 
 					return; // Someone can only be in one type at a time, so let's quit here
 
@@ -1666,74 +1724,76 @@ class WPF_BuddyPress extends WPF_Integrations_Base {
 	 * @return void
 	 */
 
-	public function set_member_type( $user_id, $new_member_type, $append = false ) {
+	public function set_member_type( $user_id, $terms, $tt_ids = array(), $taxonomy = false, $append = false, $old_tt_ids = array() ) {
 
 		if ( ! function_exists( 'bp_member_type_post_by_type' ) ) {
 			return;
 		}
 
-		$new_type_id = bp_member_type_post_by_type( $new_member_type );
-
-		if ( empty( $new_type_id ) ) {
+		if ( false === $taxonomy || bp_get_member_type_tax_name() !== $taxonomy ) {
 			return;
 		}
 
-		/*
-		 Removed in v3.36.16
+		if ( empty( $terms ) ) {
+			return; // nothing was added.
+		}
 
-		// If the type isn't being appended then we need to remove any linked tags from the other types.
-		// Unfortunately BuddyBoss doesn't fire bp_remove_member_type before setting the new type so we don't know what the previous type was.
+		$new_type_id = bp_member_type_post_by_type( $terms[0] );
 
-		$remove_tags = array();
+		if ( empty( $new_type_id ) ) {
+			return; // couldn't find the new profile type.
+		}
 
-		if ( false == $append ) {
+		// Sometimes the member type is set before WPF has synced the new user to the CRM.
+		if ( doing_action( 'user_register' ) && ! did_action( 'wpf_user_created' ) ) {
 
-			$member_types = bp_get_member_types();
-
-			foreach ( $member_types as $member_type ) {
-
-				if ( $member_type == $new_member_type ) {
-					continue;
-				}
-
-				$type_id = bp_member_type_post_by_type( $member_type );
-
-				$settings = get_post_meta( $type_id, 'wpf_settings_buddypress', true );
-
-				if ( ! empty( $settings ) && ! empty( $settings['tag_link'] ) ) {
-
-					$remove_tags = array_merge( $remove_tags, $settings['tag_link'] );
-
-				}
-			}
-		} */
-
-		// Prevent looping
-
-		remove_action( 'wpf_tags_modified', array( $this, 'update_profile_types' ), 10, 2 );
-
-		// Now maybe apply the tags for this type
-
-		$settings = get_post_meta( $new_type_id, 'wpf_settings_buddypress', true );
-
-		if ( ! empty( $settings ) && ! empty( $settings['tag_link'] ) ) {
-
-			wpf_log( 'info', $user_id, 'User added to BuddyPress profile type <a href="' . admin_url( 'post.php?post=' . $new_type_id . '&action=edit' ) . '">' . $new_member_type->labels['singular_name'] . '</a>. Applying tags.' );
-			wp_fusion()->user->apply_tags( $settings['tag_link'], $user_id );
+			remove_action( 'user_register', array( wp_fusion()->user, 'user_register' ), 20 );
+			wp_fusion()->user->user_register( $user_id );
 
 		}
 
-		add_action( 'wpf_tags_modified', array( $this, 'update_profile_types' ), 10, 2 );
+		// Sync the name.
 
-		// Sync the name
-
-		$new_member_type = bp_get_member_type_object( $new_member_type );
+		$new_member_type = bp_get_member_type_object( $terms[0] );
 
 		$update_data = array(
 			'bbp_profile_type' => $new_member_type->labels['singular_name'],
 		);
 
 		wp_fusion()->user->push_user_meta( $user_id, $update_data );
+
+		// Update the tags. First, prevent looping.
+
+		remove_action( 'wpf_tags_modified', array( $this, 'update_profile_types' ), 10, 2 );
+
+		// Maybe remove tags from the previous type.
+
+		if ( false === $append && ! empty( $old_tt_ids ) ) {
+
+			$old_member_type = bp_get_term_by( 'term_taxonomy_id', $old_tt_ids[0] );
+			$old_type_id     = bp_member_type_post_by_type( $old_member_type->name );
+			$old_member_type = bp_get_member_type_object( $old_member_type->name );
+
+			// Maybe remove linked tags from the old type.
+
+			$settings = get_post_meta( $old_type_id, 'wpf_settings_buddypress', true );
+
+			if ( ! empty( $settings ) && ! empty( $settings['tag_link'] ) ) {
+				wpf_log( 'info', $user_id, 'User removed from BuddyPress profile type <a href="' . admin_url( 'post.php?post=' . $old_type_id . '&action=edit' ) . '">' . $old_member_type->labels['singular_name'] . '</a>. Removing tags.' );
+				wp_fusion()->user->remove_tags( $settings['tag_link'], $user_id );
+			}
+		}
+
+		// Now maybe apply the tags for this type.
+
+		$settings = get_post_meta( $new_type_id, 'wpf_settings_buddypress', true );
+
+		if ( ! empty( $settings ) && ! empty( $settings['tag_link'] ) ) {
+			wpf_log( 'info', $user_id, 'User added to BuddyPress profile type <a href="' . admin_url( 'post.php?post=' . $new_type_id . '&action=edit' ) . '">' . $new_member_type->labels['singular_name'] . '</a>. Applying tags.' );
+			wp_fusion()->user->apply_tags( $settings['tag_link'], $user_id );
+		}
+
+		add_action( 'wpf_tags_modified', array( $this, 'update_profile_types' ), 10, 2 );
 
 	}
 

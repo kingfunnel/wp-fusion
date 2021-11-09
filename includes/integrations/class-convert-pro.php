@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Convert_Pro extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'convert-pro';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Convert pro';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/lead-generation/convert-pro/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_Convert_Pro extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'convert-pro';
 
 		add_filter( 'cp_after_options', array( $this, 'add_options' ) );
 
@@ -41,11 +64,11 @@ class WPF_Convert_Pro extends WPF_Integrations_Base {
 
 		foreach ( $available_tags as $id => $label ) {
 
-			if( is_array( $label ) ) {
+			if ( is_array( $label ) ) {
 				$label = $label['label'];
 			}
 
-			$tags[$id] = $label;
+			$tags[ $id ] = $label;
 
 		}
 
@@ -65,49 +88,52 @@ class WPF_Convert_Pro extends WPF_Integrations_Base {
 			'panel'        => 'Target',
 			'section'      => 'Configure',
 			'section_icon' => 'cp-icon-embed',
-			'category'		=> sprintf( __('When User Has %s Tag', 'wp-fusion'), wp_fusion()->crm->name ),
+			'category'     => sprintf( __( 'When User Has %s Tag', 'wp-fusion' ), wp_fusion()->crm->name ),
 		);
 
 		$options['options'][] = array(
-			'type'			=> 'dropdown',
-			'class'			=> 'select4-wpf-tags',
-			'name'			=> 'tags_trigger',
-			'id'			=> 'wpf-apply-tags',
-			'opts'			=> array(
-				'title' 		=> __('Select Tag', 'wp-fusion'),
-				'options'		=> $tags,
-				'class'			=> 'select4-wpf-tags',
+			'type'         => 'dropdown',
+			'class'        => 'select4-wpf-tags',
+			'name'         => 'tags_trigger',
+			'id'           => 'wpf-apply-tags',
+			'opts'         => array(
+				'title'   => __( 'Select Tag', 'wp-fusion' ),
+				'options' => $tags,
+				'class'   => 'select4-wpf-tags',
 			),
-			'panel'			=> 'Target',
-			'section'		=> 'Configure',
-			'section_icon'	=> 'cp-icon-embed',
-			'category'		=> sprintf( __('When User Has %s Tag', 'wp-fusion'), wp_fusion()->crm->name ),
+			'panel'        => 'Target',
+			'section'      => 'Configure',
+			'section_icon' => 'cp-icon-embed',
+			'category'     => sprintf( __( 'When User Has %s Tag', 'wp-fusion' ), wp_fusion()->crm->name ),
 			'dependency'   => array(
 				'name'     => 'enable_wpf',
 				'operator' => '==',
 				'value'    => 'true',
-			)
+			),
 		);
 
 		$options['options'][] = array(
-			'type'			=> 'dropdown',
-			'class'			=> 'select4-wpf-tags',
-			'name'			=> 'tags_logic',
-			'id'			=> 'wpf-apply-tags',
-			'opts'			=> array(
-				'title' 		=> __('Logic', 'wp-fusion'),
-				'options'		=> array( 'show' => 'Show only to users who have the tag', 'hide' => 'Hide from users who have the tag' ),
-				'class'			=> 'select4-wpf-tags',
+			'type'         => 'dropdown',
+			'class'        => 'select4-wpf-tags',
+			'name'         => 'tags_logic',
+			'id'           => 'wpf-apply-tags',
+			'opts'         => array(
+				'title'   => __( 'Logic', 'wp-fusion' ),
+				'options' => array(
+					'show' => 'Show only to users who have the tag',
+					'hide' => 'Hide from users who have the tag',
+				),
+				'class'   => 'select4-wpf-tags',
 			),
-			'panel'			=> 'Target',
-			'section'		=> 'Configure',
-			'section_icon'	=> 'cp-icon-embed',
-			'category'		=> sprintf( __('When User Has %s Tag', 'wp-fusion'), wp_fusion()->crm->name ),
+			'panel'        => 'Target',
+			'section'      => 'Configure',
+			'section_icon' => 'cp-icon-embed',
+			'category'     => sprintf( __( 'When User Has %s Tag', 'wp-fusion' ), wp_fusion()->crm->name ),
 			'dependency'   => array(
 				'name'     => 'enable_wpf',
 				'operator' => '==',
 				'value'    => 'true',
-			)
+			),
 		);
 
 		return $options;
@@ -126,44 +152,40 @@ class WPF_Convert_Pro extends WPF_Integrations_Base {
 
 		$settings = get_post_meta( $style_id, 'configure', true );
 
-		if( isset( $settings['enable_wpf'] ) && $settings['enable_wpf'] == true ) {
+		if ( isset( $settings['enable_wpf'] ) && $settings['enable_wpf'] == true ) {
 
-			if( ! isset( $settings['tags_logic'] ) || $settings['tags_logic'] == 'show' ) {
+			if ( ! isset( $settings['tags_logic'] ) || $settings['tags_logic'] == 'show' ) {
 
 				$display = false;
 
-				if( wpf_is_user_logged_in() ) {
+				if ( wpf_is_user_logged_in() ) {
 
 					$user_tags = wp_fusion()->user->get_tags();
 
-					if( in_array($settings['tags_trigger'], $user_tags) ) {
+					if ( in_array( $settings['tags_trigger'], $user_tags ) ) {
 						$display = true;
 					}
-
 				}
 
 				if ( wpf_admin_override() ) {
 					$display = true;
 				}
-
-			} elseif( $settings['tags_logic'] == 'hide' ) {
+			} elseif ( $settings['tags_logic'] == 'hide' ) {
 
 				$display = true;
 
-				if( wpf_is_user_logged_in() ) {
+				if ( wpf_is_user_logged_in() ) {
 
 					$user_tags = wp_fusion()->user->get_tags();
 
-					if( in_array($settings['tags_trigger'], $user_tags) ) {
+					if ( in_array( $settings['tags_trigger'], $user_tags ) ) {
 						$display = false;
 					}
-
 				}
 
 				if ( wpf_admin_override() ) {
 					$display = true;
 				}
-
 			}
 
 			$display = apply_filters( 'wpf_user_can_access', $display, wpf_get_current_user_id(), $style_id );
@@ -177,4 +199,4 @@ class WPF_Convert_Pro extends WPF_Integrations_Base {
 
 }
 
-new WPF_Convert_Pro;
+new WPF_Convert_Pro();

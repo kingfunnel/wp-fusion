@@ -9,6 +9,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_PMP extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'pmpro';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Paid Memberships Pro';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/paid-memberships-pro/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_PMP extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'pmpro';
 
 		// Admin settings
 		add_action( 'pmpro_membership_level_after_other_settings', array( $this, 'membership_level_settings' ) );
@@ -174,7 +197,6 @@ class WPF_PMP extends WPF_Integrations_Base {
 			if ( $settings['remove_tags'] == true ) {
 				$remove_keys[] = 'apply_tags';
 			}
-
 		} elseif ( 'cancelled' == $status ) {
 
 			// Cancelled
@@ -185,7 +207,6 @@ class WPF_PMP extends WPF_Integrations_Base {
 			if ( $settings['remove_tags'] == true ) {
 				$remove_keys[] = 'apply_tags';
 			}
-
 		} elseif ( 'inactive' == $status ) {
 
 			// Inactive
@@ -195,7 +216,6 @@ class WPF_PMP extends WPF_Integrations_Base {
 			if ( $settings['remove_tags'] == true ) {
 				$remove_keys[] = 'apply_tags';
 			}
-
 		}
 
 		$apply_tags  = array();
@@ -210,7 +230,6 @@ class WPF_PMP extends WPF_Integrations_Base {
 				$apply_tags = array_merge( $apply_tags, $settings[ $key ] );
 
 			}
-
 		}
 
 		foreach ( $remove_keys as $key ) {
@@ -297,7 +316,7 @@ class WPF_PMP extends WPF_Integrations_Base {
 				<td>
 					<input class="checkbox" type="checkbox" id="wpf-remove-tags" name="wpf-settings[remove_tags]"
 						   value="1" <?php echo checked( $settings['remove_tags'], 1, false ); ?> />
-					<label for="wpf-remove-tags"><?php _e( 'Remove original tags (above) when the membership is cancelled or expires.', 'wp-fusion' ) ?></label>
+					<label for="wpf-remove-tags"><?php _e( 'Remove original tags (above) when the membership is cancelled or expires.', 'wp-fusion' ); ?></label>
 				</td>
 			</tr>
 			<tr>
@@ -316,9 +335,9 @@ class WPF_PMP extends WPF_Integrations_Base {
 
 						wpf_render_tag_multiselect( $args );
 
-					?>
+						?>
 					<br/>
-					<small><?php printf( __( 'This tag will be applied in %1$s when a member is registered. Likewise, if this tag is applied to a user from within %2$s, they will be automatically enrolled in this membership. If the tag is removed they will be removed from the membership.', 'wp-fusion' ), wp_fusion()->crm->name, wp_fusion()->crm->name ) ?></small>
+					<small><?php printf( __( 'This tag will be applied in %1$s when a member is registered. Likewise, if this tag is applied to a user from within %2$s, they will be automatically enrolled in this membership. If the tag is removed they will be removed from the membership.', 'wp-fusion' ), wp_fusion()->crm->name, wp_fusion()->crm->name ); ?></small>
 				</td>
 			</tr>
 			<tr>
@@ -465,7 +484,7 @@ class WPF_PMP extends WPF_Integrations_Base {
 							'field_id'  => 'apply_tags',
 						)
 					);
-?>
+					?>
 					<br/>
 					<small>Apply the selected tags in <?php echo wp_fusion()->crm->name; ?> when the coupon is used.</small>
 				</td>
@@ -526,10 +545,10 @@ class WPF_PMP extends WPF_Integrations_Base {
 	 *
 	 * Triggered before a user's membership level is changed. Removes tags from the previous level and maybe applies cancelled tags.
 	 *
-	 * @param integer  $level_id      The level identifier.
-	 * @param integer  $user_id       The user identifier.
-	 * @param array    $old_levels    The old levels.
-	 * @param bool     $cancel_level  Is the level being cancelled?
+	 * @param integer $level_id      The level identifier.
+	 * @param integer $user_id       The user identifier.
+	 * @param array   $old_levels    The old levels.
+	 * @param bool    $cancel_level  Is the level being cancelled?
 	 */
 	public function before_change_membership_level( $level_id, $user_id, $old_levels, $cancel_level ) {
 
@@ -716,7 +735,6 @@ class WPF_PMP extends WPF_Integrations_Base {
 			if ( ! empty( $settings['apply_tags_payment_failed'] ) ) {
 				wp_fusion()->user->apply_tags( $settings['apply_tags_payment_failed'], $old_order->user_id );
 			}
-
 		}
 
 	}
@@ -739,7 +757,6 @@ class WPF_PMP extends WPF_Integrations_Base {
 			if ( ! empty( $settings['apply_tags_payment_failed'] ) ) {
 				wp_fusion()->user->remove_tags( $settings['apply_tags_payment_failed'], $order->user_id );
 			}
-
 		}
 
 	}
@@ -1286,9 +1303,12 @@ class WPF_PMP extends WPF_Integrations_Base {
 
 		// This will return all levels but we only want to process the most recent (highest subscription ID)
 
-		usort( $levels, function( $a, $b ) {
-			return $a->subscription_id < $b->subscription_id;
-		});
+		usort(
+			$levels,
+			function( $a, $b ) {
+				return $a->subscription_id < $b->subscription_id;
+			}
+		);
 
 		$this->sync_membership_level_fields( $user_id, $levels[0] );
 

@@ -162,7 +162,7 @@ class WPF_CRM_Queue {
 
 			$result = apply_filters( "wpf_api_{$method}_result", $result, $args );
 
-			$result = wpf_clean( $result ); // sanitize_text_field recursive. (Removed because it was breaking special characters in tag names).
+			$result = wpf_clean( $result ); // sanitize_text_field recursive.
 
 			return $result;
 
@@ -355,7 +355,7 @@ class WPF_CRM_Queue {
 
 			foreach ( $contacts as $cid => $args ) {
  
-				// Don't send empty data
+				// Don't send empty data.
 				if ( ! empty( $args[0] ) && ! empty( $args[1] ) || $method == 'combined_update' ) {
 
 					if ( $method == 'combined_update' ) {
@@ -383,6 +383,8 @@ class WPF_CRM_Queue {
 				}
 			}
 		}
+
+		$this->buffer = false; // in case we need to call it again later, clear it out.
 
 	}
 

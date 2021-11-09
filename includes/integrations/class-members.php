@@ -8,14 +8,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Members_Plugin extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'members';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Members';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/members/';
+
+	/**
 	 * Gets things started.
 	 *
 	 * @since 3.37.3
 	 */
 
 	public function init() {
-
-		$this->slug = 'members';
 
 		// Update roles / tags based on settings
 		add_action( 'wpf_tags_modified', array( $this, 'tags_modified' ), 10, 2 );

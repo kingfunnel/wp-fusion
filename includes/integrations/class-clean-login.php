@@ -13,13 +13,36 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Clean_Login extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'clean-login';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Clean login';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Get things started.
 	 *
 	 * @since 3.21.2
 	 */
 	public function init() {
-
-		$this->slug = 'clean-login';
 
 		add_filter( 'wpf_user_register', array( $this, 'filter_form_fields' ), 10, 2 );
 		add_filter( 'wpf_user_update', array( $this, 'filter_form_fields' ), 10, 2 );
@@ -32,8 +55,8 @@ class WPF_Clean_Login extends WPF_Integrations_Base {
 	 *
 	 * @since  3.21.2
 	 *
-	 * @param  array    $post_data  The post data.
-	 * @param  integer  $user_id    The user ID.
+	 * @param  array   $post_data  The post data.
+	 * @param  integer $user_id    The user ID.
 	 * @return array    Registration / Update data.
 	 */
 	public function filter_form_fields( $post_data, $user_id ) {

@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Users_Insights extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'users-insights';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Users insights';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/users-insights/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_Users_Insights extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'users-insights';
 
 		add_filter( 'get_user_meta', array( $this, 'merge_geo_data' ), 10, 2 );
 
@@ -165,15 +188,15 @@ class WPF_Users_Insights extends WPF_Integrations_Base {
 			// Disabled for now, hooks don't support it
 
 			// $meta_fields['last_seen'] = array(
-			// 	'label' => 'Last Seen',
-			// 	'type'  => 'date',
-			// 	'group' => 'users_insights',
+			// 'label' => 'Last Seen',
+			// 'type'  => 'date',
+			// 'group' => 'users_insights',
 			// );
 
 			// $meta_fields['sessions'] = array(
-			// 	'label' => 'Sessions',
-			// 	'type'  => 'int',
-			// 	'group' => 'users_insights',
+			// 'label' => 'Sessions',
+			// 'type'  => 'int',
+			// 'group' => 'users_insights',
 			// );
 
 		}
@@ -183,9 +206,9 @@ class WPF_Users_Insights extends WPF_Integrations_Base {
 			// Disabled for now, hooks don't support it
 
 			// $meta_fields['browser'] = array(
-			// 	'label' => 'Browser',
-			// 	'type'  => 'text',
-			// 	'group' => 'users_insights',
+			// 'label' => 'Browser',
+			// 'type'  => 'text',
+			// 'group' => 'users_insights',
 			// );
 
 		}
@@ -195,27 +218,27 @@ class WPF_Users_Insights extends WPF_Integrations_Base {
 			// Disabled for now, hooks don't support it
 
 			// $meta_fields['country'] = array(
-			// 	'label' => 'Country',
-			// 	'type'  => 'country',
-			// 	'group' => 'users_insights',
+			// 'label' => 'Country',
+			// 'type'  => 'country',
+			// 'group' => 'users_insights',
 			// );
 
 			// $meta_fields['region'] = array(
-			// 	'label' => 'Region',
-			// 	'type'  => 'state',
-			// 	'group' => 'users_insights',
+			// 'label' => 'Region',
+			// 'type'  => 'state',
+			// 'group' => 'users_insights',
 			// );
 
 			// $meta_fields['city'] = array(
-			// 	'label' => 'City',
-			// 	'type'  => 'text',
-			// 	'group' => 'users_insights',
+			// 'label' => 'City',
+			// 'type'  => 'text',
+			// 'group' => 'users_insights',
 			// );
 
 			// $meta_fields['coordinates'] = array(
-			// 	'label' => 'Coordinates',
-			// 	'type'  => 'text',
-			// 	'group' => 'users_insights',
+			// 'label' => 'Coordinates',
+			// 'type'  => 'text',
+			// 'group' => 'users_insights',
 			// );
 
 		}

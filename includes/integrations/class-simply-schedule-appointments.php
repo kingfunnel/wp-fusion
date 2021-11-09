@@ -33,6 +33,15 @@ class WPF_Simply_Schedule_Appointments extends WPF_Integrations_Base {
 	public $name = 'Simply Schedule Appointments';
 
 	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/events/simply-schedule-appointments/';
+
+
+	/**
 	 * Get things started.
 	 *
 	 * @since 3.38.10

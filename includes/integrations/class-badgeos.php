@@ -9,6 +9,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_BadgeOS extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'badgeos';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Badgeos';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/gamification/badgeos/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_BadgeOS extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'badgeos';
 
 		// Add meta field group
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ), 10 );
@@ -27,8 +50,8 @@ class WPF_BadgeOS extends WPF_Integrations_Base {
 		add_filter( 'wpf_meta_box_post_types', array( $this, 'unset_wpf_meta_boxes' ) );
 
 		// Tag users when badges / points are added and removed
-		add_action( 'badgeos_award_achievement', array( $this, 'award_achievement'), 10, 5 );
-		add_action( 'badgeos_revoke_achievement', array( $this, 'revoke_achievement'), 10, 2 );
+		add_action( 'badgeos_award_achievement', array( $this, 'award_achievement' ), 10, 5 );
+		add_action( 'badgeos_revoke_achievement', array( $this, 'revoke_achievement' ), 10, 2 );
 		add_action( 'badgeos_update_users_points', array( $this, 'update_points' ), 10, 5 );
 
 		// Assign / remove linked badges
@@ -49,8 +72,11 @@ class WPF_BadgeOS extends WPF_Integrations_Base {
 
 	public function add_meta_field_group( $field_groups ) {
 
-		if( !isset( $field_groups['badgeos'] ) ) {
-			$field_groups['badgeos'] = array( 'title' => 'BadgeOS', 'fields' => array() );
+		if ( ! isset( $field_groups['badgeos'] ) ) {
+			$field_groups['badgeos'] = array(
+				'title'  => 'BadgeOS',
+				'fields' => array(),
+			);
 		}
 
 		return $field_groups;
@@ -66,7 +92,11 @@ class WPF_BadgeOS extends WPF_Integrations_Base {
 
 	public function prepare_meta_fields( $meta_fields ) {
 
-		$meta_fields['_badgeos_points'] = array( 'label' => 'BadgeOS Points', 'type' => 'text', 'group' => 'badgeos' );
+		$meta_fields['_badgeos_points'] = array(
+			'label' => 'BadgeOS Points',
+			'type'  => 'text',
+			'group' => 'badgeos',
+		);
 
 		return $meta_fields;
 
@@ -81,8 +111,8 @@ class WPF_BadgeOS extends WPF_Integrations_Base {
 
 	public function unset_wpf_meta_boxes( $post_types ) {
 
-		foreach( badgeos_get_achievement_types_slugs() as $slug ) {
-			unset( $post_types[$slug] );
+		foreach ( badgeos_get_achievement_types_slugs() as $slug ) {
+			unset( $post_types[ $slug ] );
 		}
 
 		unset( $post_types['achievement-type'] );
@@ -107,7 +137,7 @@ class WPF_BadgeOS extends WPF_Integrations_Base {
 
 		if ( ! empty( $wpf_settings['tag_link'] ) ) {
 
-			wp_fusion()->user->apply_tags( $wpf_settings['tag_link'], $user_id);
+			wp_fusion()->user->apply_tags( $wpf_settings['tag_link'], $user_id );
 
 		}
 
@@ -124,14 +154,13 @@ class WPF_BadgeOS extends WPF_Integrations_Base {
 
 		$wpf_settings = get_post_meta( $achievement_id, 'wpf-settings-badgeos', true );
 
-		if( empty($wpf_settings) ) {
+		if ( empty( $wpf_settings ) ) {
 			return;
 		}
 
 		if ( ! empty( $wpf_settings['tag_link'] ) ) {
 			wp_fusion()->user->remove_tags( $wpf_settings['tag_link'], $user_id );
 		}
-
 
 	}
 
@@ -158,27 +187,29 @@ class WPF_BadgeOS extends WPF_Integrations_Base {
 
 	public function update_linked_achievements( $user_id, $user_tags ) {
 
-		$linked_badges = get_posts( array(
-			'post_type'  => badgeos_get_achievement_types_slugs(),
-			'nopaging'   => true,
-			'meta_query' => array(
-				array(
-					'key'     => 'wpf-settings-badgeos',
-					'compare' => 'EXISTS'
+		$linked_badges = get_posts(
+			array(
+				'post_type'  => badgeos_get_achievement_types_slugs(),
+				'nopaging'   => true,
+				'meta_query' => array(
+					array(
+						'key'     => 'wpf-settings-badgeos',
+						'compare' => 'EXISTS',
+					),
 				),
-			),
-			'fields'     => 'ids'
-		) );
+				'fields'     => 'ids',
+			)
+		);
 
 		if ( empty( $linked_badges ) ) {
 			return;
 		}
 
 		// Prevent looping when the badges assigned / removed
-		remove_action( 'badgeos_award_achievement', array( $this, 'award_achievement'), 10, 5 );
-		remove_action( 'badgeos_revoke_achievement', array( $this, 'revoke_achievement'), 10, 2 );
+		remove_action( 'badgeos_award_achievement', array( $this, 'award_achievement' ), 10, 5 );
+		remove_action( 'badgeos_revoke_achievement', array( $this, 'revoke_achievement' ), 10, 2 );
 
-		// Assign / revoke linked badges 
+		// Assign / revoke linked badges
 
 		foreach ( $linked_badges as $badge_id ) {
 
@@ -192,29 +223,27 @@ class WPF_BadgeOS extends WPF_Integrations_Base {
 
 			// Check if user already has badge
 			$args = array(
-				'user_id'			=> $user_id,
-				'achievement_id'	=> $badge_id
-				);
+				'user_id'        => $user_id,
+				'achievement_id' => $badge_id,
+			);
 
 			$has_badge = badgeos_get_user_achievements( $args );
 
-
-			if ( in_array( $tag_id, $user_tags ) && empty($has_badge) ) {
+			if ( in_array( $tag_id, $user_tags ) && empty( $has_badge ) ) {
 
 				// Logger
-				wpf_log( 'info', $user_id, 'User granted BadgeOS badge <a href="' . get_edit_post_link( $badge_id ) . '" target="_blank">' . get_the_title($badge_id) . '</a> by tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>', array( 'source' => 'badgeos' ) );
+				wpf_log( 'info', $user_id, 'User granted BadgeOS badge <a href="' . get_edit_post_link( $badge_id ) . '" target="_blank">' . get_the_title( $badge_id ) . '</a> by tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>', array( 'source' => 'badgeos' ) );
 
 				badgeos_award_achievement_to_user( $badge_id, $user_id );
 
-			} else if ( ! in_array( $tag_id, $user_tags ) && ! empty($has_badge) ) {
+			} elseif ( ! in_array( $tag_id, $user_tags ) && ! empty( $has_badge ) ) {
 
 				// Logger
-				wpf_log( 'info', $user_id, 'BadgeOS badge <a href="' . get_edit_post_link( $badge_id ) . '" target="_blank">' . get_the_title($badge_id) . '</a> revoked by tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>', array( 'source' => 'badgeos' ) );
+				wpf_log( 'info', $user_id, 'BadgeOS badge <a href="' . get_edit_post_link( $badge_id ) . '" target="_blank">' . get_the_title( $badge_id ) . '</a> revoked by tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>', array( 'source' => 'badgeos' ) );
 
 				badgeos_revoke_achievement_from_user( $badge_id, $user_id );
 
 			}
-
 		}
 
 	}
@@ -245,7 +274,7 @@ class WPF_BadgeOS extends WPF_Integrations_Base {
 		wp_nonce_field( 'wpf_meta_box_badgeos', 'wpf_meta_box_badgeos_nonce' );
 
 		$settings = array(
-			'tag_link' => array()
+			'tag_link' => array(),
 		);
 
 		if ( get_post_meta( $post->ID, 'wpf-settings-badgeos', true ) ) {
@@ -260,11 +289,11 @@ class WPF_BadgeOS extends WPF_Integrations_Base {
 			echo '<td>';
 
 			$args = array(
-				'setting' 		=> $settings['tag_link'],
-				'meta_name'		=> 'wpf-settings-badgeos',
-				'field_id'		=> 'tag_link',
-				'placeholder'	=> 'Select Tag',
-				'limit'			=> 1
+				'setting'     => $settings['tag_link'],
+				'meta_name'   => 'wpf-settings-badgeos',
+				'field_id'    => 'tag_link',
+				'placeholder' => 'Select Tag',
+				'limit'       => 1,
 			);
 
 			wpf_render_tag_multiselect( $args );
@@ -274,8 +303,7 @@ class WPF_BadgeOS extends WPF_Integrations_Base {
 
 			echo '</tr>';
 
-		echo '</tbody></table>';
-
+			echo '</tbody></table>';
 
 	}
 
@@ -321,4 +349,4 @@ class WPF_BadgeOS extends WPF_Integrations_Base {
 
 }
 
-new WPF_BadgeOS;
+new WPF_BadgeOS();

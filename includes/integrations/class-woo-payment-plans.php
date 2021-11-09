@@ -35,7 +35,7 @@ class WPF_Woo_Payment_Plans extends WPF_Integrations_Base {
 	/**
 	 * The link to the documentation on the WP Fusion website.
 	 *
-	 * @since 3.38.10
+	 * @since 3.38.14
 	 * @var string $docs_url
 	 */
 	public $docs_url = 'https://wpfusion.com/documentation/events/woocommerce-payment-plans/';

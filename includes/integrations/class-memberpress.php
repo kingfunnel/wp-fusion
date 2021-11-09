@@ -15,6 +15,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_MemberPress extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'memberpress';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Memberpress';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/integrations/memberpress/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -22,8 +47,6 @@ class WPF_MemberPress extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'memberpress';
 
 		// WPF Settings
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ), 20 );
@@ -856,7 +879,7 @@ class WPF_MemberPress extends WPF_Integrations_Base {
 				// translators: 1: MemberPress subscription ID, 2: MemberPress subscription product, 3: Old status, 4: New status.
 				esc_html__( 'Memberpress subscription %1$s to %2$s status changed from %3$s to %4$s.', 'wp-fusion' ),
 				'<a href="' . esc_url( admin_url( 'admin.php?page=memberpress-subscriptions&action=edit&id=' . $subscription->id ) ) . '">#' . esc_html( $subscription->id ) . '</a>',
-				'<a href="' . esc_url( admin_url( 'edit.php?post=' . $data['product_id'] . '&action=edit' ) ) . '">' . esc_html( get_the_title( $data['product_id'] ) ) . '</a>',
+				'<a href="' . esc_url( admin_url( 'post.php?post=' . $data['product_id'] . '&action=edit' ) ) . '">' . esc_html( get_the_title( $data['product_id'] ) ) . '</a>',
 				'<strong>' . esc_html( ucwords( $old_status ) ) . '</strong>',
 				'<strong>' . esc_html( ucwords( $new_status ) ) . '</strong>'
 			)
@@ -943,7 +966,9 @@ class WPF_MemberPress extends WPF_Integrations_Base {
 			if ( ! empty( $settings['remove_tags'] ) ) {
 				$remove_tags = array_merge( $remove_tags, $settings['apply_tags_registration'] );
 			}
-		} elseif ( 'cancelled' == $new_status ) {
+		}
+
+		if ( 'cancelled' == $new_status ) {
 
 			// Cancelled subscription
 			$apply_tags = array_merge( $apply_tags, $settings['apply_tags_cancelled'] );
@@ -1589,32 +1614,18 @@ class WPF_MemberPress extends WPF_Integrations_Base {
 
 	public function batch_step_memberships( $member_id ) {
 
-		$product_ids = array();
+		$member      = new MeprUser( $member_id );
+		$product_ids = $member->current_and_prior_subscriptions();
 
-		$member        = new MeprUser( $member_id );
-		$subscriptions = array_unique( $member->current_and_prior_subscriptions() );
+		// Subscriptions.
+		$subscriptions = $member->subscriptions();
 
-		// Get products from subscriptions
-
-		if ( ! empty( $subscriptions ) ) {
-			$product_ids = array_merge( $product_ids, $subscriptions );
-		}
-
-		// Get products from transactions
+		// Get products from transactions.
 
 		$transactions = $member->transactions();
 
-		if ( ! empty( $transactions ) ) {
-
-			foreach ( $transactions as $transaction ) {
-
-				if ( ! in_array( $transaction->product_id, $product_ids ) ) {
-					$product_ids[] = $transaction->product_id;
-				}
-
-			}
-
-		}
+		$product_ids = array_merge( $product_ids, wp_list_pluck( $transactions, 'product_id' ) );
+		$product_ids = array_unique( $product_ids );
 
 		if ( empty( $product_ids ) ) {
 			return;
@@ -1639,6 +1650,28 @@ class WPF_MemberPress extends WPF_Integrations_Base {
 
 				if ( ! empty( $settings['remove_tags'] ) ) {
 					wp_fusion()->user->remove_tags( $settings['apply_tags_registration'], $member_id );
+				}
+
+				// Maybe apply tags based on status.
+
+				foreach ( $subscriptions as $subscription ) {
+
+					if ( $subscription->product_id === $product_id ) {
+
+						if ( ! empty( $settings['apply_tags_cancelled'] ) && $subscription->is_cancelled() ) {
+
+							$apply_tags = array_merge( $apply_tags, $settings['apply_tags_cancelled'] );
+
+						} elseif ( ! empty( $settings['apply_tags_expired'] ) && $subscription->is_expired() ) {
+
+							$apply_tags = array_merge( $apply_tags, $settings['apply_tags_expired'] );
+
+						} elseif ( ! empty( $settings['apply_tags_trial'] ) && $subscription->in_trial() ) {
+
+							$apply_tags = array_merge( $apply_tags, $settings['apply_tags_trial'] );
+
+						}
+					}
 				}
 			}
 		}

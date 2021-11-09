@@ -215,6 +215,7 @@ class WPF_Autonami {
 		$this->params = array(
 			'timeout'    => 15,
 			'user-agent' => 'WP Fusion; ' . home_url(),
+			'sslverify'  => false,
 			'headers'    => array(
 				'Content-Type'  => 'application/json',
 				'Accept'        => 'application/json',

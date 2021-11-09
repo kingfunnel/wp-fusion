@@ -478,7 +478,10 @@ jQuery(document).ready(function($){
 			postFields = $(crmContainer).find('#test-connection').attr('data-post-fields').split(',');
 
 			$(postFields).each(function(index, el) {
-				data[el] = $('input#' + el).val();
+
+				if ( $('#' + el).length ) {
+					data[el] = $('#' + el).val();
+				}
 			});
 
 			// Test the CRM connection
@@ -495,6 +498,8 @@ jQuery(document).ready(function($){
 					button.find('span.text').html( 'Retry' );
 
 				} else {
+
+					$(crmContainer).find('div.error').remove();
 
 					$('#connection_configured').val('1'); // connection is configured
 					$('#wpf-needs-setup').slideUp(400);

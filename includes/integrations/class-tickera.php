@@ -7,15 +7,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Tickera extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'tickera';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Tickera';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/events/tickera/';
+
+	/**
 	 * Gets things started.
 	 *
 	 * @since 3.37.18
 	 */
 
 	public function init() {
-
-		$this->slug = 'tickera';
-		$this->name = 'Tickera';
 
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ) );
 		add_action( 'save_post_tc_tickets', array( $this, 'save_meta_box_data' ) );
@@ -84,7 +106,7 @@ class WPF_Tickera extends WPF_Integrations_Base {
 	 *
 	 * @since 3.37.18
 	 *
-	 * @param int   $attendee_id The attendee ID.
+	 * @param int $attendee_id The attendee ID.
 	 */
 	public function checkin_user( $attendee_id ) {
 
@@ -130,7 +152,7 @@ class WPF_Tickera extends WPF_Integrations_Base {
 	 *
 	 * @since  3.37.18
 	 *
-	 * @param  int   $ticket_id The ticket ID.
+	 * @param  int $ticket_id The ticket ID.
 	 * @return array The event data.
 	 */
 	public function get_event_data( $ticket_id ) {
@@ -150,7 +172,7 @@ class WPF_Tickera extends WPF_Integrations_Base {
 	 *
 	 * @since  3.37.18
 	 *
-	 * @param  int   $ticket_id The ticket ID.
+	 * @param  int $ticket_id The ticket ID.
 	 * @return array The ticket data.
 	 */
 	public function get_ticket_data( $ticket_id ) {
@@ -163,7 +185,7 @@ class WPF_Tickera extends WPF_Integrations_Base {
 			// 'tc_price_per_ticket'                      => get_post_meta( $ticket_id, 'price_per_ticket', true ),
 			'tc_ticket_checkin_availability_from_date' => get_post_meta( $ticket_id, '_ticket_checkin_availability_from_date', true ),
 			'tc_ticket_checkin_availability_to_date'   => get_post_meta( $ticket_id, '_ticket_checkin_availability_to_date', true ),
-			//'tc_quantity_available'                    => get_post_meta( $ticket_id, 'quantity_available', true ),
+			// 'tc_quantity_available'                    => get_post_meta( $ticket_id, 'quantity_available', true ),
 		);
 	}
 

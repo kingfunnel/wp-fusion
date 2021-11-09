@@ -391,7 +391,7 @@ class WPF_ConvertKit {
 		}
 
 		if ( ! $this->params ) {
-			$this->get_params( $api_key );
+			$this->get_params( $api_secret );
 		}
 
 		$response = wp_safe_remote_get( 'https://api.convertkit.com/v3/subscribers?api_secret=' . $api_secret, $this->get_params() );
@@ -680,6 +680,8 @@ class WPF_ConvertKit {
 			$available_tags = wpf_get_option( 'available_tags' );
 			reset( $available_tags );
 			$assign_tags = array( key( $available_tags ) );
+
+			wpf_log( 'notice', wpf_get_current_user_id(), 'Heads up: ConvertKit requires all new subscribers to be created with a tag. To avoid an API error, WP Fusion will create this subscriber with the <strong>' . wpf_get_tag_label( key( $available_tags ) ) . '</strong> tag. To prevent this from happening in the future, please select a tag for new subscribers at Settings &raquo; WP Fusion &raquo; General &raquo; Assign Tags.' );
 
 		}
 

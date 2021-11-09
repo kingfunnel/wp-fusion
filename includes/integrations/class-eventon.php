@@ -14,13 +14,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_EventON extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'eventon';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Eventon';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Gets things started.
 	 *
 	 * @since 3.38.5
 	 */
 	public function init() {
 
-		$this->slug = 'eventon';
 		$this->name = 'EventON';
 
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ) );

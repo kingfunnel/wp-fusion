@@ -364,7 +364,7 @@ class WPF_RestroPress extends WPF_Integrations_Base {
 	 *
 	 * @since  3.37.31
 	 *
-	 * @param  int   $customer_id
+	 * @param  int $customer_id
 	 * @return array The address.
 	 */
 	private function get_customer_address( $customer_id ) {
@@ -395,7 +395,7 @@ class WPF_RestroPress extends WPF_Integrations_Base {
 	 *
 	 * @since  3.37.31
 	 *
-	 * @param  int   $order_id The order ID.
+	 * @param  int $order_id The order ID.
 	 * @return array The customer data.
 	 */
 

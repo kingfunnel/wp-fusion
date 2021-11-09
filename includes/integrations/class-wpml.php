@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_WPML extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'wpml';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Wpml';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/multilingual/wpml/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_WPML extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'wpml';
 
 		add_action( 'pre_get_posts', array( $this, 'pre_get_posts' ) );
 
@@ -54,8 +77,11 @@ class WPF_WPML extends WPF_Integrations_Base {
 
 	public function add_meta_field_group( $field_groups ) {
 
-		if( !isset( $field_groups['wpml'] ) ) {
-			$field_groups['wpml'] = array( 'title' => 'WPML', 'fields' => array() );
+		if ( ! isset( $field_groups['wpml'] ) ) {
+			$field_groups['wpml'] = array(
+				'title'  => 'WPML',
+				'fields' => array(),
+			);
 		}
 
 		return $field_groups;
@@ -71,8 +97,16 @@ class WPF_WPML extends WPF_Integrations_Base {
 
 	public function prepare_meta_fields( $meta_fields ) {
 
-		$meta_fields['language_code'] = array( 'label' => 'Language Code', 'type' => 'text', 'group' => 'wpml' );
-		$meta_fields['language_name'] = array( 'label' => 'Language Name', 'type' => 'text', 'group' => 'wpml' );
+		$meta_fields['language_code'] = array(
+			'label' => 'Language Code',
+			'type'  => 'text',
+			'group' => 'wpml',
+		);
+		$meta_fields['language_name'] = array(
+			'label' => 'Language Name',
+			'type'  => 'text',
+			'group' => 'wpml',
+		);
 
 		return $meta_fields;
 
@@ -88,19 +122,25 @@ class WPF_WPML extends WPF_Integrations_Base {
 
 	public function sync_language() {
 
-		if( ! wpf_is_user_logged_in() ) {
+		if ( ! wpf_is_user_logged_in() ) {
 			return;
 		}
 
 		$language_code = get_user_meta( wpf_get_current_user_id(), 'language_code', true );
 		$language_name = get_user_meta( wpf_get_current_user_id(), 'language_name', true );
 
-		if( $language_code != ICL_LANGUAGE_CODE || $language_name != ICL_LANGUAGE_NAME ) {
+		if ( $language_code != ICL_LANGUAGE_CODE || $language_name != ICL_LANGUAGE_NAME ) {
 
 			update_user_meta( wpf_get_current_user_id(), 'language_code', ICL_LANGUAGE_CODE );
 			update_user_meta( wpf_get_current_user_id(), 'language_name', ICL_LANGUAGE_NAME );
 
-			wp_fusion()->user->push_user_meta( wpf_get_current_user_id(), array( 'language_code' => ICL_LANGUAGE_CODE, 'language_name' => ICL_LANGUAGE_NAME ) );
+			wp_fusion()->user->push_user_meta(
+				wpf_get_current_user_id(),
+				array(
+					'language_code' => ICL_LANGUAGE_CODE,
+					'language_name' => ICL_LANGUAGE_NAME,
+				)
+			);
 
 		}
 
@@ -108,4 +148,4 @@ class WPF_WPML extends WPF_Integrations_Base {
 
 }
 
-new WPF_WPML;
+new WPF_WPML();

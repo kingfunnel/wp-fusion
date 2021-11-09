@@ -53,7 +53,7 @@ class WPF_HubSpot {
 
 		$this->slug     = 'hubspot';
 		$this->name     = 'HubSpot';
-		$this->supports = array();
+		$this->supports = array( 'events' );
 
 		// OAuth
 		$this->client_id     = '959bd865-5a24-4a43-a8bf-05a69c537938';
@@ -124,11 +124,11 @@ class WPF_HubSpot {
 
 	public function format_field_value( $value, $field_type, $field ) {
 
-		if ( 'datepicker' == $field_type || 'date' == $field_type ) {
+		if ( 'date' === $field_type ) {
 
-			// Dates are in milliseconds since the epoch so if the timestamp isn't already in ms we'll multiply x 1000 here
-			if ( $value < 1000000000000 ) {
-				$value = date( 'U', strtotime( 'today', $value ) ) * 1000;
+			// Dates are in milliseconds since the epoch so if the timestamp isn't already in ms we'll multiply x 1000 here.
+			if ( ! empty( $value ) && $value < 1000000000000 ) {
+				$value = gmdate( 'U', strtotime( 'today', $value ) ) * 1000;
 			}
 
 			return $value;
@@ -400,11 +400,10 @@ class WPF_HubSpot {
 
 				foreach ( $response->lists as $list ) {
 
-					if ( $list->listType == 'STATIC' ) {
+					if ( 'STATIC' == $list->listType ) {
 						$category = 'Static Lists';
 					} else {
 						$category = 'Active Lists (Read Only)';
-						//$list->name .= ' (read only)';
 					}
 
 					$available_tags[ $list->listId ] = array(
@@ -856,12 +855,7 @@ class WPF_HubSpot {
 
 			// This will also merge historical tracking data that was accumulated before a visitor registered.
 
-			if ( isset( $_COOKIE['wpf_guest'] ) ) {
-				$email = sanitize_email( wp_unslash( $_COOKIE['wpf_guest'] ) );
-			} else {
-				$user  = wp_get_current_user();
-				$email = $user->user_email;
-			}
+			$email = wpf_get_current_user_email();
 
 			echo '<script>';
 			echo 'var _hsq = window._hsq = window._hsq || [];';
@@ -901,5 +895,71 @@ class WPF_HubSpot {
 		return $body_json->portalId;
 
 	}
+
+	/**
+	 * Track event.
+	 *
+	 * Track an event with the HubSpot engagements API.
+	 *
+	 * @since  3.38.16
+	 *
+	 * @param  string      $event      The event title.
+	 * @param  bool|string $event_data The event description.
+	 * @param  bool|string $email_address The user email address.
+	 * @return bool|WP_Error True if success, WP_Error if failed.
+	 */
+	public function track_event( $event, $event_data = false, $email_address = false ) {
+
+		if ( empty( $email_address ) && ! wpf_is_user_logged_in() ) {
+			// Tracking only works if WP Fusion knows who the contact is.
+			return;
+		}
+
+		// Get the contact ID to track.
+
+		$contact_id = wpf_get_contact_id();
+
+		if ( empty( $contact_id ) ) {
+			$contact_id = $this->get_contact_id( $email_address );
+		}
+
+		if ( ! $contact_id ) {
+			return;
+		}
+
+		$event_html_data = str_replace( '=', ' - ', http_build_query( $event_data, '', '<br>' ) );
+		$body            = array(
+			'engagement'   => array(
+				'active'  => true,
+				'ownerId' => $contact_id,
+				'type'    => 'NOTE',
+			),
+			'associations' => array(
+				'contactIds' => array( $contact_id ),
+			),
+			'metadata'     => array(
+				'title' => $event,
+				'body'  => '<b>' . $event . '</b><br>' . $event_html_data,
+			),
+
+		);
+
+		$params         = $this->params;
+		$params['body'] = wp_json_encode( $body );
+
+		wpf_log( 'info', wpf_get_current_user_id(), 'Tracking event: ' . $event, array( 'meta_array_nofilter' => $body ) );
+
+		$request  = 'https://api.hubapi.com/engagements/v1/engagements';
+		$response = wp_safe_remote_post( $request, $params );
+
+		if ( is_wp_error( $response ) ) {
+			wpf_log( 'error', 0, 'Error tracking event: ' . $response->get_error_message() );
+			return $response;
+		}
+
+		return true;
+	}
+
+
 
 }

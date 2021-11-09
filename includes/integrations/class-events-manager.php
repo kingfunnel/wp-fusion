@@ -7,6 +7,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Events_Manager extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'events-manager';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Events manager';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/events/events-manager/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,9 +40,6 @@ class WPF_Events_Manager extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->name = 'Events Manager';
-		$this->slug = 'events-manager';
 
 		add_filter( 'em_booking_add_registration_result', array( $this, 'add_registration' ), 10, 3 );
 		add_filter( 'em_booking_set_status', array( $this, 'approve_booking' ), 10, 2 );

@@ -9,6 +9,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_UserPro extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'userpro';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Userpro';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/userpro/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -17,8 +42,6 @@ class WPF_UserPro extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'userpro';
 
 		add_filter( 'userpro_form_validation', array( $this, 'form_submitted' ), 50, 2 );
 		add_action( 'userpro_after_profile_head', array( $this, 'load_new_values' ) );
@@ -44,7 +67,7 @@ class WPF_UserPro extends WPF_Integrations_Base {
 			'title'   => __( 'UserPro Integration', 'wp-fusion' ),
 			'std'     => 0,
 			'type'    => 'heading',
-			'section' => 'integrations'
+			'section' => 'integrations',
 		);
 
 		$settings['userpro_pull'] = array(
@@ -52,7 +75,7 @@ class WPF_UserPro extends WPF_Integrations_Base {
 			'desc'    => __( 'Update the local profile data for a given user from the CRM before displaying. May slow down profile load times.', 'wp-fusion' ),
 			'std'     => 0,
 			'type'    => 'checkbox',
-			'section' => 'integrations'
+			'section' => 'integrations',
 		);
 
 		return $settings;
@@ -68,8 +91,11 @@ class WPF_UserPro extends WPF_Integrations_Base {
 
 	public function add_meta_field_group( $field_groups ) {
 
-		if( !isset( $field_groups['userpro'] ) ) {
-			$field_groups['userpro'] = array( 'title' => 'UserPro', 'fields' => array() );
+		if ( ! isset( $field_groups['userpro'] ) ) {
+			$field_groups['userpro'] = array(
+				'title'  => 'UserPro',
+				'fields' => array(),
+			);
 		}
 
 		return $field_groups;
@@ -90,7 +116,10 @@ class WPF_UserPro extends WPF_Integrations_Base {
 		foreach ( (array) $userpro_fields as $key => $field ) {
 
 			if ( ! is_array( $field ) ) {
-				$field = array( 'label' => '', 'type' => 'text' );
+				$field = array(
+					'label' => '',
+					'type'  => 'text',
+				);
 			}
 
 			if ( ! isset( $field['label'] ) ) {
@@ -104,7 +133,7 @@ class WPF_UserPro extends WPF_Integrations_Base {
 			$meta_fields[ $key ] = array(
 				'label' => $field['label'],
 				'type'  => $field['type'],
-				'group'	=> 'userpro'
+				'group' => 'userpro',
 			);
 
 		}
@@ -122,7 +151,7 @@ class WPF_UserPro extends WPF_Integrations_Base {
 
 	public function filter_form_fields( $post_data, $user_id ) {
 
-		if( ! isset($post_data['unique_id']) ) {
+		if ( ! isset( $post_data['unique_id'] ) ) {
 			return $post_data;
 		}
 
@@ -138,7 +167,6 @@ class WPF_UserPro extends WPF_Integrations_Base {
 				$post_data[ $key ] = $value;
 
 			}
-
 		}
 
 		return $post_data;
@@ -159,7 +187,6 @@ class WPF_UserPro extends WPF_Integrations_Base {
 			wp_fusion()->user->push_user_meta( wpf_get_current_user_id(), $form );
 		}
 
-
 		return $errors;
 
 	}
@@ -176,7 +203,7 @@ class WPF_UserPro extends WPF_Integrations_Base {
 
 		if ( wpf_get_option( 'userpro_pull' ) == true ) {
 
-			wp_fusion()->user->pull_user_meta($args['user_id']);
+			wp_fusion()->user->pull_user_meta( $args['user_id'] );
 
 		}
 
@@ -184,4 +211,4 @@ class WPF_UserPro extends WPF_Integrations_Base {
 
 }
 
-new WPF_UserPro;
+new WPF_UserPro();

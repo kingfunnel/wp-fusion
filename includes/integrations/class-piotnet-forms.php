@@ -13,11 +13,35 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Piotnet_Forms extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'pionet-forms';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Pionet forms';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/lead-generation/piotnet-forms/';
+
+	/**
 	 * Gets things started.
 	 */
 	public function init() {
 
-		$this->slug = 'pionet-forms';
 		$this->name = 'Piotnet Forms';
 
 		add_action( 'piotnetforms/form_builder/new_record', array( $this, 'process_entry' ) );
@@ -272,4 +296,4 @@ class WPF_Piotnet_Forms extends WPF_Integrations_Base {
 
 }
 
-new WPF_Piotnet_Forms;
+new WPF_Piotnet_Forms();

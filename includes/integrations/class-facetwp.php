@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_FacetWP extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'facetwp';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'FacetWP';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/other/facetwp/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_FacetWP extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'facetwp';
 
 		add_filter( 'facetwp_pre_filtered_post_ids', array( $this, 'filter_posts' ), 10, 2 );
 		add_filter( 'facetwp_settings_admin', array( $this, 'admin_settings' ), 10, 2 );
@@ -100,16 +123,16 @@ class WPF_FacetWP extends WPF_Integrations_Base {
 
 	public function admin_settings( $settings, $settings_class ) {
 
-		$settings['wp-fusion'] = [
-			'label' => __( 'WP Fusion', 'wp-fusion' ),
-			'fields' => [
-				'wpf_hide_restricted' => [
+		$settings['wp-fusion'] = array(
+			'label'  => __( 'WP Fusion', 'wp-fusion' ),
+			'fields' => array(
+				'wpf_hide_restricted' => array(
 					'label' => __( 'Exclude restricted items?', 'wp-fusion' ),
 					'notes' => __( 'Any posts that the user doesn\'t have access to will be hidden from the results.', 'fwp' ),
-					'html' => $settings_class->get_field_html( 'wpf_hide_restricted', 'toggle' )
-				],
-			],
-		];
+					'html'  => $settings_class->get_setting_html( 'wpf_hide_restricted', 'toggle' ),
+				),
+			),
+		);
 
 		return $settings;
 

@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_LifterLMS extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'lifterlms';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'LifterLMS';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/learning-management/lifterlms/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -17,45 +42,43 @@ class WPF_LifterLMS extends WPF_Integrations_Base {
 
 	public function init() {
 
-		$this->slug = 'lifterlms';
-
-		// Course stuff
+		// Course stuff.
 		add_action( 'llms_user_enrolled_in_course', array( $this, 'course_begin' ), 10, 2 );
 		add_action( 'lifterlms_course_completed', array( $this, 'course_lesson_complete' ), 10, 2 );
 		add_action( 'lifterlms_lesson_completed', array( $this, 'course_lesson_complete' ), 10, 2 );
 		add_action( 'lifterlms_quiz_completed', array( $this, 'quiz_complete' ), 10, 3 );
 
-		// Membership
+		// Membership.
 		add_action( 'llms_user_added_to_membership_level', array( $this, 'added_to_membership' ), 10, 2 );
 		add_action( 'llms_user_removed_from_membership_level', array( $this, 'removed_from_membership' ), 10, 2 );
 		add_action( 'wpf_tags_modified', array( $this, 'update_course_membership_enrollments' ), 10, 2 );
 
-		// Access plans
+		// Access plans.
 		add_action( 'lifterlms_access_plan_purchased', array( $this, 'access_plan_purchased' ), 10, 2 );
 		add_action( 'llms_access_plan_mb_after_row_five', array( $this, 'access_plan_settings' ), 10, 3 );
 		add_action( 'llms_access_plan_saved', array( $this, 'save_plan' ), 10, 3 );
 
-		// Voucher
+		// Voucher.
 		add_action( 'llms_voucher_used', array( $this, 'voucher_used' ), 10, 3 );
 
-		// Engagements (Work in progress)
+		// Engagements (Work in progress).
 		add_filter( 'lifterlms_engagement_triggers', array( $this, 'engagement_triggers' ) );
 		add_filter( 'llms_metabox_fields_lifterlms_engagement', array( $this, 'engagement_fields' ) );
 		add_action( 'save_post', array( $this, 'save_engagement_data' ) );
 		add_action( 'wpf_tags_modified', array( $this, 'update_engagements' ), 10, 2 );
 
-		// Tracks
+		// Tracks.
 		add_action( 'lifterlms_track_completed', array( $this, 'track_complete' ), 10, 2 );
 		add_action( 'course_track_edit_form_fields', array( $this, 'course_track_form_fields' ), 10, 2 );
 		add_action( 'edited_course_track', array( $this, 'save_course_track_form_fields' ), 10, 2 );
 
-		// Groups (beta)
+		// Groups (beta).
 		add_action( 'llms_user_group_enrollment_created', array( $this, 'group_enrollment_created' ), 10, 2 );
 		add_action( 'llms_user_group_enrollment_updated', array( $this, 'group_enrollment_created' ), 10, 2 );
 		add_action( 'llms_user_enrollment_deleted', array( $this, 'group_unenrollment' ), 10, 4 );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 
-		// Settings
+		// Settings.
 		add_filter( 'llms_metabox_fields_lifterlms_membership', array( $this, 'membership_metabox' ) );
 		add_filter( 'llms_metabox_fields_lifterlms_course_options', array( $this, 'course_lesson_metabox' ) );
 		add_filter( 'llms_metabox_fields_lifterlms_lesson', array( $this, 'course_lesson_metabox' ) );
@@ -63,18 +86,18 @@ class WPF_LifterLMS extends WPF_Integrations_Base {
 		add_action( 'llms_builder_register_custom_fields', array( $this, 'quiz_settings' ), 100 );
 		add_action( 'save_post', array( $this, 'save_meta_box_data' ), 5 );
 
-		// Registration / profile / checkout stuff
+		// Registration / profile / checkout stuff.
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ), 20 );
 		add_filter( 'wpf_meta_fields', array( $this, 'prepare_meta_fields' ) );
 		add_filter( 'wpf_watched_meta_fields', array( $this, 'watch_meta_fields' ) );
 		add_filter( 'wpf_user_register', array( $this, 'user_register' ), 10, 2 );
 		add_filter( 'wpf_user_update', array( $this, 'user_register' ), 10, 2 );
-		//add_action( 'lifterlms_user_updated', array( $this, 'user_updated' ), 10, 3 );
+		// add_action( 'lifterlms_user_updated', array( $this, 'user_updated' ), 10, 3 );.
 
-		// Fix LifterLMS removing WPF's custom column
+		// Fix LifterLMS removing WPF's custom column.
 		add_filter( 'manage_lesson_posts_columns', array( wp_fusion()->admin_interfaces, 'bulk_edit_columns' ), 15, 1 );
 
-		// Batch operations
+		// Batch operations.
 		add_filter( 'wpf_export_options', array( $this, 'export_options' ) );
 		add_action( 'wpf_batch_lifter_memberships_init', array( $this, 'batch_init_memberships' ) );
 		add_action( 'wpf_batch_lifter_memberships', array( $this, 'batch_step_memberships' ) );
@@ -191,7 +214,7 @@ class WPF_LifterLMS extends WPF_Integrations_Base {
 				),
 				'desc'            => __( 'Apply these tags when a user is enrolled in this course.', 'wp-fusion' ),
 				'id'              => 'wpf-settings[apply_tags_start]',
-				'label'           => __( 'Apply tags when enrolled', 'wp-fusion' ),
+				'label'           => __( 'Apply Tags - Enrolled', 'wp-fusion' ),
 				'multi'           => '1',
 				'type'            => 'select',
 				'value'           => $values,
@@ -234,7 +257,7 @@ class WPF_LifterLMS extends WPF_Integrations_Base {
 			),
 			'desc'            => sprintf( __( 'Apply these tags when %s marked complete.', 'wp-fusion' ), $post->post_type ),
 			'id'              => 'wpf-settings[apply_tags_complete]',
-			'label'           => __( 'Apply tags - Completed', 'wp-fusion' ),
+			'label'           => __( 'Apply Tags - Completed', 'wp-fusion' ),
 			'multi'           => '1',
 			'type'            => 'select',
 			'value'           => $values,
@@ -298,21 +321,7 @@ class WPF_LifterLMS extends WPF_Integrations_Base {
 
 	public function quiz_settings( $fields ) {
 
-		$available_tags = wpf_get_option( 'available_tags', array() );
-
-		$data = array();
-
-		foreach ( $available_tags as $id => $label ) {
-
-			if ( is_array( $label ) ) {
-				$label = $label['label'];
-			}
-
-			$data[ $id ] = $label;
-
-		}
-
-		asort( $data );
+		$available_tags = wp_fusion()->settings->get_available_tags_flat( false );
 
 		$fields['quiz']['wp_fusion'] = array(
 			'title'      => 'WP Fusion',
@@ -323,16 +332,15 @@ class WPF_LifterLMS extends WPF_Integrations_Base {
 						'attribute' => 'apply_tags_attempted',
 						'label'     => __( 'Apply Tags - Quiz Attempted', 'wp-fusion' ),
 						'type'      => 'select',
-						'class'     => 'FOO',
 						'multiple'  => true,
-						'options'   => $data,
+						'options'   => $available_tags,
 					),
 					array(
 						'attribute' => 'apply_tags_passed',
 						'label'     => __( 'Apply Tags - Quiz Passed', 'wp-fusion' ),
 						'type'      => 'select',
 						'multiple'  => true,
-						'options'   => $data,
+						'options'   => $available_tags,
 					),
 				),
 			),
@@ -630,7 +638,7 @@ class WPF_LifterLMS extends WPF_Integrations_Base {
 					$achievements = LLMS()->achievements();
 					$achievements->trigger_engagement( $user_id, $award_id, $engagement_id );
 
-				} elseif( $type == 'certificate' && ! in_array( $award_id, $student_certificate_ids ) ) {
+				} elseif ( $type == 'certificate' && ! in_array( $award_id, $student_certificate_ids ) ) {
 
 					wpf_log( 'info', $user_id, 'User granted LifterLMS certificate <a href="' . get_edit_post_link( $award_id ) . '" target="_blank">' . get_the_title( $award_id ) . '</a> by tag <strong>' . wp_fusion()->user->get_tag_label( $tag ) . '</strong>', array( 'source' => 'lifterlms' ) );
 
@@ -638,9 +646,7 @@ class WPF_LifterLMS extends WPF_Integrations_Base {
 					$certificates->trigger_engagement( $user_id, $award_id, $engagement_id );
 
 				}
-
 			}
-
 		}
 
 	}
@@ -1129,12 +1135,7 @@ class WPF_LifterLMS extends WPF_Integrations_Base {
 
 				$enrollment_trigger = apply_filters( 'wpf_llms_course_enrollment_trigger', $enrollment_trigger );
 
-				// Prevent looping
-				remove_action( 'llms_user_enrolled_in_course', array( $this, 'course_begin' ), 10, 2 );
-
 				$student->enroll( $course_id, $enrollment_trigger );
-
-				add_action( 'llms_user_enrolled_in_course', array( $this, 'course_begin' ), 10, 2 );
 
 			} elseif ( ! in_array( $tag_id, $user_tags ) && llms_is_user_enrolled( $user_id, $course_id ) ) {
 
@@ -1164,32 +1165,41 @@ class WPF_LifterLMS extends WPF_Integrations_Base {
 
 	public function course_begin( $user_id, $course_id ) {
 
-		$wpf_settings = get_post_meta( $course_id, 'wpf-settings', true );
+		$settings = get_post_meta( $course_id, 'wpf-settings', true );
 
-		if ( ! empty( $wpf_settings ) ) {
+		if ( ! empty( $settings ) ) {
 
 			$student            = new LLMS_Student( $user_id );
 			$enrollment_trigger = $student->get_enrollment_trigger( $course_id );
 
 			if ( 0 === strpos( $enrollment_trigger, 'membership_' ) ) {
-				return; // Don't apply the tags if the student was added to the course via a membership
+				return; // don't apply tags if they were added via a membership.
 			}
 
-			// Prevent looping
-			remove_action( 'wpf_tags_modified', array( $this, 'update_course_membership_enrollments' ), 10, 2 );
+			$apply_tags = array();
 
-			if ( ! empty( $wpf_settings['apply_tags_start'] ) ) {
-				wp_fusion()->user->apply_tags( $wpf_settings['apply_tags_start'], $user_id );
+			if ( ! empty( $settings['apply_tags_start'] ) ) {
+				$apply_tags = array_merge( $apply_tags, $settings['apply_tags_start'] );
 			}
 
-			if ( ! empty( $wpf_settings['link_tag'] ) ) {
-				wp_fusion()->user->apply_tags( $wpf_settings['link_tag'], $user_id );
+			if ( ! empty( $settings['link_tag'] ) && ! doing_action( 'wpf_tags_modified' ) ) {
+				// Don't apply any linked tag if they were enrolled by WPF.
+				$apply_tags = array_merge( $apply_tags, $settings['link_tag'] );
 			}
 
-			add_action( 'wpf_tags_modified', array( $this, 'update_course_membership_enrollments' ), 10, 2 );
+			if ( ! empty( $apply_tags ) ) {
 
+				// Prevent looping.
+				remove_action( 'wpf_tags_modified', array( $this, 'update_course_membership_enrollments' ), 10, 2 );
+
+				wpf_log( 'info', $user_id, 'User was enrolled in LifterLMS course <a href="' . admin_url( 'post.php?post=' . $course_id . '&action=edit' ) . '" target="_blank">' . get_the_title( $course_id ) . '</a>. Applying tags.' );
+
+				wp_fusion()->user->apply_tags( $apply_tags, $user_id );
+
+				add_action( 'wpf_tags_modified', array( $this, 'update_course_membership_enrollments' ), 10, 2 );
+
+			}
 		}
-
 	}
 
 	/**
@@ -1201,11 +1211,7 @@ class WPF_LifterLMS extends WPF_Integrations_Base {
 
 	public function course_lesson_complete( $user_id, $post_id ) {
 
-		$wpf_settings = get_post_meta( $post_id, 'wpf-settings', true );
-
-		if ( ! empty( $wpf_settings ) && ! empty( $wpf_settings['apply_tags_complete'] ) ) {
-			wp_fusion()->user->apply_tags( $wpf_settings['apply_tags_complete'], $user_id );
-		}
+		$settings = get_post_meta( $post_id, 'wpf-settings', true );
 
 		if ( get_post_type( $post_id ) == 'course' ) {
 
@@ -1215,6 +1221,10 @@ class WPF_LifterLMS extends WPF_Integrations_Base {
 
 			update_user_meta( $user_id, 'llms_last_lesson_completed', get_the_title( $post_id ) );
 
+		}
+
+		if ( ! empty( $settings ) && ! empty( $settings['apply_tags_complete'] ) ) {
+			wp_fusion()->user->apply_tags( $settings['apply_tags_complete'], $user_id );
 		}
 
 	}
@@ -1447,9 +1457,9 @@ class WPF_LifterLMS extends WPF_Integrations_Base {
 
 	public function get_tag_select_values( $settings ) {
 
-		$available_tags = wpf_get_option( 'available_tags', array() );
+		$available_tags = wp_fusion()->settings->get_available_tags_flat( false );
 
-		// Handling for user created tags (like with ActiveCampaign)
+		// Handling for user created tags (like with ActiveCampaign).
 		if ( is_array( wp_fusion()->crm->supports ) && in_array( 'add_tags', wp_fusion()->crm->supports ) ) {
 
 			$tags_added         = false;
@@ -1477,28 +1487,18 @@ class WPF_LifterLMS extends WPF_Integrations_Base {
 
 		$values = array();
 
-		if ( is_array( reset( $available_tags ) ) ) {
+		foreach ( $available_tags as $id => $label ) {
 
-			foreach ( $available_tags as $id => $data ) {
-				$values[] = array(
-					'key'   => $id,
-					'title' => $data['label'],
-				);
+			// Fix for LLMS auto-selecting "0" if available in $values
+			if ( empty( $label ) ) {
+				continue;
 			}
-		} else {
-			foreach ( $available_tags as $id => $label ) {
 
-				// Fix for LLMS auto-selecting "0" if available in $values
-				if ( empty( $label ) ) {
-					continue;
-				}
+			$values[] = array(
+				'key'   => $id,
+				'title' => $label,
+			);
 
-				$values[] = array(
-					'key'   => $id,
-					'title' => $label,
-				);
-
-			}
 		}
 
 		return $values;

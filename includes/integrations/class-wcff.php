@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_WCFF extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'wcff';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Wc Fields Factory';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_WCFF extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'wcff';
 
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ), 15 );
 		add_filter( 'wpf_meta_fields', array( $this, 'set_contact_field_names' ), 30 );

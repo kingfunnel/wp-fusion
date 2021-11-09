@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Woo_Memberships_Teams extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'woo-memberships-teams';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'WooCommerce memberships teams';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/teams-for-woocommerce-memberships/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_Woo_Memberships_Teams extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'woo-memberships-teams';
 
 		add_action( 'wc_memberships_for_teams_add_team_member', array( $this, 'add_team_member' ), 10, 3 );
 		add_action( 'wc_memberships_for_teams_after_remove_team_member', array( $this, 'after_remove_team_member' ), 10, 3 );

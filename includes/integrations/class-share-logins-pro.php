@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Share_Logins_Pro extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'share-logins-pro';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Share logins pro';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/other/share-logins-pro/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_Share_Logins_Pro extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'share-logins-pro';
 
 		add_filter( 'option_share-logins_basics', array( $this, 'register_meta_fields' ), 10, 2 );
 		add_action( 'wpf_tags_applied', array( $this, 'tags_modified' ), 10, 2 );

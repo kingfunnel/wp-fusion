@@ -6,6 +6,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class WPF_Elementor extends WPF_Integrations_Base {
 
+	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'elementor';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Elementor';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/page-builders/elementor/';
+
 
 	/**
 	 * Gets things started
@@ -16,8 +41,6 @@ class WPF_Elementor extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'elementor';
 
 		add_filter( 'wpf_meta_box_post_types', array( $this, 'unset_wpf_meta_boxes' ) );
 
@@ -68,10 +91,10 @@ class WPF_Elementor extends WPF_Integrations_Base {
 
 		$element->start_controls_section(
 			'wpf_tags_section',
-			[
+			array(
 				'label' => __( 'WP Fusion', 'wp-fusion' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_ADVANCED,
-			]
+			)
 		);
 
 		$element->end_controls_section();
@@ -107,7 +130,7 @@ class WPF_Elementor extends WPF_Integrations_Base {
 
 		$element->add_control(
 			'wpf_visibility',
-			[
+			array(
 				'label'       => __( 'Visibility', 'wp-fusion' ),
 				'type'        => \Elementor\Controls_Manager::SELECT,
 				'default'     => 'everyone',
@@ -118,52 +141,52 @@ class WPF_Elementor extends WPF_Integrations_Base {
 				),
 				'multiple'    => false,
 				'label_block' => true,
-			]
+			)
 		);
 
 		$element->add_control(
 			'wpf_tags',
-			[
+			array(
 				'label'       => sprintf( __( 'Required %s Tags (Any)', 'wp-fusion' ), wp_fusion()->crm->name ),
 				'type'        => \Elementor\Controls_Manager::SELECT2,
 				'options'     => $data,
 				'multiple'    => true,
 				'label_block' => true,
 				'condition'   => array(
-					'wpf_visibility' => [ 'loggedin', 'everyone' ],
+					'wpf_visibility' => array( 'loggedin', 'everyone' ),
 				),
-				//'description' => __( 'The user must be logged in and have at least one of the tags specified to access the content.', 'wp-fusion' ),
-			]
+				// 'description' => __( 'The user must be logged in and have at least one of the tags specified to access the content.', 'wp-fusion' ),
+			)
 		);
 
 		$element->add_control(
 			'wpf_tags_all',
-			[
+			array(
 				'label'       => sprintf( __( 'Required %s Tags (All)', 'wp-fusion' ), wp_fusion()->crm->name ),
 				'type'        => \Elementor\Controls_Manager::SELECT2,
 				'options'     => $data,
 				'multiple'    => true,
 				'label_block' => true,
 				'condition'   => array(
-					'wpf_visibility' => [ 'loggedin', 'everyone' ],
+					'wpf_visibility' => array( 'loggedin', 'everyone' ),
 				),
-				//'description' => __( 'The user must be logged in and have <em>all</em> of the tags specified to access the content.', 'wp-fusion' ),
-			]
+				// 'description' => __( 'The user must be logged in and have <em>all</em> of the tags specified to access the content.', 'wp-fusion' ),
+			)
 		);
 
 		$element->add_control(
 			'wpf_tags_not',
-			[
+			array(
 				'label'       => sprintf( __( 'Required %s Tags (Not)', 'wp-fusion' ), wp_fusion()->crm->name ),
 				'type'        => \Elementor\Controls_Manager::SELECT2,
 				'options'     => $data,
 				'multiple'    => true,
 				'label_block' => true,
 				'condition'   => array(
-					'wpf_visibility' => [ 'everyone', 'loggedin' ],
+					'wpf_visibility' => array( 'everyone', 'loggedin' ),
 				),
 				'description' => __( 'If the user is logged in and has any of these tags, the content will be hidden.', 'wp-fusion' ),
-			]
+			)
 		);
 
 		do_action( 'wpf_elementor_controls_section', $element );
@@ -360,14 +383,14 @@ class WPF_Elementor extends WPF_Integrations_Base {
 
 		$element->add_control(
 			'wpf_filter_queries',
-			[
+			array(
 				'label'       => __( 'Filter Queries', 'wp-fusion' ),
 				'description' => __( 'Filter results based on WP Fusion access rules', 'wp-fusion' ),
 				'type'        => \Elementor\Controls_Manager::SWITCHER,
 				'label_block' => false,
 				'show_label'  => true,
 				'separator'   => 'before',
-			]
+			)
 		);
 
 	}
@@ -387,40 +410,27 @@ class WPF_Elementor extends WPF_Integrations_Base {
 			return $query_args;
 		}
 
-		// No need to do this again if WPF is already doing it globally
+		// No need to do this again if WPF is already doing it globally.
 
-		if ( 'advanced' == wpf_get_option( 'hide_archives' ) ) {
+		if ( 'advanced' === wpf_get_option( 'hide_archives' ) ) {
 			return $query_args;
 		}
 
-		$args = array(
-			'post_type'  => $query_args['post_type'],
-			'nopaging'   => true,
-			'fields'     => 'ids',
-			'meta_query' => array(
-				array(
-					'key'     => 'wpf-settings',
-					'compare' => 'EXISTS',
-				),
-			),
-		);
+		if ( wpf_admin_override() ) {
+			return $query_args;
+		}
 
-		$post_ids = get_posts( $args );
+		// This lets everyone know WP Fusion is messing with the query, and also
+		// enables the posts_where filter in WPF_Access_Control.
+
+		$query_args['wpf_filtering_query'] = true;
+
+		// Exclude any restricted post IDs.
+
+		$post_ids = wp_fusion()->access->get_restricted_posts( $query_args['post_type'] );
 
 		if ( ! empty( $post_ids ) ) {
-
-			if ( ! isset( $query_args['post__not_in'] ) ) {
-				$query_args['post__not_in'] = array();
-			}
-
-			foreach ( $post_ids as $post_id ) {
-
-				if ( ! wp_fusion()->access->user_can_access( $post_id ) ) {
-
-					$query_args['post__not_in'][] = $post_id;
-
-				}
-			}
+			$query_args['post__not_in'] = $post_ids;
 		}
 
 		return $query_args;

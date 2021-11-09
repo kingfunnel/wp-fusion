@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Uncanny_Groups extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'uncanny-groups';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Uncanny groups';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_Uncanny_Groups extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'uncanny-groups';
 
 		add_action( 'ulgm_group_user_invited', array( $this, 'group_user_added' ), 10, 3 );
 		add_action( 'ulgm_existing_group_user_added', array( $this, 'group_user_added' ), 10, 3 );
@@ -38,16 +61,19 @@ class WPF_Uncanny_Groups extends WPF_Integrations_Base {
 
 		$product_id = uncanny_learndash_groups\SharedFunctions::get_product_id_from_group_id( $group_id );
 
-		$license = get_post_meta( $product_id['product_id'], '_ulgm_license', true );
+		if ( ! empty( $product_id ) ) {
 
-		$settings = get_post_meta( $license[0], 'wpf-settings-woo', true );
+			$license = get_post_meta( $product_id['product_id'], '_ulgm_license', true );
 
-		if ( ! empty( $settings ) && ! empty( $settings['apply_tags_group_user_added'] ) ) {
+			$settings = get_post_meta( $license[0], 'wpf-settings-woo', true );
 
-			$user = get_user_by( 'email', $user_data['user_email'] );
+			if ( ! empty( $settings ) && ! empty( $settings['apply_tags_group_user_added'] ) ) {
 
-			wp_fusion()->user->apply_tags( $settings['apply_tags_group_user_added'], $user->ID );
+				$user = get_user_by( 'email', $user_data['user_email'] );
 
+				wp_fusion()->user->apply_tags( $settings['apply_tags_group_user_added'], $user->ID );
+
+			}
 		}
 
 	}
@@ -71,7 +97,7 @@ class WPF_Uncanny_Groups extends WPF_Integrations_Base {
 
 		if ( is_array( $post_data['user_email'] ) ) {
 
-			$user = get_userdata( $user_id );
+			$user                    = get_userdata( $user_id );
 			$post_data['user_email'] = $user->user_email;
 
 		}

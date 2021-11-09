@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_CPT_UI extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'cpt-ui';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'CPT-UI';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_CPT_UI extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'cpt-ui';
 
 		add_action( 'cptui_post_type_after_fieldsets', array( $this, 'admin_settings' ) );
 		add_action( 'cptui_after_update_post_type', array( $this, 'save_post_type' ) );
@@ -89,7 +112,8 @@ class WPF_CPT_UI extends WPF_Integrations_Base {
 			'setting'   => $settings['allow_tags'],
 			'meta_name' => 'wpf-settings',
 			'field_id'  => 'allow_tags',
-			'disabled'  => ! $settings['lock_content']
+			'disabled'  => ! $settings['lock_content'],
+			'read_only' => true,
 		);
 
 		wpf_render_tag_multiselect( $args );
@@ -113,20 +137,21 @@ class WPF_CPT_UI extends WPF_Integrations_Base {
 
 		foreach ( $post_types as $post_type ) {
 
-			$posts = get_posts( array(
-				'post_type'      => $post_type,
-				'posts_per_page' => 200,
-				'orderby'        => 'post_title',
-				'order'          => 'ASC'
-			) );
+			$posts = get_posts(
+				array(
+					'post_type'      => $post_type,
+					'posts_per_page' => 200,
+					'orderby'        => 'post_title',
+					'order'          => 'ASC',
+				)
+			);
 
 			foreach ( $posts as $post ) {
 				$available_posts[ $post_type ][ $post->ID ] = $post->post_title;
 			}
-
 		}
 
-		echo '<select' . ( $settings['lock_content'] == 1 ? "" : ' disabled' ) . ' id="wpf-redirect" class="select4-search" style="width: 100%;" data-placeholder="None" name="wpf-settings[redirect]">';
+		echo '<select' . ( $settings['lock_content'] == 1 ? '' : ' disabled' ) . ' id="wpf-redirect" class="select4-search" style="width: 100%;" data-placeholder="None" name="wpf-settings[redirect]">';
 
 		echo '<option></option>';
 
@@ -163,10 +188,10 @@ class WPF_CPT_UI extends WPF_Integrations_Base {
 
 	public function save_post_type( $data ) {
 
-		if ( isset( $data['wpf-settings'] ) ) {
+		if ( isset( $_POST['wpf-settings'] ) ) {
 
 			$settings = wpf_get_option( 'post_type_rules', array() );
-			$settings[ $data['cpt_custom_post_type']['name'] ] = $data['wpf-settings'];
+			$settings[ $data['cpt_custom_post_type']['name'] ] = $_POST['wpf-settings'];
 
 			wp_fusion()->settings->set( 'post_type_rules', $settings );
 

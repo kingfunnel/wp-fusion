@@ -9,6 +9,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_LearnDash extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'learndash';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'LearnDash';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/learning-management/learndash/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -17,8 +42,6 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'learndash';
 
 		add_action( 'learndash_course_completed', array( $this, 'course_completed' ), 5 );
 		add_action( 'learndash_lesson_completed', array( $this, 'lesson_completed' ), 5 );
@@ -42,6 +65,8 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 
 		// Filter Course Steps.
 		add_filter( 'get_post_metadata', array( $this, 'filter_course_steps' ), 10, 4 );
+		add_filter( 'sfwd_lms_has_access', array( $this, 'has_access' ), 10, 3 );
+		add_filter( 'learndash_can_user_read_step', array( $this, 'can_user_read_step' ), 10, 3 );
 
 		// Settings.
 		add_action( 'add_meta_boxes', array( $this, 'configure_meta_box' ) );
@@ -86,6 +111,13 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 		// Send auto-generated passwords on user registration
 		add_filter( 'random_password', array( $this, 'push_password' ) );
 
+		// Detect LearnDash for WooCommerce plugin
+		add_action( 'added_user_meta', array( $this, 'maybe_add_learndash_woocommerce_plugin_source' ), 10, 4 );
+		add_action( 'updated_user_meta', array( $this, 'maybe_add_learndash_woocommerce_plugin_source' ), 10, 4 );
+
+		// Uncanny Toolkit Pro compatibility
+		add_action( 'wp_fusion_init', array( $this, 'uncanny_toolkit_pro_compatibility' ) );
+
 		// Export functions
 		add_filter( 'wpf_export_options', array( $this, 'export_options' ) );
 		add_filter( 'wpf_batch_learndash_courses_init', array( $this, 'batch_init' ) );
@@ -95,7 +127,6 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 		add_action( 'wpf_batch_learndash_courses', array( $this, 'batch_step_courses' ) );
 		add_action( 'wpf_batch_learndash_progress', array( $this, 'batch_step_progress' ) );
 		add_action( 'wpf_batch_learndash_groups', array( $this, 'batch_step_groups' ) );
-
 	}
 
 	/**
@@ -146,7 +177,6 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 	 */
 
 	public function quiz_completed( $data, $user ) {
-
 		if ( isset( $data['quiz']->ID ) ) {
 			$quiz_id = $data['quiz']->ID;
 		} else {
@@ -160,24 +190,35 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 			return;
 		}
 
+		$update_data = array();
+
 		// Add final score to CRM field.
 		if ( ! empty( $settings['final_score_field'] ) && ! empty( $settings['final_score_field']['crm_field'] ) ) {
+			$update_data[ $settings['final_score_field']['crm_field'] ] = $data['score'];
+		}
 
-			$contact_id = wp_fusion()->user->get_contact_id();
+		// Add final points to CRM field.
+		if ( ! empty( $settings['final_points_field'] ) && ! empty( $settings['final_points_field']['crm_field'] ) ) {
+			$update_data[ $settings['final_points_field']['crm_field'] ] = $data['points'];
+		}
 
-			if ( empty( $contact_id ) ) {
-				return;
-			}
+		$contact_id = wp_fusion()->user->get_contact_id( $user->ID );
 
-			$update_data = array(
-				$settings['final_score_field']['crm_field'] => $data['score'],
-			);
+		if ( empty( $contact_id ) ) {
+			return;
+		}
 
-			wpf_log( 'info', $user->ID, 'Syncing <a href="' . admin_url( 'post.php?post=' . $quiz_id . '&action=edit' ) . '">' . get_the_title( $quiz_id ) . '</a> quiz score to ' . wp_fusion()->crm->name . ':', array( 'meta_array_nofilter' => $update_data ) );
+		if ( ! empty( $update_data ) ) {
+
+			// Sync fields.
+
+			wpf_log( 'info', $user->ID, 'Syncing <a href="' . admin_url( 'post.php?post=' . $quiz_id . '&action=edit' ) . '">' . get_the_title( $quiz_id ) . '</a> quiz fields to ' . wp_fusion()->crm->name . ':', array( 'meta_array_nofilter' => $update_data ) );
 
 			wp_fusion()->crm->update_contact( $contact_id, $update_data, false );
 
 		}
+
+		// Apply tags.
 
 		if ( $data['pass'] == true && ! empty( $settings['apply_tags_ld'] ) ) {
 
@@ -362,11 +403,50 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 
 	public function update_user_activity( $args ) {
 
+		// Save the user activity.
+
 		if ( ! empty( $args['course_id'] ) ) {
 
 			remove_action( 'learndash_update_user_activity', array( $this, 'update_user_activity' ), 10, 1 );
 
 			update_user_meta( $args['user_id'], 'ld_last_course_progressed', get_the_title( $args['course_id'] ) );
+
+		}
+
+		// Sync the course progress with the CRM.
+
+		if ( ! empty( $args['course_id'] ) && ! empty( $args['user_id'] ) ) {
+
+			$settings = get_post_meta( $args['course_id'], 'wpf-settings-learndash', true );
+
+			if ( empty( $settings ) ) {
+				return;
+			}
+			if ( empty( $settings['progress_field']['crm_field'] ) ) {
+				return;
+			}
+
+			$progress = learndash_course_progress(
+				array(
+					'user_id'   => $args['user_id'],
+					'course_id' => $args['course_id'],
+					'array'     => true,
+				)
+			);
+
+			if ( empty( $progress ) ) {
+				return;
+			}
+
+			$update_data = array(
+				$settings['progress_field']['crm_field'] => $progress['percentage'],
+			);
+
+			wpf_log( 'info', $args['user_id'], 'Syncing <a href="' . admin_url( 'post.php?post=' . $args['course_id'] . '&action=edit' ) . '">' . get_the_title( $args['course_id'] ) . '</a> course progress to ' . wp_fusion()->crm->name . ':', array( 'meta_array_nofilter' => $update_data ) );
+
+			$contact_id = wpf_get_contact_id( $args['user_id'] );
+
+			wp_fusion()->crm->update_contact( $contact_id, $update_data, false );
 
 		}
 
@@ -412,15 +492,19 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 	 *
 	 * @since  3.36.16
 	 *
-	 * @param  bool  $can_read  Can the user read the step?
-	 * @param  int   $step_id   The step ID.
-	 * @param  int   $course_id The course ID.
+	 * @param  bool $can_read  Can the user read the step?
+	 * @param  int  $step_id   The step ID.
+	 * @param  int  $course_id The course ID.
 	 * @return bool  True if user able to read step, False otherwise.
 	 */
 	public function can_user_read_step( $can_read, $step_id, $course_id ) {
 
 		if ( ! $can_read ) {
 			return $can_read;
+		}
+
+		if ( learndash_is_course_shared_steps_enabled() ) {
+			return $can_read; // this doesn't work with shared steps.
 		}
 
 		if ( is_admin() || wpf_admin_override() ) {
@@ -462,7 +546,8 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 			// Reduce the course step count.
 
 			add_filter(
-				'learndash-course-progress-stats', function( $progress ) {
+				'learndash-course-progress-stats',
+				function( $progress ) {
 
 					if ( is_array( $progress ) && ! empty( $progress['total'] ) ) {
 						$progress['total'] -= 1;
@@ -494,9 +579,9 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 	 */
 	public function filter_course_steps( $value, $post_id, $meta_key, $single ) {
 
-		if ( 'ld_course_steps' === $meta_key ) {
+		if ( 'ld_course_steps' === $meta_key && learndash_is_course_shared_steps_enabled() ) { // only works with shared course steps.
 
-			if ( is_admin() || wpf_admin_override() ) {
+			if ( is_admin() || wpf_admin_override() || wp_doing_cron() ) {
 				return $value; // Don't need to do anything.
 			}
 
@@ -506,10 +591,8 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 
 			$settings = get_post_meta( $post_id, 'wpf-settings-learndash', true );
 
-			if ( ! empty( $settings ) && 'filter_steps' === $settings['step_display'] ) {
-
+			if ( ! empty( $settings ) && isset( $settings['step_display'] ) && 'filter_steps' === $settings['step_display'] ) {
 				$should_filter = true;
-
 			}
 
 			// If query filtering is on.
@@ -559,15 +642,45 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 							}
 						}
 					}
-				}
 
-				if ( $single ) {
-					$value = array( $value ); // get_metadata_raw will return $value[0] if $single is true and the response from the filter is non-null.
+					if ( $single && is_array( $value ) ) {
+						$value = array( $value ); // get_metadata_raw will return $value[0] if $single is true and the response from the filter is non-null.
+					}
 				}
 			}
 		}
 
 		return $value;
+
+	}
+
+	/**
+	 * This works to hide the lessons in focus mode with the BuddyBoss theme
+	 * when Filter Course Steps is on.
+	 *
+	 * @since  3.38.22
+	 *
+	 * @param  bool $has_access Indicates if the user has access.
+	 * @param  int  $post_id    The course ID.
+	 * @param  int  $user_id    The user ID.
+	 * @return bool  Whether or not the user can access the lesson.
+	 */
+	public function has_access( $has_access, $post_id, $user_id ) {
+
+		if ( true === $has_access ) {
+
+			$course_id = learndash_get_course_id( $post_id );
+			$settings  = get_post_meta( $course_id, 'wpf-settings-learndash', true );
+
+			if ( ! empty( $settings ) && isset( $settings['step_display'] ) && 'filter_steps' === $settings['step_display'] ) {
+
+				if ( ! wpf_user_can_access( $post_id, $user_id ) ) {
+					$has_access = false;
+				}
+			}
+		}
+
+		return $has_access;
 
 	}
 
@@ -583,7 +696,7 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 	 */
 	public function lesson_row_class( $class, $item = false ) {
 
-		if ( false == $item ) {
+		if ( false === $item ) {
 			return $class;  // at the moment learndash-nav-widget-lesson-class is hooked to this
 							// function but we're waiting for an update from LD to pass the
 							// second parameter.
@@ -592,7 +705,7 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 		if ( is_a( $item, 'WP_Post' ) ) {
 			$id = $item->ID; // Topics
 		} else {
-			$id = $item['id']; // Lessons
+			$id = ( isset( $item['id'] ) ? $item['id'] : 0 ); // Lessons
 		}
 
 		$course_id = learndash_get_course_id( $id );
@@ -629,12 +742,16 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 	 * @return array The attributes.
 	 */
 	public function lesson_attributes( $attributes, $lesson ) {
-
-		$course_id = learndash_get_course_id( $lesson['id'] );
+		$lesson_id = ( isset( $lesson['id'] ) ? $lesson['id'] : 0 );
+		$course_id = learndash_get_course_id( $lesson_id );
 		$settings  = get_post_meta( $course_id, 'wpf-settings-learndash', true );
 
 		if ( empty( $settings ) ) {
 			return $attributes;
+		}
+
+		if ( ! sfwd_lms_has_access( $lesson['id'] ) ) {
+			return $attributes; // only applies to content not protected by LearnDash.
 		}
 
 		if ( empty( $settings['step_display'] ) && ! empty( $settings['lock_lessons'] ) ) {
@@ -643,7 +760,7 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 
 		if ( ! empty( $settings['step_display'] ) && 'lock_lessons' === $settings['step_display'] ) {
 
-			if ( ! wpf_user_can_access( $lesson['id'] ) ) {
+			if ( ! wpf_user_can_access( $lesson_id ) ) {
 
 				$attribute = array(
 					'label' => isset( $settings['lesson_locked_text'] ) ? $settings['lesson_locked_text'] : '',
@@ -654,7 +771,7 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 				// Classes can be ld-status-complete, ld-status-waiting, ld-status-unlocked, ld-status-incomplete
 				// Icons can be any of the ld-icon-* classes, for example ld-icon-calendar
 
-				$attributes[] = apply_filters( 'wpf_learndash_lesson_locked_attributes', $attribute, $lesson['id'] );
+				$attributes[] = apply_filters( 'wpf_learndash_lesson_locked_attributes', $attribute, $lesson_id );
 
 			}
 		}
@@ -767,6 +884,7 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 			'apply_tags_ld_essay_submitted' => array(),
 			'apply_tags_ld_quiz_fail'       => array(),
 			'final_score_field'             => array( 'crm_field' => false ),
+			'final_points_field'            => array( 'crm_field' => false ),
 		);
 
 		$settings = array_merge( $defaults, $settings );
@@ -824,6 +942,13 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 
 			echo '</p>';
 
+			// Add final points field
+			echo '<p><label for="final_score_field"><small>' . sprintf( __( 'Sync final points for this quiz to a custom field in %s', 'wp-fusion' ), wp_fusion()->crm->name ) . ':</small></label>';
+
+			wpf_render_crm_field_select( $settings['final_points_field']['crm_field'], 'wpf-settings', 'final_points_field' );
+
+			echo '</p>';
+
 		}
 
 	}
@@ -844,6 +969,75 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 			return;
 		}
 		add_meta_box( 'wpf-learndash-meta', __( 'WP Fusion - Question Settings', 'wp-fusion' ), array( $this, 'meta_box_callback_question' ), 'sfwd-question' );
+
+	}
+
+	/**
+	 * Displays progress field on the course settings panel.
+	 *
+	 * @since 3.38.16
+	 *
+	 * @param array $field_args The field arguments.
+	 * @return mixed HTML Output.
+	 */
+	public function display_crm_field_dropdown( $field_args ) {
+
+		$settings = get_post_meta( get_the_ID(), 'wpf-settings-learndash', true );
+
+		if ( empty( $settings ) ) {
+			$settings = array();
+		}
+
+		if ( ! isset( $settings[ $field_args['name'] ] ) ) {
+			$settings[ $field_args['name'] ] = array( 'crm_field' => false );
+		}
+
+		wpf_render_crm_field_select( $settings[ $field_args['name'] ]['crm_field'], 'wpf-settings-learndash', $field_args['name'] );
+
+		echo '<p style="margin-top:5px;" class="description">' . esc_html( $field_args['desc'] ) . '</p>';
+
+	}
+
+	/**
+	 * Display tags select input for assignment upload setting
+	 *
+	 * @access public
+	 * @return mixed HTML output
+	 */
+
+	public function display_wpf_tags_select( $field_args ) {
+
+		global $post;
+
+		$settings = get_post_meta( $post->ID, 'wpf-settings-learndash', true );
+
+		if ( empty( $settings ) ) {
+			$settings = array();
+		}
+
+		if ( ! isset( $settings[ $field_args['name'] ] ) ) {
+			$settings[ $field_args['name'] ] = array();
+		}
+
+		$args = array(
+			'setting'   => $settings[ $field_args['name'] ],
+			'meta_name' => 'wpf-settings-learndash',
+			'field_id'  => $field_args['name'],
+		);
+
+		if ( isset( $field_args['limit'] ) ) {
+			$args['limit'] = $field_args['limit'];
+		}
+
+		if ( 'apply_tags_enrolled' == $field_args['name'] ) {
+			$args['no_dupes'] = array( 'wpf-settings-learndash-tag_link' );
+		} elseif ( 'tag_link' == $field_args['name'] ) {
+			$args['no_dupes'] = array( 'wpf-settings-learndash-apply_tags_enrolled' );
+		}
+
+		wpf_render_tag_multiselect( $args );
+
+		echo '<p style="margin-top:5px;" class="description">' . $field_args['desc'] . '</p>';
 
 	}
 
@@ -929,9 +1123,9 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 
 			$filter_steps_subfields = array(
 				'lesson_locked_text' => array(
-					'name'  => 'lesson_locked_text',
-					'id'    => 'learndash-course-access-settings_course_step_display_lesson_locked_text',
-					'args'  => array(
+					'name' => 'lesson_locked_text',
+					'id'   => 'learndash-course-access-settings_course_step_display_lesson_locked_text',
+					'args' => array(
 						'name'             => 'learndash-course-access-settings[lesson_locked_text]',
 						'label'            => sprintf( __( 'Locked %s Text', 'wp-fusion' ), LearnDash_Custom_Label::get_label( 'lesson' ) ),
 						'type'             => 'text',
@@ -965,7 +1159,7 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 					'limit'            => 1,
 					'help_text'        => sprintf( __( 'For more information on these settings, %1$ssee our documentation%2$s.', 'wp-fusion' ), '<a href="https://wpfusion.com/documentation/learning-management/learndash/#course-specific-settings" target="_blank">', '</a>' ),
 				),
-				'step_display' => array(
+				'step_display'        => array(
 					'name'    => 'step_display',
 					'label'   => sprintf( __( 'WP Fusion - %s Navigation', 'wp-fusion' ), LearnDash_Custom_Label::get_label( 'course' ) ),
 					'type'    => 'radio',
@@ -981,9 +1175,9 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 								wp_fusion()->crm->name
 							),
 						),
-						'lock_lessons'      => array(
-							'label'       => sprintf( __( 'Lock %s', 'wp-fusion' ), learndash_get_custom_label_lower( 'lessons' ) ),
-							'description' => sprintf(
+						'lock_lessons' => array(
+							'label'               => sprintf( __( 'Lock %s', 'wp-fusion' ), learndash_get_custom_label_lower( 'lessons' ) ),
+							'description'         => sprintf(
 								// translators: placeholder: course.
 								esc_html_x( 'Content that a user cannot access will show as disabled in the %s navigation.', 'placeholder: course', 'wp-fusion' ),
 								learndash_get_custom_label_lower( 'course' )
@@ -993,17 +1187,24 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 							),
 							'inner_section_state' => ( 'lock_lessons' === $settings['step_display'] ) ? 'open' : 'closed',
 						),
-						'filter_steps'    => array(
-							'label'               => sprintf( __( 'Filter %s steps', 'wp-fusion' ), learndash_get_custom_label_lower( 'course' ) ),
-							'description'         => sprintf(
+						'filter_steps' => array(
+							'label'       => sprintf( __( 'Filter %s steps', 'wp-fusion' ), learndash_get_custom_label_lower( 'course' ) ),
+							'description' => sprintf(
 								// translators: placeholder: course, course.
 								esc_html_x( '%1$s, topics, and quizzes that a user doesn\'t have access to will be removed from the %2$s navigation, and won\'t be required for course completion.', 'placeholder: lessons, course', 'wp-fusion' ),
 								LearnDash_Custom_Label::get_label( 'lessons' ),
 								learndash_get_custom_label_lower( 'course' )
 							),
 						),
-					)
-				)
+					),
+				),
+				'progress_field'      => array(
+					'name'             => 'progress_field',
+					'label'            => __( 'WP Fusion - Course Progress', 'wp-fusion' ),
+					'type'             => 'select',
+					'display_callback' => array( $this, 'display_crm_field_dropdown' ),
+					'desc'             => sprintf( __( 'As the user progresses through the course, their course completion percentage will be synced to the selected custom field in %s.', 'wp-fusion' ), wp_fusion()->crm->name ),
+				),
 			);
 
 			// Warning if course is open and a linked tag is set
@@ -1182,49 +1383,6 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 	}
 
 	/**
-	 * Display tags select input for assignment upload setting
-	 *
-	 * @access public
-	 * @return mixed HTML output
-	 */
-
-	public function display_wpf_tags_select( $field_args ) {
-
-		global $post;
-
-		$settings = get_post_meta( $post->ID, 'wpf-settings-learndash', true );
-
-		if ( empty( $settings ) ) {
-			$settings = array();
-		}
-
-		if ( ! isset( $settings[ $field_args['name'] ] ) ) {
-			$settings[ $field_args['name'] ] = array();
-		}
-
-		$args = array(
-			'setting'   => $settings[ $field_args['name'] ],
-			'meta_name' => 'wpf-settings-learndash',
-			'field_id'  => $field_args['name'],
-		);
-
-		if ( isset( $field_args['limit'] ) ) {
-			$args['limit'] = $field_args['limit'];
-		}
-
-		if ( 'apply_tags_enrolled' == $field_args['name'] ) {
-			$args['no_dupes'] = array( 'wpf-settings-learndash-tag_link' );
-		} elseif ( 'tag_link' == $field_args['name'] ) {
-			$args['no_dupes'] = array( 'wpf-settings-learndash-apply_tags_enrolled' );
-		}
-
-		wpf_render_tag_multiselect( $args );
-
-		echo '<p style="margin-top:5px;" class="description">' . $field_args['desc'] . '</p>';
-
-	}
-
-	/**
 	 * Runs when WPF meta box is saved on a course, lesson, or question
 	 *
 	 * @access public
@@ -1335,9 +1493,6 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 					$is_enrolled = false;
 				}
 
-				// Prevent looping
-				remove_action( 'learndash_update_course_access', array( $this, 'updated_course_access' ), 10, 4 );
-
 				if ( in_array( $tag_id, $user_tags ) && ! $is_enrolled && ! user_can( $user_id, 'manage_options' ) ) {
 
 					if ( in_array( $course_id, $groups_courses ) ) {
@@ -1372,8 +1527,6 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 
 				}
 
-				add_action( 'learndash_update_course_access', array( $this, 'updated_course_access' ), 10, 4 );
-
 			}
 		}
 
@@ -1407,13 +1560,6 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 
 		if ( ! empty( $linked_groups ) ) {
 
-			// Prevent looping
-			remove_action( 'ld_added_group_access', array( $this, 'added_group_access' ), 10, 2 );
-			remove_action( 'ld_removed_group_access', array( $this, 'removed_group_access' ), 10, 2 );
-
-			remove_action( 'ld_added_leader_group_access', array( $this, 'added_group_leader_access' ), 10, 2 );
-			remove_action( 'ld_removed_leader_group_access', array( $this, 'removed_group_leader_access' ), 10, 2 );
-
 			$user_tags = wp_fusion()->user->get_tags( $user_id ); // Get them here for cases where the tags might have changed since wpf_tags_modified was triggered
 
 			foreach ( $linked_groups as $group_id ) {
@@ -1432,17 +1578,27 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 
 					if ( in_array( $tag_id, $user_tags ) && learndash_is_user_in_group( $user_id, $group_id ) == false ) {
 
-						wpf_log( 'info', $user_id, 'User added to LearnDash group <a href="' . get_edit_post_link( $group_id ) . '" target="_blank">' . get_the_title( $group_id ) . '</a> by tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>' );
+						wpf_log( 'info', $user_id, 'User added to LearnDash group <a href="' . admin_url( 'post.php?post=' . $group_id . '&action=edit' ) . '" target="_blank">' . get_the_title( $group_id ) . '</a> by tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>' );
+
+						// Prevent looping.
+						remove_action( 'ld_added_group_access', array( $this, 'added_group_access' ), 10, 2 );
 
 						ld_update_group_access( $user_id, $group_id, $remove = false );
+
+						add_action( 'ld_added_group_access', array( $this, 'added_group_access' ), 10, 2 );
 
 						$updated = true;
 
 					} elseif ( ! in_array( $tag_id, $user_tags ) && learndash_is_user_in_group( $user_id, $group_id ) != false ) {
 
-						wpf_log( 'info', $user_id, 'User removed from LearnDash group <a href="' . get_edit_post_link( $group_id ) . '" target="_blank">' . get_the_title( $group_id ) . '</a> by tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>' );
+						wpf_log( 'info', $user_id, 'User removed from LearnDash group <a href="' . admin_url( 'post.php?post=' . $group_id . '&action=edit' ) . '" target="_blank">' . get_the_title( $group_id ) . '</a> by tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>' );
+
+						// Prevent looping.
+						remove_action( 'ld_removed_group_access', array( $this, 'removed_group_access' ), 10, 2 );
 
 						ld_update_group_access( $user_id, $group_id, $remove = true );
+
+						add_action( 'ld_removed_group_access', array( $this, 'removed_group_access' ), 10, 2 );
 
 						$updated = true;
 
@@ -1462,25 +1618,29 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 
 					if ( in_array( $tag_id, $user_tags ) && ! in_array( $user_id, $group_leader_ids ) ) {
 
-						wpf_log( 'info', $user_id, 'User added as leader to LearnDash group <a href="' . get_edit_post_link( $group_id ) . '" target="_blank">' . get_the_title( $group_id ) . '</a> by linked tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>' );
+						wpf_log( 'info', $user_id, 'User added as leader to LearnDash group <a href="' . admin_url( 'post.php?post=' . $group_id . '&action=edit' ) . '" target="_blank">' . get_the_title( $group_id ) . '</a> by linked tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>' );
+
+
+						// Prevent looping.
+						remove_action( 'ld_added_leader_group_access', array( $this, 'added_group_leader_access' ), 10, 2 );
 
 						ld_update_leader_group_access( $user_id, $group_id, $remove = false );
 
+						add_action( 'ld_added_leader_group_access', array( $this, 'added_group_leader_access' ), 10, 2 );
+
 					} elseif ( ! in_array( $tag_id, $user_tags ) && in_array( $user_id, $group_leader_ids ) ) {
 
-						wpf_log( 'info', $user_id, 'User removed as leader from LearnDash group <a href="' . get_edit_post_link( $group_id ) . '" target="_blank">' . get_the_title( $group_id ) . '</a> by linked tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>' );
+						wpf_log( 'info', $user_id, 'User removed as leader from LearnDash group <a href="' . admin_url( 'post.php?post=' . $group_id . '&action=edit' ) . '" target="_blank">' . get_the_title( $group_id ) . '</a> by linked tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>' );
+
+						remove_action( 'ld_removed_leader_group_access', array( $this, 'removed_group_leader_access' ), 10, 2 );
 
 						ld_update_leader_group_access( $user_id, $group_id, $remove = true );
+
+						add_action( 'ld_removed_leader_group_access', array( $this, 'removed_group_leader_access' ), 10, 2 );
 
 					}
 				}
 			}
-
-			add_action( 'ld_added_group_access', array( $this, 'added_group_access' ), 10, 2 );
-			add_action( 'ld_removed_group_access', array( $this, 'removed_group_access' ), 10, 2 );
-
-			add_action( 'ld_added_leader_group_access', array( $this, 'added_group_leader_access' ), 10, 2 );
-			add_action( 'ld_removed_leader_group_access', array( $this, 'removed_group_leader_access' ), 10, 2 );
 
 		}
 
@@ -1697,8 +1857,8 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 	 *
 	 * @since 3.36.8
 	 *
-	 * @param int   $user_id  The user ID.
-	 * @param int   $group_id The group ID.
+	 * @param int $user_id  The user ID.
+	 * @param int $group_id The group ID.
 	 */
 	public function added_group_leader_access( $user_id, $group_id ) {
 
@@ -1724,8 +1884,8 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 	 *
 	 * @since 3.36.8
 	 *
-	 * @param int   $user_id  The user ID.
-	 * @param int   $group_id The group ID.
+	 * @param int $user_id  The user ID.
+	 * @param int $group_id The group ID.
 	 */
 
 	public function removed_group_leader_access( $user_id, $group_id ) {
@@ -1776,7 +1936,7 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 
 			$apply_tags = array();
 
-			if ( ! empty( $settings['tag_link'] ) ) {
+			if ( ! empty( $settings['tag_link'] ) && ! doing_action( 'wpf_tags_modified' ) ) {
 				$apply_tags = array_merge( $apply_tags, $settings['tag_link'] );
 			}
 
@@ -1786,12 +1946,22 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 
 			if ( ! empty( $apply_tags ) ) {
 
-				wpf_log( 'info', $user_id, 'User was enrolled in LearnDash course <a href="' . admin_url( 'post.php?post=' . $course_id . '&action=edit' ) . '" target="_blank">' . get_the_title( $course_id ) . '</a>. Applying tags.' );
+				$message = 'User was enrolled in LearnDash course <a href="' . admin_url( 'post.php?post=' . $course_id . '&action=edit' ) . '" target="_blank">' . get_the_title( $course_id ) . '</a>';
+
+				// Safety check to see if this was triggered by the LD + Woo plugin.
+
+				$ld_woo_courses = get_user_meta( $user_id, '_learndash_woocommerce_enrolled_courses_access_counter', true );
+
+				if ( ! empty( $ld_woo_courses ) && isset( $ld_woo_courses[ $course_id ] ) ) {
+					$message .= ' by the <strong>LearnDash - WooCommerce plugin</strong>';
+				}
+
+				wpf_log( 'info', $user_id, $message . '. Applying tags.' );
 
 				wp_fusion()->user->apply_tags( $apply_tags, $user_id );
 
 			}
-		} elseif ( ! empty( $settings['tag_link'] ) ) {
+		} elseif ( ! empty( $settings['tag_link'] ) && ! doing_action( 'wpf_tags_modified' ) ) {
 
 			wpf_log( 'info', $user_id, 'User was unenrolled from LearnDash course <a href="' . admin_url( 'post.php?post=' . $course_id . '&action=edit' ) . '" target="_blank">' . get_the_title( $course_id ) . '</a>. Removing linked tag.' );
 
@@ -1820,6 +1990,47 @@ class WPF_LearnDash extends WPF_Integrations_Base {
 
 	}
 
+	/**
+	 * If the LearnDash for WooCommerce plugin is triggering an enrollment, make
+	 * sure it's recorded in the WPF logs.
+	 *
+	 * @since 3.38.17
+	 *
+	 * @param int    $meta_id     The meta ID.
+	 * @param int    $user_id     The user ID.
+	 * @param string $meta_key    The meta key.
+	 * @param mixes  $_meta_value The meta value.
+	 */
+	public function maybe_add_learndash_woocommerce_plugin_source( $meta_id, $user_id, $meta_key, $_meta_value ) {
+
+		if ( '_learndash_woocommerce_enrolled_courses_access_counter' === $meta_key ) {
+			wp_fusion()->logger->add_source( 'learndash-woocommerce' );
+		}
+
+	}
+
+	/**
+	 * Uncanny Toolkit Pro compatibility.
+	 *
+	 * The autocomplete lessons module in Uncanny Toolkit Pro runs at shutdown
+	 * on priority 10, which means any tags to be applied aren't picked up by
+	 * the WPF queue (which runs on priority 1).
+	 *
+	 * This adds a new shutdown handler at priority 15 to pick up any tags that
+	 * were queued up by autocompleted lessons.
+	 *
+	 * @since 3.38.23
+	 *
+	 * @see   \uncanny_pro_toolkit\LessonTopicAutoComplete
+	 * @see   WPF_CRM_Queue::shutdown
+	 */
+	public function uncanny_toolkit_pro_compatibility() {
+
+		if ( class_exists( '\uncanny_pro_toolkit\LessonTopicAutoComplete' ) ) {
+			add_action( 'shutdown', array( wp_fusion()->crm, 'shutdown' ), 15 );
+		}
+
+	}
 
 	/**
 	 * Adds LearnDash field group to meta fields list

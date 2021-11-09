@@ -7,6 +7,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_myCRED extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'mycred';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Mycred';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/gamification/mycred/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -14,8 +39,6 @@ class WPF_myCRED extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'mycred';
 
 		// Badge actions
 		add_action( 'mycred_badge_level_reached', array( $this, 'badge_level_reached' ), 10, 3 );
@@ -53,7 +76,7 @@ class WPF_myCRED extends WPF_Integrations_Base {
 			// Prevent looping
 			remove_action( 'wpf_tags_modified', array( $this, 'update_linked_badges' ), 10, 2 );
 
-			wp_fusion()->user->apply_tags( $wpf_settings['tag_link'], $user_id);
+			wp_fusion()->user->apply_tags( $wpf_settings['tag_link'], $user_id );
 
 			add_action( 'wpf_tags_modified', array( $this, 'update_linked_badges' ), 10, 2 );
 
@@ -98,7 +121,6 @@ class WPF_myCRED extends WPF_Integrations_Base {
 				add_action( 'wpf_tags_modified', array( $this, 'update_linked_ranks' ), 10, 2 );
 
 			}
-
 		}
 
 	}
@@ -118,24 +140,26 @@ class WPF_myCRED extends WPF_Integrations_Base {
 			return;
 		}
 
-		$linked_badges = get_posts( array(
-			'post_type'  => 'mycred_badge',
-			'nopaging'   => true,
-			'meta_query' => array(
-				array(
-					'key'     => 'wpf-settings-mycred',
-					'compare' => 'EXISTS'
+		$linked_badges = get_posts(
+			array(
+				'post_type'  => 'mycred_badge',
+				'nopaging'   => true,
+				'meta_query' => array(
+					array(
+						'key'     => 'wpf-settings-mycred',
+						'compare' => 'EXISTS',
+					),
 				),
-			),
-			'fields'     => 'ids'
-		) );
+				'fields'     => 'ids',
+			)
+		);
 
 		if ( empty( $linked_badges ) ) {
 			return;
 		}
 
 		// Prevent looping when the badges assigned / removed
-		remove_action( 'mycred_badge_level_reached', array( $this, 'badge_level_reached'), 10, 3 );
+		remove_action( 'mycred_badge_level_reached', array( $this, 'badge_level_reached' ), 10, 3 );
 
 		$user_badges = mycred_get_users_badges( $user_id, true );
 
@@ -196,17 +220,19 @@ class WPF_myCRED extends WPF_Integrations_Base {
 			return;
 		}
 
-		$linked_ranks = get_posts( array(
-			'post_type'  => 'mycred_rank',
-			'nopaging'   => true,
-			'meta_query' => array(
-				array(
-					'key'     => 'wpf-settings-mycred',
-					'compare' => 'EXISTS'
+		$linked_ranks = get_posts(
+			array(
+				'post_type'  => 'mycred_rank',
+				'nopaging'   => true,
+				'meta_query' => array(
+					array(
+						'key'     => 'wpf-settings-mycred',
+						'compare' => 'EXISTS',
+					),
 				),
-			),
-			'fields'     => 'ids'
-		) );
+				'fields'     => 'ids',
+			)
+		);
 
 		if ( empty( $linked_ranks ) ) {
 			return;
@@ -229,17 +255,14 @@ class WPF_myCRED extends WPF_Integrations_Base {
 
 			$tag_id = $settings['tag_link'][0];
 
-			if( in_array( $tag_id, $user_tags ) && $user_rank != $rank_id ) {
+			if ( in_array( $tag_id, $user_tags ) && $user_rank != $rank_id ) {
 
 				// Logger
-				wpf_log( 'info', $user_id, 'User granted myCred rank <a href="' . get_edit_post_link( $rank_id ) . '" target="_blank">' . get_the_title($rank_id) . '</a> by tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>', array( 'source' => 'mycred' ) );
+				wpf_log( 'info', $user_id, 'User granted myCred rank <a href="' . get_edit_post_link( $rank_id ) . '" target="_blank">' . get_the_title( $rank_id ) . '</a> by tag <strong>' . wp_fusion()->user->get_tag_label( $tag_id ) . '</strong>', array( 'source' => 'mycred' ) );
 
 				update_user_meta( $user_id, MYCRED_RANK_KEY, $rank_id );
 
 			}
-
-
-
 		}
 
 	}
@@ -287,7 +310,7 @@ class WPF_myCRED extends WPF_Integrations_Base {
 		wp_nonce_field( 'wpf_meta_box_mycred', 'wpf_meta_box_mycred_nonce' );
 
 		$settings = array(
-			'tag_link' => array()
+			'tag_link' => array(),
 		);
 
 		if ( get_post_meta( $post->ID, 'wpf-settings-mycred', true ) ) {
@@ -302,22 +325,21 @@ class WPF_myCRED extends WPF_Integrations_Base {
 			echo '<td>';
 
 			$args = array(
-				'setting' 		=> $settings['tag_link'],
-				'meta_name'		=> 'wpf-settings-mycred',
-				'field_id'		=> 'tag_link',
-				'placeholder'	=> 'Select Tag',
-				'limit'			=> 1
+				'setting'     => $settings['tag_link'],
+				'meta_name'   => 'wpf-settings-mycred',
+				'field_id'    => 'tag_link',
+				'placeholder' => 'Select Tag',
+				'limit'       => 1,
 			);
 
 			wpf_render_tag_multiselect( $args );
 
-			echo '<span class="description">' . sprintf( __( 'When the badge is awarded this tag will be applied in %s.<br />Likewise, if the tag is applied in %s, the user will automatically be granted the badge. If the tag is removed, the badge will be removed.', 'wp-fusion' ), wp_fusion()->crm->name, wp_fusion()->crm->name ) . '</span>';
+			echo '<span class="description">' . sprintf( __( 'When the badge is awarded this tag will be applied in %1$s.<br />Likewise, if the tag is applied in %2$s, the user will automatically be granted the badge. If the tag is removed, the badge will be removed.', 'wp-fusion' ), wp_fusion()->crm->name, wp_fusion()->crm->name ) . '</span>';
 			echo '</td>';
 
 			echo '</tr>';
 
-		echo '</tbody></table>';
-
+			echo '</tbody></table>';
 
 	}
 
@@ -349,9 +371,9 @@ class WPF_myCRED extends WPF_Integrations_Base {
 			echo '<td>';
 
 			$args = array(
-				'setting' 		=> $settings['apply_tags'],
-				'meta_name'		=> 'wpf-settings-mycred',
-				'field_id'		=> 'apply_tags'
+				'setting'   => $settings['apply_tags'],
+				'meta_name' => 'wpf-settings-mycred',
+				'field_id'  => 'apply_tags',
 			);
 
 			wpf_render_tag_multiselect( $args );
@@ -365,20 +387,19 @@ class WPF_myCRED extends WPF_Integrations_Base {
 			echo '<td>';
 
 			$args = array(
-				'setting' 		=> $settings['tag_link'],
-				'meta_name'		=> 'wpf-settings-mycred',
-				'field_id'		=> 'tag_link'
+				'setting'   => $settings['tag_link'],
+				'meta_name' => 'wpf-settings-mycred',
+				'field_id'  => 'tag_link',
 			);
 
 			wpf_render_tag_multiselect( $args );
 
-			echo '<span class="description">' . sprintf( __( 'When the rank is awarded this tag will be applied in %s.<br />Likewise, if the tag is applied in %s, the user will automatically be granted the rank.', 'wp-fusion' ), wp_fusion()->crm->name, wp_fusion()->crm->name ) . '</span>';
+			echo '<span class="description">' . sprintf( __( 'When the rank is awarded this tag will be applied in %1$s.<br />Likewise, if the tag is applied in %2$s, the user will automatically be granted the rank.', 'wp-fusion' ), wp_fusion()->crm->name, wp_fusion()->crm->name ) . '</span>';
 			echo '</td>';
 
 			echo '</tr>';
 
-		echo '</tbody></table>';
-
+			echo '</tbody></table>';
 
 	}
 
@@ -421,4 +442,4 @@ class WPF_myCRED extends WPF_Integrations_Base {
 
 }
 
-new WPF_myCRED;
+new WPF_myCRED();

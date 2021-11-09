@@ -38,7 +38,7 @@ class WPF_Formidable_Forms extends FrmFormAction {
 			'priority' => 25,
 			'event'    => array( 'create', 'update' ),
 			'tooltip'  => sprintf( __( 'Add to %s', 'wp-fusion' ), wp_fusion()->crm->name ),
-			'color'    => 'var(--primary-hover)'
+			'color'    => 'var(--primary-hover)',
 		);
 
 		$this->FrmFormAction( 'wpfusion', 'WP Fusion', $action_ops );
@@ -75,7 +75,7 @@ class WPF_Formidable_Forms extends FrmFormAction {
 	public function get_defaults() {
 		return array(
 			'contact_fields' => array(),
-			'apply_tags'     => array()
+			'apply_tags'     => array(),
 		);
 	}
 
@@ -88,14 +88,14 @@ class WPF_Formidable_Forms extends FrmFormAction {
 
 	public function form( $form_action, $args = array() ) {
 
-		extract($args);
+		extract( $args );
 		$action_control = $this;
 
 		$settings = $form_action->post_content;
 
 		$defaults = array(
-			'contact_fields'	=> array(),
-			'apply_tags'		=> array()
+			'contact_fields' => array(),
+			'apply_tags'     => array(),
 		);
 
 		$settings = array_merge( $defaults, $settings );
@@ -103,53 +103,61 @@ class WPF_Formidable_Forms extends FrmFormAction {
 		$form_fields = FrmField::getAll( 'fi.form_id=' . (int) $args['form']->id . " and fi.type not in ('break', 'divider', 'html', 'captcha', 'form')", 'field_order' );
 
 		?>
-        <h3 style="padding-top: 20px;"><?php _e( 'Field Mapping', 'wp-fusion' ); ?>
-            <span class="frm_help frm_icon_font frm_tooltip_icon"
-                  title="For each field in your form, select a corresponding field in <?php echo wp_fusion()->crm->name; ?> to save the entry data."</span>
-        </h3>
+		<h3 style="padding-top: 20px;"><?php _e( 'Field Mapping', 'wp-fusion' ); ?>
+			<span class="frm_help frm_icon_font frm_tooltip_icon"
+				  title="For each field in your form, select a corresponding field in <?php echo wp_fusion()->crm->name; ?> to save the entry data."</span>
+		</h3>
 
-        <p>Map form fields to <?php echo wp_fusion()->crm->name; ?> fields:</p>
+		<p>Map form fields to <?php echo wp_fusion()->crm->name; ?> fields:</p>
 
-        <table class="form-table settings-field-map-table wpf-field-map">
+		<table class="form-table settings-field-map-table wpf-field-map">
 
-			<?php foreach ( $form_fields as $field ) : 
+			<?php
+			foreach ( $form_fields as $field ) :
 
-				if( ! isset( $settings['contact_fields'][ $field->id ] ) ) {
+				if ( ! isset( $settings['contact_fields'][ $field->id ] ) ) {
 					$settings['contact_fields'][ $field->id ] = array( 'crm_field' => false );
 				}
 
 				?>
 
-                <tr>
-                    <td width="100px">
-                        <label><?php echo FrmAppHelper::truncate( $field->name, 40 ) ?></label>
-                    </td>
-                    <td width="15px">&raquo;</td>
-                    <td>
-                    	<?php
+				<tr>
+					<td width="100px">
+						<label><?php echo FrmAppHelper::truncate( $field->name, 40 ); ?></label>
+					</td>
+					<td width="15px">&raquo;</td>
+					<td>
+						<?php
 
-						wpf_render_crm_field_select( $settings['contact_fields'][ $field->id ]['crm_field'], $action_control->get_field_name( 'contact_fields' ), $field->id ); ?>
-                    </td>
-                </tr>
+						wpf_render_crm_field_select( $settings['contact_fields'][ $field->id ]['crm_field'], $action_control->get_field_name( 'contact_fields' ), $field->id );
+						?>
+					</td>
+				</tr>
 
 			<?php endforeach; ?>
 
-        </table>
+		</table>
 
-        <h3 style="padding-top: 20px;"><?php _e( 'Apply Tags', 'formidable' ); ?>
-            <span class="frm_help frm_icon_font frm_tooltip_icon"
-                  title="These tags will be applied to the contact record when this form is submitted."</span>
-        </h3>
-        <table class="form-table">
-            <tr>
-                <td>
-					<?php wpf_render_tag_multiselect( array( 'setting' => $settings['apply_tags'], 'meta_name' => $action_control->get_field_name( 'apply_tags' ) ) ); ?>
-                </td>
-            </tr>
-        </table>
+		<h3 style="padding-top: 20px;"><?php _e( 'Apply Tags', 'formidable' ); ?>
+			<span class="frm_help frm_icon_font frm_tooltip_icon"
+				  title="These tags will be applied to the contact record when this form is submitted."</span>
+		</h3>
+		<table class="form-table">
+			<tr>
+				<td>
+					<?php
+					wpf_render_tag_multiselect(
+						array(
+							'setting'   => $settings['apply_tags'],
+							'meta_name' => $action_control->get_field_name( 'apply_tags' ),
+						)
+					);
+					?>
+				</td>
+			</tr>
+		</table>
 
-		<?php 
-
+		<?php
 
 	}
 
@@ -179,12 +187,11 @@ class WPF_Formidable_Forms extends FrmFormAction {
 
 			if ( $field->type == 'toggle' && ! isset( $entry->metas[ $field->id ] ) ) {
 
-				if( empty( $field->field_options['toggle_off'] ) ) {
+				if ( empty( $field->field_options['toggle_off'] ) ) {
 					$entry->metas[ $field->id ] = null;
 				} else {
 					$entry->metas[ $field->id ] = $field->field_options['toggle_off'];
 				}
-
 			} elseif ( $field->type == 'checkbox' && ! isset( $entry->metas[ $field->id ] ) ) {
 
 				$entry->metas[ $field->id ] = null;
@@ -202,11 +209,9 @@ class WPF_Formidable_Forms extends FrmFormAction {
 						$entry->metas[ $field->id ][ $i ] = wp_get_attachment_url( $img_id );
 
 					}
-
 				} else {
 					$entry->metas[ $field->id ] = wp_get_attachment_url( $entry->metas[ $field->id ] );
 				}
-
 			}
 
 			if ( 'checkbox' == $field->type && count( $field->options ) > 1 ) {
@@ -233,25 +238,24 @@ class WPF_Formidable_Forms extends FrmFormAction {
 			}
 
 			// Array handling
-			if( is_array( $update_data[ $value['crm_field'] ] ) )  {
+			if ( is_array( $update_data[ $value['crm_field'] ] ) ) {
 				$update_data[ $value['crm_field'] ] = implode( ', ', $update_data[ $value['crm_field'] ] );
 			}
-
 		}
 
-		if( ! isset( $settings['apply_tags'] ) ) {
+		if ( ! isset( $settings['apply_tags'] ) ) {
 			$settings['apply_tags'] = array();
 		}
 
 		$args = array(
-			'email_address'		=> $email_address,
-			'update_data'		=> $update_data,
-			'apply_tags'		=> $settings['apply_tags'],
-			'integration_slug'	=> 'formidable',
-			'integration_name'	=> 'Formidable Forms',
-			'form_id'			=> $form->id,
-			'form_title'		=> $form->name,
-			'form_edit_link'	=> admin_url( 'admin.php?page=formidable&frm_action=edit&id=' . $form->id )
+			'email_address'    => $email_address,
+			'update_data'      => $update_data,
+			'apply_tags'       => $settings['apply_tags'],
+			'integration_slug' => 'formidable',
+			'integration_name' => 'Formidable Forms',
+			'form_id'          => $form->id,
+			'form_title'       => $form->name,
+			'form_edit_link'   => admin_url( 'admin.php?page=formidable&frm_action=edit&id=' . $form->id ),
 		);
 
 		$contact_id = WPF_Forms_Helper::process_form_data( $args );
@@ -306,6 +310,10 @@ class WPF_Formidable_Forms extends FrmFormAction {
 
 	public function after_update_user( $action, $entry, $form ) {
 
+		if ( ! class_exists( 'FrmRegEntryHelper' ) ) {
+			return;
+		}
+
 		$user_id_field = FrmRegEntryHelper::get_user_id_field_for_form( $entry->form_id );
 
 		if ( $user_id_field && isset( $entry->metas[ $user_id_field ] ) && $entry->metas[ $user_id_field ] ) {
@@ -331,13 +339,13 @@ class WPF_Formidable_Forms extends FrmFormAction {
 
 		$settings = get_option( 'frm_wpf_settings_' . $values['id'] );
 
-		if( ! empty( $settings ) ) {
+		if ( ! empty( $settings ) ) {
 
 			$sections[] = array(
 				'name'     => 'WP Fusion',
 				'anchor'   => 'wp_fusion',
 				'function' => 'display_settings_tab',
-				'class'    => 'WPF_Formidable_Forms'
+				'class'    => 'WPF_Formidable_Forms',
 			);
 
 		}
@@ -360,56 +368,65 @@ class WPF_Formidable_Forms extends FrmFormAction {
 		$settings    = maybe_unserialize( get_option( 'frm_wpf_settings_' . $values['id'] ) );
 
 		$defaults = array(
-			'contact_fields'	=> array(),
-			'apply_tags'		=> array()
+			'contact_fields' => array(),
+			'apply_tags'     => array(),
 		);
 
 		$settings = array_merge( $defaults, $settings );
 
 		?>
-        <h3 class="frm_first_h3"><?php _e( 'Field Mapping', 'wp-fusion' ); ?>
-            <span class="frm_help frm_icon_font frm_tooltip_icon"
-                  title="For each field in your form, select a corresponding field in <?php echo wp_fusion()->crm->name; ?> to save the entry data."</span>
-        </h3>
+		<h3 class="frm_first_h3"><?php _e( 'Field Mapping', 'wp-fusion' ); ?>
+			<span class="frm_help frm_icon_font frm_tooltip_icon"
+				  title="For each field in your form, select a corresponding field in <?php echo wp_fusion()->crm->name; ?> to save the entry data."</span>
+		</h3>
 
-        <p>Map form fields to <?php echo wp_fusion()->crm->name; ?> fields:</p>
+		<p>Map form fields to <?php echo wp_fusion()->crm->name; ?> fields:</p>
 
-        <table class="form-table settings-field-map-table wpf-field-map">
+		<table class="form-table settings-field-map-table wpf-field-map">
 
-			<?php foreach ( $form_fields as $field ) : 
+			<?php
+			foreach ( $form_fields as $field ) :
 
-				if( ! isset( $settings['contact_fields'][ $field->id ] ) ) {
+				if ( ! isset( $settings['contact_fields'][ $field->id ] ) ) {
 					$settings['contact_fields'][ $field->id ] = array( 'crm_field' => false );
 				}
 
 				?>
 
-                <tr>
-                    <td width="100px">
-                        <label><?php echo FrmAppHelper::truncate( $field->name, 40 ) ?></label>
-                    </td>
-                    <td width="15px">&raquo;</td>
-                    <td>
+				<tr>
+					<td width="100px">
+						<label><?php echo FrmAppHelper::truncate( $field->name, 40 ); ?></label>
+					</td>
+					<td width="15px">&raquo;</td>
+					<td>
 						<?php wpf_render_crm_field_select( $settings['contact_fields'][ $field->id ]['crm_field'], 'wpf_settings[contact_fields]', $field->id ); ?>
-                    </td>
-                </tr>
+					</td>
+				</tr>
 
 			<?php endforeach; ?>
 
-        </table>
+		</table>
 
-        <h3><?php _e( 'Apply Tags', 'wp-fusion' ); ?>
-            <span class="frm_help frm_icon_font frm_tooltip_icon"
-                  title="These tags will be applied to the contact record when this form is submitted."></span>
-        </h3>
-        <table class="form-table">
-            <tr>
-                <td>
-					<?php wpf_render_tag_multiselect( array( 'setting' => $settings['apply_tags'], 'meta_name' => 'wpf_settings', 'field_id' => 'apply_tags' ) ); ?>
-                </td>
-            </tr>
-        </table>
-        <br/><br/>
+		<h3><?php _e( 'Apply Tags', 'wp-fusion' ); ?>
+			<span class="frm_help frm_icon_font frm_tooltip_icon"
+				  title="These tags will be applied to the contact record when this form is submitted."></span>
+		</h3>
+		<table class="form-table">
+			<tr>
+				<td>
+					<?php
+					wpf_render_tag_multiselect(
+						array(
+							'setting'   => $settings['apply_tags'],
+							'meta_name' => 'wpf_settings',
+							'field_id'  => 'apply_tags',
+						)
+					);
+					?>
+				</td>
+			</tr>
+		</table>
+		<br/><br/>
 
 		<?php
 
@@ -465,25 +482,24 @@ class WPF_Formidable_Forms extends FrmFormAction {
 			}
 
 			// Array handling
-			if( is_array( $update_data[ $value['crm_field'] ] ) )  {
+			if ( is_array( $update_data[ $value['crm_field'] ] ) ) {
 				$update_data[ $value['crm_field'] ] = implode( ', ', $update_data[ $value['crm_field'] ] );
 			}
-
 		}
 
-		if( ! isset( $settings['apply_tags'] ) ) {
+		if ( ! isset( $settings['apply_tags'] ) ) {
 			$settings['apply_tags'] = array();
 		}
 
 		$args = array(
-			'email_address'		=> $email_address,
-			'update_data'		=> $update_data,
-			'apply_tags'		=> $settings['apply_tags'],
-			'integration_slug'	=> 'formidable',
-			'integration_name'	=> 'Formidable Forms',
-			'form_id'			=> null,
-			'form_title'		=> null,
-			'form_edit_link'	=> null
+			'email_address'    => $email_address,
+			'update_data'      => $update_data,
+			'apply_tags'       => $settings['apply_tags'],
+			'integration_slug' => 'formidable',
+			'integration_name' => 'Formidable Forms',
+			'form_id'          => null,
+			'form_title'       => null,
+			'form_edit_link'   => null,
 		);
 
 		$contact_id = WPF_Forms_Helper::process_form_data( $args );

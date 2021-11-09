@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_S2Member extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 's2member';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'S2member';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/integrations/s2member/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_S2Member extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 's2member';
 
 		add_filter( 'wpf_user_register', array( $this, 'user_meta_filter' ), 10, 2 );
 		add_filter( 'wpf_user_update', array( $this, 'user_meta_filter' ), 10, 2 );

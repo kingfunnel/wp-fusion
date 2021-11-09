@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_FooEvents extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'fooevents';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'FooEvents';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/events/fooevents/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_FooEvents extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'fooevents';
 
 		add_filter( 'wpf_woocommerce_customer_data', array( $this, 'merge_custom_fields' ), 10, 2 );
 		add_filter( 'wpf_woocommerce_apply_tags_checkout', array( $this, 'merge_attendee_tags' ), 10, 2 );
@@ -124,6 +147,12 @@ class WPF_FooEvents extends WPF_Integrations_Base {
 
 				// Merge custom fields, they only go if the customer is also an attendee
 				if ( ! empty( $attendee['WooCommerceEventsCustomAttendeeFields'] ) ) {
+
+					// New v5.5+ method
+
+					$customer_data = array_merge( $customer_data, $attendee['WooCommerceEventsCustomAttendeeFields'] );
+
+					// Old method:
 
 					foreach ( $attendee['WooCommerceEventsCustomAttendeeFields'] as $key => $value ) {
 
@@ -345,7 +374,7 @@ class WPF_FooEvents extends WPF_Integrations_Base {
 
 			if ( ! empty( $apply_tags ) ) {
 
-				wpf_log( 'info', 0, 'Applying tags to FooEvents attendee for contact ID ' . $contact_id . ': ', array( 'tag_array' => $apply_tags ) );
+				wpf_log( 'info', 0, 'Applying tags to FooEvents attendee for contact #' . $contact_id . ': ', array( 'tag_array' => $apply_tags ) );
 
 				wp_fusion()->crm->apply_tags( $apply_tags, $contact_id );
 

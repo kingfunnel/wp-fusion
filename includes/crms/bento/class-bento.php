@@ -28,7 +28,7 @@ class WPF_Bento {
 	 * @since 3.38.4
 	 */
 
-	public $supports = array( 'add_tags', 'add_fields' );
+	public $supports = array( 'add_tags', 'add_fields', 'events' );
 
 
 	/**
@@ -87,6 +87,9 @@ class WPF_Bento {
 
 		add_action( 'wp_head', array( $this, 'tracking_code_output' ) );
 
+		// Slow down the batch processses to get around the 10 requests per 10 second limit.
+		add_filter( 'wpf_batch_sleep_time', array( $this, 'set_sleep_time' ) );
+
 	}
 
 	/**
@@ -106,6 +109,21 @@ class WPF_Bento {
 		}
 
 		return $post_data;
+
+	}
+
+	/**
+	 * Slow down batch processses to get around the 10 requests per 10 seconds
+	 * limit.
+	 *
+	 * @since  3.38.16
+	 *
+	 * @param  int $seconds The seconds to sleep between steps.
+	 * @return int   The seconds.
+	 */
+	public function set_sleep_time( $seconds ) {
+
+		return 4;
 
 	}
 
@@ -235,6 +253,10 @@ class WPF_Bento {
 			if ( isset( $body_json->success ) && false == $body_json->success ) {
 
 				$response = new WP_Error( 'error', $body_json->message );
+
+			} elseif ( 429 === $response_code ) {
+
+				return new WP_Error( 'error', 'API limits exceeded. Try again later.' );
 
 			} elseif ( 500 === $response_code ) {
 
@@ -582,17 +604,17 @@ class WPF_Bento {
 	 * @param bool  $map_meta_fields Whether to map WordPress meta keys to CRM field keys.
 	 * @return int|WP_Error Contact ID on success, or WP Error.
 	 */
-	public function add_contact( $contact_data, $map_meta_fields = true ) {
+	public function add_contact( $data, $map_meta_fields = true ) {
 
 		if ( $map_meta_fields ) {
-			$contact_data = wp_fusion()->crm_base->map_meta_fields( $contact_data );
+			$data = wp_fusion()->crm_base->map_meta_fields( $data );
 		}
 
 		// Bento can't create a subscriber with custom fields.
 
 		$contact_data = array(
 			'site_uuid' => wpf_get_option( 'site_uuid' ),
-			'email'     => $contact_data['email'],
+			'email'     => $data['email'],
 		);
 
 		$request        = $this->url . '/fetch/subscribers/';
@@ -611,8 +633,8 @@ class WPF_Bento {
 		$contact_id = $body->data->attributes->uuid;
 
 		// If there are custom fields in addition to email, send those in a separate request.
-		if ( count( $contact_data ) > 1 ) {
-			$this->update_contact( $contact_id, $contact_data, false );
+		if ( count( $data ) > 1 ) {
+			$this->update_contact( $contact_id, $data, false );
 		}
 
 		return $contact_id;
@@ -629,14 +651,14 @@ class WPF_Bento {
 	 * @param bool  $map_meta_fields Whether to map WordPress meta keys to CRM field keys.
 	 * @return bool|WP_Error Error if the API call failed.
 	 */
-	public function update_contact( $contact_id, $contact_data, $map_meta_fields = true ) {
+	public function update_contact( $contact_id, $data, $map_meta_fields = true ) {
 
 		if ( $map_meta_fields ) {
-			$contact_data = wp_fusion()->crm_base->map_meta_fields( $contact_data );
+			$data = wp_fusion()->crm_base->map_meta_fields( $data );
 		}
 
-		if ( ! isset( $contact_data['email'] ) ) {
-			$contact_data['email'] = $this->get_email_from_cid( $contact_id );
+		if ( ! isset( $data['email'] ) ) {
+			$data['email'] = $this->get_email_from_cid( $contact_id );
 		}
 
 		$body = array(
@@ -644,11 +666,15 @@ class WPF_Bento {
 			'command'   => array(),
 		);
 
-		foreach ( $contact_data as $field => $value ) {
+		foreach ( $data as $field => $value ) {
+
+			if ( 'email' === $field ) {
+				continue; // we don't need to update this as well
+			}
 
 			$body['command'][] = array(
 				'command' => 'add_field',
-				'email'   => $contact_data['email'],
+				'email'   => $data['email'],
 				'query'   => array(
 					'key'   => $field,
 					'value' => $value,
@@ -721,5 +747,55 @@ class WPF_Bento {
 	public function load_contacts( $tag ) {
 		return array();
 	}
+
+
+	/**
+	 * Track event.
+	 *
+	 * Track an event with the Bento site tracking API.
+	 *
+	 * @since  3.38.16
+	 *
+	 * @param  string      $event      The event title.
+	 * @param  bool|string $event_data The event description.
+	 * @param  bool|string $email_address The user email address.
+	 * @return bool|WP_Error True if success, WP_Error if failed.
+	 */
+	public function track_event( $event, $event_data = false, $email_address = false ) {
+
+		if ( empty( $email_address ) && ! wpf_is_user_logged_in() ) {
+			// Tracking only works if WP Fusion knows who the contact is.
+			return;
+		}
+
+		// Get the email address to track.
+		if ( empty( $email_address ) ) {
+			$user          = wpf_get_current_user();
+			$email_address = $user->user_email;
+		}
+
+		$site_uuid = wpf_get_option( 'site_uuid' );
+
+		$data['events'][] = array(
+			'email'   => $email_address,
+			'type'    => $event,
+			'details' => $event_data,
+		);
+
+		wpf_log( 'info', wpf_get_current_user_id(), 'Tracking event: ' . $event, array( 'meta_array_nofilter' => $data ) );
+
+		$request        = $this->url . '/batch/events/?site_uuid=' . $site_uuid;
+		$params         = $this->get_params();
+		$params['body'] = wp_json_encode( $data );
+
+		$response = wp_safe_remote_post( $request, $params );
+		if ( is_wp_error( $response ) ) {
+			wpf_log( 'error', 0, 'Error tracking event: ' . $response->get_error_message() );
+			return $response;
+		}
+
+		return true;
+	}
+
 
 }

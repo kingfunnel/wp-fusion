@@ -38,6 +38,7 @@ class WPF_Salesforce {
 
 	/**
 	 * Lets us link directly to editing a contact record.
+	 *
 	 * @var string
 	 */
 
@@ -56,11 +57,17 @@ class WPF_Salesforce {
 		$this->name     = 'Salesforce';
 		$this->supports = array();
 
+		// OAuth.
+		$this->client_id     = '3MVG9CEn_O3jvv0xMf5rhesocm_5czidz9CFtu_qNZ2V0Zw.bmL0LTRRylD5fhkAKYwGxRDDRXjV4TOowpNmg';
+		$this->client_secret = '9BB0BD5237B1EA6ED8AFE2618053BDB181459DD61AB3B49567A8BA5013C35D76';
+
 		$this->object_type = 'Contact';
 
 		if ( wpf_get_option( 'sf_tag_type', 'Topics' ) != 'Topics' ) {
 			$this->tag_type = 'Tag';
 		}
+
+		add_filter( 'http_response', array( $this, 'handle_http_response' ), 50, 3 ); // up here so it can run when testing the connection.
 
 		// Set up admin options
 		if ( is_admin() ) {
@@ -81,7 +88,6 @@ class WPF_Salesforce {
 
 		add_filter( 'wpf_crm_post_data', array( $this, 'format_post_data' ) );
 		add_filter( 'wpf_format_field_value', array( $this, 'format_field_value' ), 10, 3 );
-		add_filter( 'http_response', array( $this, 'handle_http_response' ), 50, 3 );
 		add_action( 'wpf_api_success', array( $this, 'api_success' ), 10, 2 );
 		add_action( 'wpf_api_fail', array( $this, 'api_success' ), 10, 2 );
 
@@ -266,6 +272,86 @@ class WPF_Salesforce {
 	}
 
 	/**
+	 * Refresh an access token from a refresh token
+	 *
+	 * @since  3.38.17
+	 *
+	 * @return string|WP_Error Access token or error.
+	 */
+	public function refresh_token() {
+
+		$refresh_token = wpf_get_option( 'sf_refresh_token' );
+
+		if ( ! empty( $refresh_token ) ) {
+
+			// New OAuth flow since 3.38.17.
+
+			$params = array(
+				'body' => array(
+					'grant_type'    => 'refresh_token',
+					'client_id'     => $this->client_id,
+					'client_secret' => $this->client_secret,
+					'refresh_token' => $refresh_token,
+				),
+			);
+
+			$url      = apply_filters( 'wpf_salesforce_auth_url', 'https://login.salesforce.com/services/oauth2/token' );
+			$response = wp_safe_remote_post( $url, $params );
+
+			if ( is_wp_error( $response ) ) {
+				return $response;
+			}
+
+			$body = json_decode( wp_remote_retrieve_body( $response ) );
+
+			if ( ! isset( $body->access_token ) ) {
+				return false;
+			}
+
+			$this->get_params( $body->access_token );
+
+			wp_fusion()->settings->set( 'sf_access_token', $body->access_token );
+
+			return $body->access_token;
+
+		} else {
+
+			// Old password based refresh, for people who haven't re-authorized via OAuth yet.
+
+			$token    = wpf_get_option( 'sf_combined_token' );
+			$username = wpf_get_option( 'sf_username' );
+
+			$auth_args = array(
+				'grant_type'    => 'password',
+				'client_id'     => '3MVG9CEn_O3jvv0xMf5rhesocmw9vf_OV6x9fHYfh4bnqRC1zUohKbulHXLyuMdCaXEliMqXtW6XVAMiNa55K',
+				'client_secret' => '6100590890846411326',
+				'username'      => rawurlencode( $username ),
+				'password'      => rawurlencode( htmlspecialchars_decode( $token ) ),
+			);
+
+			$url = apply_filters( 'wpf_salesforce_auth_url', 'https://login.salesforce.com/services/oauth2/token' );
+
+			$auth_url = add_query_arg( $auth_args, $url );
+			$response = wp_safe_remote_post( $auth_url );
+
+			$body = json_decode( wp_remote_retrieve_body( $response ) );
+
+			if ( isset( $body->error ) ) {
+				return new WP_Error( $body->error, $body->error_description );
+			}
+
+			wp_fusion()->settings->set( 'sf_access_token', $body->access_token );
+			wp_fusion()->settings->set( 'sf_instance_url', $body->instance_url );
+
+			// Set params for subsequent ops.
+			$this->get_params( $body->access_token );
+
+			return $body->access_token;
+
+		}
+	}
+
+	/**
 	 * Check HTTP Response for errors and return WP_Error if found
 	 *
 	 * @access public
@@ -274,32 +360,30 @@ class WPF_Salesforce {
 
 	public function handle_http_response( $response, $args, $url ) {
 
-		if ( strpos( $url, 'salesforce' ) !== false ) {
+		if ( strpos( $url, 'salesforce' ) !== false && 'WP Fusion; ' . home_url() === $args['user-agent'] ) {
 
 			$response_code    = wp_remote_retrieve_response_code( $response );
 			$response_message = wp_remote_retrieve_response_message( $response );
 			$body             = json_decode( wp_remote_retrieve_body( $response ) );
 
-			if ( $response_code == 401 && $body[0]->errorCode == 'INVALID_SESSION_ID' ) {
+			if ( 401 === $response_code && 'INVALID_SESSION_ID' === $body[0]->errorCode ) {
 
-				// Prevent looping when the connection process runs
-				remove_filter( 'http_response', array( $this, 'handle_http_response' ), 50, 3 );
+				if ( strpos( $body[0]->message, 'expired' ) !== false ) {
 
-				// Try to refresh the access token
-				$result = $this->connect( null, null, true );
+					// Refresh the access token.
+					$access_token = $this->refresh_token();
 
-				// Add the filter back to that subsequent calls get error handling
-				add_filter( 'http_response', array( $this, 'handle_http_response' ), 50, 3 );
+					if ( is_wp_error( $access_token ) ) {
+						return $access_token;
+					}
 
-				if ( is_wp_error( $result ) ) {
-					return $result;
+					$args['headers']['Authorization'] = 'Bearer ' . $access_token;
+
+					$response = wp_safe_remote_request( $url, $args );
+
+				} else {
+					$response = new WP_Error( 'error', 'Invalid API credentials.' );
 				}
-
-				$params          = $this->get_params();
-				$args['headers'] = $params['headers'];
-
-				$response = wp_safe_remote_request( $url, $args );
-
 			} elseif ( $response_code != 200 && $response_code != 201 && $response_code != 204 && ! empty( $response_message ) ) {
 
 				if ( is_array( $body ) && ! empty( $body[0] ) && ! empty( $body[0]->message ) ) {
@@ -329,10 +413,12 @@ class WPF_Salesforce {
 	 * @return  array Params
 	 */
 
-	public function get_params() {
+	public function get_params( $access_token = null ) {
 
-		// Get saved data from DB
-		$access_token = wpf_get_option( 'sf_access_token' );
+		// Get saved data from DB.
+		if ( empty( $access_token ) ) {
+			$access_token = wpf_get_option( 'sf_access_token' );
+		}
 
 		$this->params = array(
 			'user-agent' => 'WP Fusion; ' . home_url(),
@@ -353,78 +439,26 @@ class WPF_Salesforce {
 
 
 	/**
-	 * Initialize connection and get access token
+	 * Test the connection.
 	 *
 	 * @access  public
 	 * @return  bool
 	 */
 
-	public function connect( $username = null, $token = null, $test = false ) {
+	public function connect( $instance_url = null, $access_token = null, $test = false ) {
 
-		if ( $test == false ) {
+		if ( ! $this->params ) {
+			$this->get_params( $access_token );
+		}
+
+		if ( ! $test ) {
 			return true;
 		}
 
-		if ( $token == null || $username == null ) {
-			$token    = wpf_get_option( 'sf_combined_token' );
-			$username = wpf_get_option( 'sf_username' );
-		}
-
-		$auth_args = array(
-			'grant_type'    => 'password',
-			'client_id'     => '3MVG9CEn_O3jvv0xMf5rhesocmw9vf_OV6x9fHYfh4bnqRC1zUohKbulHXLyuMdCaXEliMqXtW6XVAMiNa55K',
-			'client_secret' => '6100590890846411326',
-			'username'      => urlencode( $username ),
-			'password'      => urlencode( $token ),
-		);
-
-		$url = apply_filters( 'wpf_salesforce_auth_url', 'https://login.salesforce.com/services/oauth2/token' );
-
-		$auth_url = add_query_arg( $auth_args, $url );
-		$response = wp_safe_remote_post( $auth_url );
-
-		$response_code = wp_remote_retrieve_response_code( $response );
+		$response = wp_safe_remote_get( $this->instance_url . '/services/data/v53.0/search/', $this->params );
 
 		if ( is_wp_error( $response ) ) {
-
 			return $response;
-
-		} elseif ( 404 == $response_code ) {
-
-			return new WP_Error( 'error', 'Unable to resolve URL ' . $url );
-
-		} elseif ( 400 == $response_code ) {
-
-			if ( true == wpf_get_option( 'connection_configured' ) ) {
-
-				// This is to handle cases where a refresh of a valid token failed
-
-				return new WP_Error( 'error', 'Authentication failure. Your security token may need to be updated.' );
-
-			} else {
-
-				return new WP_Error( 'error', 'Authentication failure. Double check your credentials. If you\'re trying to connect to a Salesforce sandbox account, <a href="https://wpfusion.com/documentation/crm-specific-docs/salesforce-sandboxes/" target="_blank">see this doc</a>.' );
-
-			}
-		}
-
-		$body = json_decode( wp_remote_retrieve_body( $response ) );
-
-		if ( isset( $body->error ) ) {
-			return new WP_Error( $body->error, $body->error_description );
-		}
-
-		wp_fusion()->settings->set( 'sf_access_token', $body->access_token );
-		wp_fusion()->settings->set( 'sf_instance_url', $body->instance_url );
-
-		// Set params for subsequent ops
-		$this->get_params();
-
-		// Make sure REST API is enabled
-		$result = $this->sync_crm_fields();
-
-		if ( is_wp_error( $result ) ) {
-			return $result;
 		}
 
 		return true;
@@ -1049,5 +1083,6 @@ class WPF_Salesforce {
 		return $contact_ids;
 
 	}
+
 
 }

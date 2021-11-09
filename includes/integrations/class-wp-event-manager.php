@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_WP_Event_Manager extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'wp-event-manager';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Wp event manager';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/integrations/wp-event-manager/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,9 +41,6 @@ class WPF_WP_Event_Manager extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'wp-event-manager';
-		$this->name = 'WP Event Manager';
 
 		add_action( 'new_event_registration', array( $this, 'new_event_registration' ), 10, 2 );
 
@@ -55,7 +77,8 @@ class WPF_WP_Event_Manager extends WPF_Integrations_Base {
 		$registration_data = array_map(
 			function( $n ) {
 					return $n[0];
-			}, $registration_data
+			},
+			$registration_data
 		);
 
 		$registration_data['user_email'] = $registration_data['email-address'];

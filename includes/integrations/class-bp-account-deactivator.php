@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_BP_Account_Deactivator extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'bp-account-deactivator';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Bp account deactivator';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_BP_Account_Deactivator extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'bp-account-deactivator';
 
 		add_action( 'wpf_tags_modified', array( $this, 'tags_modified' ), 10, 2 );
 
@@ -53,7 +76,6 @@ class WPF_BP_Account_Deactivator extends WPF_Integrations_Base {
 				bp_account_deactivator()->set_active( $user_id );
 
 			}
-
 		}
 
 	}

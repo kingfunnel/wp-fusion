@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Contact_Form_7 extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'cf7';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Contact form 7';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/lead-generation/contact-form-7/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_Contact_Form_7 extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'cf7';
 
 		add_filter( 'wpcf7_editor_panels', array( $this, 'add_panel' ) );
 		add_action( 'wpcf7_after_save', array( $this, 'save_form' ) );
@@ -143,6 +166,7 @@ class WPF_Contact_Form_7 extends WPF_Integrations_Base {
 
 	/**
 	 * Save WPF settings fields
+	 *
 	 * @access public
 	 *
 	 * @param unknown $contact_form
@@ -227,4 +251,4 @@ class WPF_Contact_Form_7 extends WPF_Integrations_Base {
 
 }
 
-new WPF_Contact_Form_7;
+new WPF_Contact_Form_7();

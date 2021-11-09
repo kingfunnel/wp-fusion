@@ -190,13 +190,11 @@ class WPF_HubSpot_Admin {
 
 	public function register_settings( $settings, $options ) {
 
-		// Add site tracking option
+		// Add site tracking option.
 		$site_tracking = array();
 
 		$site_tracking['site_tracking_header'] = array(
 			'title'   => __( 'HubSpot Site Tracking', 'wp-fusion' ),
-			'desc'    => '',
-			'std'     => '',
 			'type'    => 'heading',
 			'section' => 'main',
 		);
@@ -204,7 +202,6 @@ class WPF_HubSpot_Admin {
 		$site_tracking['site_tracking'] = array(
 			'title'   => __( 'Site Tracking', 'wp-fusion' ),
 			'desc'    => __( 'Enable <a target="_blank" href="https://knowledge.hubspot.com/articles/kcs_article/account/how-does-hubspot-track-visitors">HubSpot site tracking</a>.', 'wp-fusion' ),
-			'std'     => 0,
 			'type'    => 'checkbox',
 			'section' => 'main',
 		);

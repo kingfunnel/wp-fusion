@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_CRED extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'cred';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Cred';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -17,15 +42,13 @@ class WPF_CRED extends WPF_Integrations_Base {
 
 	public function init() {
 
-		$this->slug = 'cred';
-
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ), 10 );
 		add_filter( 'wpf_meta_fields', array( $this, 'set_contact_field_names' ), 30 );
 		add_filter( 'wpf_user_register', array( $this, 'filter_form_fields' ), 10, 2 );
 		add_filter( 'wpf_user_update', array( $this, 'filter_form_fields' ), 10, 2 );
 		add_filter( 'wpf_meta_box_post_types', array( $this, 'unset_wpf_meta_boxes' ) );
 
-		add_action( 'cred_submit_complete', array($this, 'update_profile'), 10, 2 );
+		add_action( 'cred_submit_complete', array( $this, 'update_profile' ), 10, 2 );
 
 	}
 
@@ -38,13 +61,13 @@ class WPF_CRED extends WPF_Integrations_Base {
 
 	public function update_profile( $user_id, $current_form ) {
 
-		if( $current_form['post_type'] == 'user') {
+		if ( $current_form['post_type'] == 'user' ) {
 
 			wp_fusion()->user->push_user_meta( $user_id );
 
 		}
 
-		if( isset( $_POST['user_email'] ) ) {
+		if ( isset( $_POST['user_email'] ) ) {
 
 			wp_fusion()->user->push_user_meta( $user_id, array( 'user_email' => $_POST['user_email'] ) );
 
@@ -61,8 +84,11 @@ class WPF_CRED extends WPF_Integrations_Base {
 
 	public function add_meta_field_group( $field_groups ) {
 
-		if( !isset( $field_groups['cred'] ) ) {
-			$field_groups['cred'] = array( 'title' => 'Toolset', 'fields' => array() );
+		if ( ! isset( $field_groups['cred'] ) ) {
+			$field_groups['cred'] = array(
+				'title'  => 'Toolset',
+				'fields' => array(),
+			);
 		}
 
 		return $field_groups;
@@ -84,9 +110,9 @@ class WPF_CRED extends WPF_Integrations_Base {
 		foreach ( (array) $cred_fields as $key => $field ) {
 
 			$meta_fields[ $key ] = array(
-				'label'  => $field['name'],
+				'label' => $field['name'],
 				'type'  => $field['type'],
-				'group'	=> 'cred'
+				'group' => 'cred',
 			);
 
 		}
@@ -128,25 +154,22 @@ class WPF_CRED extends WPF_Integrations_Base {
 				$post_data[ $key ] = $value;
 
 			}
-
 		}
 
-		if( isset( $post_data['wpcf'] ) && is_array( $post_data['wpcf'] ) ) {
+		if ( isset( $post_data['wpcf'] ) && is_array( $post_data['wpcf'] ) ) {
 
-			foreach( $post_data['wpcf'] as $key => $value ) {
+			foreach ( $post_data['wpcf'] as $key => $value ) {
 
-				$post_data[$key] = $value;
+				$post_data[ $key ] = $value;
 
 			}
-
 		}
 
 		return $post_data;
-
 
 	}
 
 
 }
 
-new WPF_CRED;
+new WPF_CRED();

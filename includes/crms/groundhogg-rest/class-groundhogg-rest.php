@@ -9,7 +9,7 @@ class WPF_Groundhogg_REST {
 	 * @since 3.38.10
 	 */
 
-	public $supports = array();
+	public $supports;
 
 	/**
 	 * API authentication parameters and headers.
@@ -32,7 +32,7 @@ class WPF_Groundhogg_REST {
 	/**
 	 * Lets us link directly to editing a contact record.
 	 *
-	 * @since 3.38.10
+	 * @since 3.38.14
 	 * @var  string
 	 */
 
@@ -50,6 +50,7 @@ class WPF_Groundhogg_REST {
 		$this->slug      = 'groundhogg-rest';
 		$this->name      = 'Groundhogg';
 		$this->menu_name = 'Groundhogg (REST API)';
+		$this->supports  = array( 'events' );
 
 		// Set up admin options.
 		if ( is_admin() ) {
@@ -651,6 +652,61 @@ class WPF_Groundhogg_REST {
 		return $contact_ids;
 
 	}
+
+
+	/**
+	 * Track event.
+	 *
+	 * Track an event with the Groundhogg activity API.
+	 *
+	 * @since  3.38.16
+	 *
+	 * @param  string      $event      The event title.
+	 * @param  bool|string $event_data The event description.
+	 * @param  bool|string $email_address The user email address.
+	 * @return bool|WP_Error True if success, WP_Error if failed.
+	 */
+	public function track_event( $event, $event_data = false, $email_address = false ) {
+
+		if ( empty( $email_address ) && ! wpf_is_user_logged_in() ) {
+			// Tracking only works if WP Fusion knows who the contact is.
+			return;
+		}
+
+		// Get the email address to track.
+		if ( empty( $email_address ) ) {
+			$user          = wpf_get_current_user();
+			$email_address = $user->user_email;
+		}
+
+		$contact_id = $this->get_contact_id( $email_address );
+
+		if ( ! $contact_id ) {
+			return;
+		}
+
+		$body = array(
+			'args' => array(
+				'contact_id' => $contact_id,
+			),
+		);
+
+		wpf_log( 'info', wpf_get_current_user_id(), 'Tracking event: ' . $event, array( 'meta_array_nofilter' => $event_data ) );
+
+		$request        = $this->url . '/activity/';
+		$params         = $this->get_params();
+		$params['body'] = wp_json_encode( $body );
+
+		$response = wp_safe_remote_post( $request, $params );
+
+		if ( is_wp_error( $response ) ) {
+			wpf_log( 'error', 0, 'Error tracking event: ' . $response->get_error_message() );
+			return $response;
+		}
+
+		return true;
+	}
+
 
 
 }

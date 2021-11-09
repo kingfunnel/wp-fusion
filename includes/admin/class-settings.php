@@ -54,6 +54,8 @@ class WPF_Settings {
 		add_action( 'show_field_contact_fields_begin', array( $this, 'show_field_contact_fields_begin' ), 10, 2 );
 		add_action( 'show_field_assign_tags', array( $this, 'show_field_assign_tags' ), 10, 2 );
 		add_action( 'validate_field_assign_tags', array( $this, 'validate_field_assign_tags' ), 10, 3 );
+		add_action( 'show_field_integrations_overview_begin', array( $this, 'show_field_integrations_overview_begin' ), 10, 2 );
+		add_action( 'show_field_integrations_overview', array( $this, 'show_field_integrations_overview' ), 10, 2 );
 		add_action( 'show_field_import_users', array( $this, 'show_field_import_users' ), 10, 2 );
 		add_action( 'show_field_import_users_end', array( $this, 'show_field_import_users_end' ), 10, 2 );
 		add_action( 'show_field_import_groups', array( $this, 'show_field_import_groups' ), 10, 2 );
@@ -113,8 +115,6 @@ class WPF_Settings {
 			add_action( 'admin_init', array( $this, 'maybe_activate_site' ) );
 
 		}
-
-		add_action( 'admin_init', array( $this, 'maybe_updated_plugin' ) );
 
 		// Fire up the options framework.
 		new WP_Fusion_Options( $this->get_setup(), $this->get_sections() );
@@ -337,7 +337,7 @@ class WPF_Settings {
 	 * @since 3.33.4
 	 * @return array
 	 */
-	public function get_available_tags_flat() {
+	public function get_available_tags_flat( $include_read_only = true ) {
 
 		$available_tags = $this->get( 'available_tags', array() );
 
@@ -346,12 +346,24 @@ class WPF_Settings {
 		foreach ( $available_tags as $id => $label ) {
 
 			if ( is_array( $label ) ) {
+
+				if ( false !== strpos( $label['category'], 'Read Only' ) && ! $include_read_only ) {
+					continue; // don't include read only tags.
+				}
+
+				if ( strpos( $label['category'], 'Read Only' ) !== false ) {
+					$label['label'] .= ' <small>(' . esc_html__( 'read only', 'wp-fusion' ) . ')</small>';
+				}
+
 				$label = $label['label'];
+
 			}
 
 			$data[ $id ] = $label;
 
 		}
+
+		asort( $data );
 
 		return $data;
 
@@ -697,6 +709,11 @@ class WPF_Settings {
 					'group' => 'extra',
 				);
 
+				if ( is_array( maybe_unserialize( $data[0] ) ) ) {
+					$meta_fields[ $key ]['type'] = 'multiselect';
+				} else {
+					$meta_fields[ $key ]['type'] = 'text';
+				}
 			}
 		}
 
@@ -833,6 +850,7 @@ class WPF_Settings {
 			'WP_Fusion_Downloads',
 			'WP_Fusion_Webhooks',
 			'WP_Fusion_Media_Tools',
+			'WP_Fusion_Event_Tracking',
 		);
 
 		foreach ( $addons as $class ) {
@@ -1000,7 +1018,46 @@ class WPF_Settings {
 			if ( 'valid' === $license_data->license ) {
 				wp_send_json_success( 'activated' );
 			} else {
-				wp_send_json_error( '<pre>' . wpf_print_r( $license_data, true ) . '</pre>' );
+
+				switch ( $license_data->error ) {
+
+					case 'expired':
+						$message = sprintf(
+							/* translators: the license key expiration date */
+							__( 'Your license key expired on %s.', 'edd-sample-plugin' ),
+							date_i18n( get_option( 'date_format' ), strtotime( $license_data->expires, current_time( 'timestamp' ) ) )
+						);
+						break;
+
+					case 'disabled':
+					case 'revoked':
+						$message = __( 'Your license key has been disabled.', 'edd-sample-plugin' );
+						break;
+
+					case 'missing':
+						$message = __( 'Invalid license.', 'edd-sample-plugin' );
+						break;
+
+					case 'invalid':
+					case 'site_inactive':
+						$message = __( 'Your license is not active for this URL.', 'edd-sample-plugin' );
+						break;
+
+					case 'item_name_mismatch':
+						/* translators: the plugin name */
+						$message = sprintf( __( 'This appears to be an invalid license key for %s.', 'edd-sample-plugin' ), EDD_SAMPLE_ITEM_NAME );
+						break;
+
+					case 'no_activations_left':
+						$message = __( 'Your license key has reached its activation limit.', 'edd-sample-plugin' );
+						break;
+
+					default:
+						$message = __( 'An error occurred, please try again.', 'edd-sample-plugin' );
+						break;
+				}
+
+				wp_send_json_error( $message . '<br /><pre>' . wpf_print_r( $license_data, true ) . '</pre>' );
 			}
 		} else {
 
@@ -1084,28 +1141,7 @@ class WPF_Settings {
 
 	}
 
-	/**
-	 * Track the current version of the plugin, and log updates to the logs
-	 *
-	 * @since 3.35.9
-	 * @access public
-	 * @return void
-	 */
-	public function maybe_updated_plugin() {
 
-		$version = get_option( 'wp_fusion_version' );
-
-		if ( WP_FUSION_VERSION !== $version ) {
-
-			wpf_log( 'notice', get_current_user_id(), 'WP Fusion updated from <strong>v' . $version . '</strong> to <strong>v' . WP_FUSION_VERSION . '</strong>.', array( 'source' => 'plugin-updater' ) );
-
-			update_option( 'wp_fusion_version', WP_FUSION_VERSION );
-
-			do_action( 'wpf_plugin_updated', $version, WP_FUSION_VERSION );
-
-		}
-
-	}
 
 
 	/**
@@ -1235,10 +1271,11 @@ class WPF_Settings {
 
 		$settings['push'] = array(
 			'title'   => __( 'Push', 'wp-fusion' ),
-			'desc'    => sprintf( __( 'When a user profile is modified, update their contact record in %s to match.', 'wp-fusion' ), wp_fusion()->crm->name ),
+			'desc'    => sprintf( __( 'Sync profile updates and custom field changes to the user\'s contact record in %s.', 'wp-fusion' ), wp_fusion()->crm->name ),
 			'std'     => 1,
 			'type'    => 'checkbox',
 			'section' => 'main',
+			'unlock'  => array( 'push_all_meta' ),
 		);
 
 		$settings['push_all_meta'] = array(
@@ -1298,17 +1335,18 @@ class WPF_Settings {
 		);
 
 		$settings['hide_archives'] = array(
-			'title'   => __( 'Filter Queries', 'wp-fusion' ),
-			'desc'    => __( 'Content that the user cannot access will be <strong>completely hidden</strong> from all post listings, grids, archives, and course navigation. <strong>Use with caution</strong>.', 'wp-fusion' ),
-			'std'     => false,
-			'type'    => 'select',
-			'section' => 'main',
-			'choices' => array(
+			'title'      => __( 'Filter Queries', 'wp-fusion' ),
+			'desc'       => __( 'Content that the user cannot access will be <strong>completely hidden</strong> from all post listings, grids, archives, and course navigation. <strong>Use with caution</strong>.', 'wp-fusion' ),
+			'std'        => false,
+			'type'       => 'select',
+			'section'    => 'main',
+			'choices'    => array(
 				false      => __( 'Off', 'wp-fusion' ),
 				'standard' => __( 'Standard', 'wp-fusion' ),
 				'advanced' => __( 'Advanced (slower)', 'wp-fusion' ),
 			),
-			'unlock'  => array( 'query_filter_post_types' ),
+			'unlock'     => array( 'query_filter_post_types' ),
+			'allow_null' => false,
 		);
 
 		$settings['query_filter_post_types'] = array(
@@ -1496,16 +1534,26 @@ class WPF_Settings {
 		);
 
 		$settings['username_format'] = array(
-			'title'   => __( 'Username Format', 'wp-fusion' ),
-			'desc'    => sprintf( __( 'How should usernames be set for newly imported users? For more information, %1$ssee our documentation%2$s.', 'wp-fusion' ), '<a href="https://wpfusion.com/documentation/getting-started/general-settings/" target="_blank">', '</a>' ),
-			'type'    => 'select',
-			'section' => 'main',
-			'std'     => 'email',
-			'choices' => array(
+			'title'      => __( 'Username Format', 'wp-fusion' ),
+			'desc'       => sprintf( __( 'How should usernames be set for newly imported users? For more information, %1$ssee our documentation%2$s.', 'wp-fusion' ), '<a href="https://wpfusion.com/documentation/getting-started/general-settings/" target="_blank">', '</a>' ),
+			'type'       => 'select',
+			'section'    => 'main',
+			'std'        => 'email',
+			'allow_null' => false,
+			'choices'    => array(
 				'email'    => __( 'Email Address', 'wp-fusion' ),
 				'flname'   => __( 'FirstnameLastname', 'wp-fusion' ),
 				'fnamenum' => __( 'Firstname12345', 'wp-fusion' ),
 			),
+		);
+
+		/*
+		// INTEGRATIONS
+		*/
+
+		$settings['integrations_overview'] = array(
+			'type'    => 'integrations_overview',
+			'section' => 'integrations',
 		);
 
 		/*
@@ -2062,6 +2110,7 @@ class WPF_Settings {
 			'placeholder' => $field['placeholder'],
 			'disabled'    => $field['disabled'],
 			'limit'       => $field['limit'],
+			'read_only'   => ! empty( $field['read_only'] ) ? true : false,
 		);
 
 		wpf_render_tag_multiselect( $args );
@@ -2397,6 +2446,55 @@ class WPF_Settings {
 
 	}
 
+	/**
+	 * Open field for the integrations overview.
+	 *
+	 * @since 3.38.14
+	 *
+	 * @param string $id     The field ID.
+	 * @param Array  $field  The field config.
+	 */
+	public function show_field_integrations_overview_begin( $id, $field ) {
+
+		echo '<tr valign="top">';
+		echo '<td style="padding: 0px;">';
+	}
+
+
+	/**
+	 * Show the integrations overview.
+	 *
+	 * @since 3.38.14
+	 *
+	 * @param string $id     The field ID.
+	 * @param Array  $field  The field config.
+	 */
+	public function show_field_integrations_overview( $id, $field ) {
+
+		echo '<div id="wpf-integrations-overview">';
+
+		echo '<p>' . sprintf( __( 'WP Fusion has detected and loaded compatibility modules for the plugins listed below. Click on each to learn how to make the most of the integration with %s.', 'wp-fusion' ), wp_fusion()->crm->name ) . '</p>';
+
+		$integrations = array();
+
+		foreach ( wp_fusion()->integrations as $integration ) {
+
+			if ( isset( $integration->name ) && ! empty( $integration->docs_url ) ) {
+				$integrations[ $integration->docs_url ] = $integration->name;
+			}
+		}
+
+		asort( $integrations );
+
+		foreach ( $integrations as $docs_url => $name ) {
+
+			echo '<a class="wpf-integration" target="_blank" href="' . esc_url( $docs_url ) . '"><span class="dashicons dashicons-admin-links"></span>' . esc_html( $name ) . '</a>';
+
+		}
+
+		echo '</div>';
+
+	}
 
 	/**
 	 * Displays import groups table

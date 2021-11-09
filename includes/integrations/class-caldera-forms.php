@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Caldera_Forms extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'caldera-forms';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Caldera-forms';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/lead-generation/caldera-forms/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_Caldera_Forms extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'caldera-forms';
 
 		add_filter( 'caldera_forms_get_form_processors', array( $this, 'register_processor' ) );
 
@@ -36,9 +59,9 @@ class WPF_Caldera_Forms extends WPF_Integrations_Base {
 	public function register_processor( $processors ) {
 
 		$processors['wp_fusion'] = array(
-			'name' 			=>  'WP Fusion',
-			'description'	=>  sprintf( __( 'Send form entries to %s' ), wp_fusion()->crm->name ),
-			'processor' 	=>  array( $this, 'process' )
+			'name'        => 'WP Fusion',
+			'description' => sprintf( __( 'Send form entries to %s' ), wp_fusion()->crm->name ),
+			'processor'   => array( $this, 'process' ),
 		);
 
 		return $processors;
@@ -55,16 +78,16 @@ class WPF_Caldera_Forms extends WPF_Integrations_Base {
 
 	public function processor_template( $processors ) {
 
-		foreach( $processors as $processor => $config ) {
+		foreach ( $processors as $processor => $config ) {
 
-			if( $processor == 'wp_fusion' ) { ?>
+			if ( $processor == 'wp_fusion' ) { ?>
 
-				<script type="text/html" id="<?php echo $processor ?>-tmpl">
+				<script type="text/html" id="<?php echo $processor; ?>-tmpl">
 
-					<p class="description"><?php echo $config['description'] ?></p><br>
+					<p class="description"><?php echo $config['description']; ?></p><br>
 
 					<div class="caldera-config-group">
-						<label for="wpf-apply-tags"><?php echo __( 'Apply Tags', 'wp-fusion' ) ?></label>
+						<label for="wpf-apply-tags"><?php echo __( 'Apply Tags', 'wp-fusion' ); ?></label>
 						<div class="caldera-config-field">
 							
 							<input id="wpf-apply-tags" type="text" class="block-input field-config" name="{{_name}}[apply_tags]" value="{{apply_tags}}" />
@@ -91,35 +114,38 @@ class WPF_Caldera_Forms extends WPF_Integrations_Base {
 
 						foreach ( $available_fields as $group_header => $fields ) {
 
-							if( is_array( $fields ) ) {
+							if ( is_array( $fields ) ) {
 
-								foreach( $fields as $key => $value ) {
+								foreach ( $fields as $key => $value ) {
 									$crm_fields[ $key ] = $value;
 								}
-
 							} else {
 
 								$crm_fields[ $group_header ] = $fields;
 
 							}
-
 						}
 
-						foreach( $crm_fields as $field => $label ) : 
+						foreach ( $crm_fields as $field => $label ) :
 
 							// Sanitize fields
-							$field = str_replace('[', 'lbracket', $field);
-							$field = str_replace(']', 'rbracket', $field);
-							$field = str_replace(',', 'comma', $field);
+							$field = str_replace( '[', 'lbracket', $field );
+							$field = str_replace( ']', 'rbracket', $field );
+							$field = str_replace( ',', 'comma', $field );
 
 							?>
 
 							<div class="caldera-config-group">
 								<label for="wpf-crm-field-<?php echo $field; ?>">
-									<?php echo $label ?>
+									<?php echo $label; ?>
 								</label>
 								<div class="caldera-config-field">
-									<input id="wpf-crm-field-<?php echo $field; ?>" type="text" class="block-input field-config magic-tag-enabled <?php if( strtolower( $label ) == 'email' ) echo "required"; ?>" name="{{_name}}[<?php echo $field; ?>]" value="{{<?php echo $field; ?>}}" />
+									<input id="wpf-crm-field-<?php echo $field; ?>" type="text" class="block-input field-config magic-tag-enabled 
+																		<?php
+																		if ( strtolower( $label ) == 'email' ) {
+																			echo 'required';}
+																		?>
+									" name="{{_name}}[<?php echo $field; ?>]" value="{{<?php echo $field; ?>}}" />
 								</div>
 							</div>
 
@@ -129,10 +155,9 @@ class WPF_Caldera_Forms extends WPF_Integrations_Base {
 
 				</script>
 
-			<?php
+				<?php
 
 			}
-
 		}
 
 	}
@@ -148,29 +173,28 @@ class WPF_Caldera_Forms extends WPF_Integrations_Base {
 	public function process( $config, $form, $process_id ) {
 
 		$email_address = false;
-		$update_data = array();
+		$update_data   = array();
 
-		foreach( $config as $key => $value ) {
+		foreach ( $config as $key => $value ) {
 
-			if( empty( $value ) || strpos($value, '%') === false ) {
+			if ( empty( $value ) || strpos( $value, '%' ) === false ) {
 				continue;
 			}
 
 			// Un-sanitize fields
-			$key = str_replace('lbracket', '[', $key);
-			$key = str_replace('rbracket', ']', $key);
-			$key = str_replace('comma', ',', $key);			
+			$key = str_replace( 'lbracket', '[', $key );
+			$key = str_replace( 'rbracket', ']', $key );
+			$key = str_replace( 'comma', ',', $key );
 
 			$update_data[ $key ] = Caldera_Forms::do_magic_tags( $value );
 
 			if ( false == $email_address && is_email( $update_data[ $key ] ) ) {
 				$email_address = $update_data[ $key ];
 			}
-
 		}
 
 		$tags_exploded = explode( ',', $config['apply_tags'] );
-		$apply_tags = array();
+		$apply_tags    = array();
 
 		foreach ( $tags_exploded as $tag ) {
 
@@ -182,14 +206,14 @@ class WPF_Caldera_Forms extends WPF_Integrations_Base {
 		}
 
 		$args = array(
-			'email_address'		=> $email_address,
-			'update_data'		=> $update_data,
-			'apply_tags'		=> $apply_tags,
-			'integration_slug'	=> 'caldera_forms',
-			'integration_name'	=> 'Caldera Forms',
-			'form_id'			=> $form['ID'],
-			'form_title'		=> $form['name'],
-			'form_edit_link'	=> admin_url( 'admin.php?edit=' . $form['ID'] . '&page=caldera-forms' )
+			'email_address'    => $email_address,
+			'update_data'      => $update_data,
+			'apply_tags'       => $apply_tags,
+			'integration_slug' => 'caldera_forms',
+			'integration_name' => 'Caldera Forms',
+			'form_id'          => $form['ID'],
+			'form_title'       => $form['name'],
+			'form_edit_link'   => admin_url( 'admin.php?edit=' . $form['ID'] . '&page=caldera-forms' ),
 		);
 
 		$contact_id = WPF_Forms_Helper::process_form_data( $args );
@@ -199,4 +223,4 @@ class WPF_Caldera_Forms extends WPF_Integrations_Base {
 
 }
 
-new WPF_Caldera_Forms;
+new WPF_Caldera_Forms();

@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Tribe_Tickets extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'tribe-tickets';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Tribe-tickets';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/gamification/badgeos/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_Tribe_Tickets extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'tribe-tickets';
 
 		$this->name = 'Tribe Tickets';
 
@@ -286,7 +309,7 @@ class WPF_Tribe_Tickets extends WPF_Integrations_Base {
 	 *
 	 * @since  3.37.13
 	 *
-	 * @param  Int   $attendee_id The attendee ID.
+	 * @param  Int $attendee_id The attendee ID.
 	 * @return array The data to sync to the CRM.
 	 */
 	public function get_attendee_meta( $attendee_id ) {
@@ -1090,7 +1113,7 @@ class WPF_Tribe_Tickets extends WPF_Integrations_Base {
 	 *
 	 * @since  3.37.24
 	 *
-	 * @param  array  $options The options.
+	 * @param  array $options The options.
 	 * @return array The options.
 	 */
 	public function export_options( $options ) {

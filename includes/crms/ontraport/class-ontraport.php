@@ -36,7 +36,7 @@ class WPF_Ontraport {
 	 * @var  string
 	 */
 
-	public $edit_url = 'https://app.ontraport.com/#!/contact/listAll&quickView=%d';
+	public $edit_url = 'https://app.ontraport.com/#!/contact/edit&id=%d';
 
 	/**
 	 * Get things started
@@ -111,7 +111,7 @@ class WPF_Ontraport {
 
 		if ( 'datepicker' == $field_type || 'date' == $field_type && is_numeric( $value ) ) {
 
-			// Dates are a unix timestamp and have to match the timezone set in the Ontraport account. For now we'll assume that is the same as the WP timezone
+			// Dates are a unix timestamp and have to match the timezone set in the Ontraport account. For now we'll assume that is the same as the WP timezone.
 
 			// strtotime() in CRM_Base seems to give us UTC, so this will switch it back to local? I really have no idea....
 
@@ -809,7 +809,11 @@ class WPF_Ontraport {
 
 				$value = $body_json['data'][ $field_data['crm_field'] ];
 
-				// Handle dropdowns and picklists
+				// Dates: Ontraport returns datetime fields in the time zone set on
+				// the field (no conversion). We'll assume the timezone in OP
+				// matches the site, and also not convert anything here.
+
+				// Handle dropdowns and picklists.
 
 				if ( isset( $options[ $field_data['crm_field'] ] ) && isset( $options[ $field_data['crm_field'] ][ $value ] ) ) {
 					$value = $options[ $field_data['crm_field'] ][ $value ];

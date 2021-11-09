@@ -75,7 +75,7 @@ class WPF_WPForms extends WPForms_Provider {
 	 * @param array $fields WPForms form array of fields.
 	 * @param array $entry
 	 * @param array $form_data
-	 * @param int $entry_id
+	 * @param int   $entry_id
 	 */
 
 	public function process_entry( $fields, $entry, $form_data, $entry_id = 0 ) {
@@ -109,7 +109,7 @@ class WPF_WPForms extends WPForms_Provider {
 			}
 
 			$email_address = false;
-			$update_data = array();
+			$update_data   = array();
 
 			// Format fields
 
@@ -138,7 +138,6 @@ class WPF_WPForms extends WPForms_Provider {
 					$fields[ $i ]['value'] = explode( PHP_EOL, $field['value_raw'] );
 
 				}
-
 			}
 
 			// Map fields
@@ -158,19 +157,19 @@ class WPF_WPForms extends WPForms_Provider {
 				}
 			}
 
-			if( ! isset( $connection['options']['apply_tags'] ) ) {
+			if ( ! isset( $connection['options']['apply_tags'] ) ) {
 				$connection['options']['apply_tags'] = array();
 			}
 
 			$args = array(
-				'email_address'		=> $email_address,
-				'update_data'		=> $update_data,
-				'apply_tags'		=> $connection['options']['apply_tags'],
-				'integration_slug'	=> 'wpforms',
-				'integration_name'	=> 'WPForms',
-				'form_id'			=> $form_data['id'],
-				'form_title'		=> $form_data['settings']['form_title'],
-				'form_edit_link'	=> admin_url( 'admin.php?page=wpforms-builder&view=providers&form_id=' . $form_data['id'] )
+				'email_address'    => $email_address,
+				'update_data'      => $update_data,
+				'apply_tags'       => $connection['options']['apply_tags'],
+				'integration_slug' => 'wpforms',
+				'integration_name' => 'WPForms',
+				'form_id'          => $form_data['id'],
+				'form_title'       => $form_data['settings']['form_title'],
+				'form_edit_link'   => admin_url( 'admin.php?page=wpforms-builder&view=providers&form_id=' . $form_data['id'] ),
 			);
 
 			$contact_id = WPF_Forms_Helper::process_form_data( $args );
@@ -192,13 +191,12 @@ class WPF_WPForms extends WPForms_Provider {
 
 		$i = 0;
 
-		foreach( $form_post as $n => $post_item ) {
+		foreach ( $form_post as $n => $post_item ) {
 
-			if( strpos( $post_item->name, 'apply_tags' ) !== false ) {
-				$form_post[$n]->name = str_replace('[]', '[' . $i . ']', $post_item->name);
+			if ( strpos( $post_item->name, 'apply_tags' ) !== false ) {
+				$form_post[ $n ]->name = str_replace( '[]', '[' . $i . ']', $post_item->name );
 				$i++;
 			}
-
 		}
 
 		$_POST['data'] = addslashes( json_encode( $form_post ) );
@@ -246,7 +244,7 @@ class WPF_WPForms extends WPForms_Provider {
 	 * Provider account lists HTML.
 	 *
 	 * @param string $connection_id
-	 * @param array $connection
+	 * @param array  $connection
 	 *
 	 * @return WP_Error|string
 	 */
@@ -261,8 +259,8 @@ class WPF_WPForms extends WPForms_Provider {
 	 * Provider account list fields HTML.
 	 *
 	 * @param string $connection_id
-	 * @param array $connection
-	 * @param mixed $form
+	 * @param array  $connection
+	 * @param mixed  $form
 	 *
 	 * @return WP_Error|string
 	 */
@@ -273,7 +271,7 @@ class WPF_WPForms extends WPForms_Provider {
 			return '';
 		}
 
-		if( !isset( $connection['fields'] ) ) {
+		if ( ! isset( $connection['fields'] ) ) {
 			$connection['fields'] = array();
 		}
 
@@ -298,7 +296,6 @@ class WPF_WPForms extends WPForms_Provider {
 				array_splice( $form_fields, $i + 2, 0, array( $form_field_last ) );
 
 			}
-
 		}
 
 		$output = '<div class="wpforms-provider-fields wpforms-connection-block">';
@@ -323,7 +320,7 @@ class WPF_WPForms extends WPForms_Provider {
 
 				$output .= '<td>';
 
-				if( ! isset( $connection['fields'][ $form_field['id'] ] ) ) {
+				if ( ! isset( $connection['fields'][ $form_field['id'] ] ) ) {
 					$connection['fields'][ $form_field['id'] ] = array( 'crm_field' => false );
 				}
 
@@ -331,114 +328,106 @@ class WPF_WPForms extends WPForms_Provider {
 
 				// CRM field
 
-				$output .= '<select class="select4-crm-field" name="providers[' . $this->slug .'][' . $connection_id . '][fields][' . $form_field['id'] . '][crm_field]" data-placeholder="Select a field">';
+				$output .= '<select class="select4-crm-field" name="providers[' . $this->slug . '][' . $connection_id . '][fields][' . $form_field['id'] . '][crm_field]" data-placeholder="Select a field">';
 
 					$output .= '<option></option>';
 
 					$crm_fields = wpf_get_option( 'crm_fields' );
 
-					if ( ! empty( $crm_fields ) ) {
+				if ( ! empty( $crm_fields ) ) {
 
-						foreach ( $crm_fields as $group_header => $fields ) {
+					foreach ( $crm_fields as $group_header => $fields ) {
 
-							// For CRMs with separate custom and built in fields
-							if ( is_array( $fields ) ) {
+						// For CRMs with separate custom and built in fields
+						if ( is_array( $fields ) ) {
 
-								$output .= '<optgroup label="' . $group_header . '">';
+							$output .= '<optgroup label="' . $group_header . '">';
 
-								foreach ( $crm_fields[ $group_header ] as $field => $label ) {
+							foreach ( $crm_fields[ $group_header ] as $field => $label ) {
 
-									if ( is_array( $label ) ) {
-										$label = $label['label'];
-									}
-
-									$output .= '<option ' . selected( esc_attr( $setting ), $field, false ) . ' value="' . esc_attr($field) . '">' . esc_html($label) . '</option>';
+								if ( is_array( $label ) ) {
+									$label = $label['label'];
 								}
 
-
-								$output .= '</optgroup>';
-
-							} else {
-
-								$field = $group_header;
-								$label = $fields;
-
-								$output .= '<option ' . selected( esc_attr( $setting ), $field, false ) . ' value="' . esc_attr($field) . '">' . esc_html($label) . '</option>';
-
-
+								$output .= '<option ' . selected( esc_attr( $setting ), $field, false ) . ' value="' . esc_attr( $field ) . '">' . esc_html( $label ) . '</option>';
 							}
 
-						}
-
-					}
-
-					// Save custom added fields to the DB
-					if ( is_array( wp_fusion()->crm->supports ) && in_array( 'add_fields', wp_fusion()->crm->supports ) ) {
-
-						$field_check = array();
-
-						// Collapse fields if they're grouped
-						if( isset( $crm_fields['Custom Fields'] ) ) {
-
-							foreach( $crm_fields as $field_group ) {
-
-								foreach( $field_group as $field => $label ) {
-									$field_check[ $field ] = $label;
-								}
-
-							}
+							$output .= '</optgroup>';
 
 						} else {
 
-							$field_check = $crm_fields;
-							
-						}
+							$field = $group_header;
+							$label = $fields;
 
-						// Check to see if new custom fields have been added
-						if ( ! empty( $setting ) && ! isset( $field_check[ $setting ] ) ) {
-
-							// Lowercase and remove spaces (for Drip)
-							if( in_array( 'safe_add_fields', wp_fusion()->crm->supports ) ) {
-
-								$setting_value = strtolower( str_replace( ' ', '', $setting ) );
-
-							} else {
-
-								$setting_value = $setting;
-
-							}
-
-							$output .= '<option value="' . esc_attr($setting_value) . '" selected="selected">' . esc_html($setting) . '</option>';
-
-							if( isset( $crm_fields['Custom Fields'] ) ) {
-
-								$crm_fields['Custom Fields'][ $setting_value ] = $setting;
-
-							} else {
-								$crm_fields[ $setting_value ] = $setting;
-							}
-
-
-							wp_fusion()->settings->set( 'crm_fields', $crm_fields );
-
-							// Save safe crm field to DB
-							$contact_fields                               = wpf_get_option( 'contact_fields' );
-							$contact_fields[ $field_sub_id ]['crm_field'] = $setting_value;
-							wp_fusion()->settings->set( 'contact_fields', $contact_fields );
+							$output .= '<option ' . selected( esc_attr( $setting ), $field, false ) . ' value="' . esc_attr( $field ) . '">' . esc_html( $label ) . '</option>';
 
 						}
+					}
+				}
+
+					// Save custom added fields to the DB
+				if ( is_array( wp_fusion()->crm->supports ) && in_array( 'add_fields', wp_fusion()->crm->supports ) ) {
+
+					$field_check = array();
+
+					// Collapse fields if they're grouped
+					if ( isset( $crm_fields['Custom Fields'] ) ) {
+
+						foreach ( $crm_fields as $field_group ) {
+
+							foreach ( $field_group as $field => $label ) {
+								$field_check[ $field ] = $label;
+							}
+						}
+					} else {
+
+						$field_check = $crm_fields;
 
 					}
 
-					if ( is_array( wp_fusion()->crm->supports ) && in_array( 'add_tags', wp_fusion()->crm->supports ) ) {
+					// Check to see if new custom fields have been added
+					if ( ! empty( $setting ) && ! isset( $field_check[ $setting ] ) ) {
 
-						$output .= '<optgroup label="Tagging">';
+						// Lowercase and remove spaces (for Drip)
+						if ( in_array( 'safe_add_fields', wp_fusion()->crm->supports ) ) {
 
-							$output .= '<option ' . selected( esc_attr( $setting ), 'add_tag_' . $form_field['id'] ) . ' value="add_tag_' . $form_field['id'] . '">+ Create tag(s) from value</option>';
+							$setting_value = strtolower( str_replace( ' ', '', $setting ) );
 
-						$output .= '</optgroup>';
+						} else {
+
+							$setting_value = $setting;
+
+						}
+
+						$output .= '<option value="' . esc_attr( $setting_value ) . '" selected="selected">' . esc_html( $setting ) . '</option>';
+
+						if ( isset( $crm_fields['Custom Fields'] ) ) {
+
+							$crm_fields['Custom Fields'][ $setting_value ] = $setting;
+
+						} else {
+							$crm_fields[ $setting_value ] = $setting;
+						}
+
+						wp_fusion()->settings->set( 'crm_fields', $crm_fields );
+
+						// Save safe crm field to DB
+						$contact_fields                               = wpf_get_option( 'contact_fields' );
+						$contact_fields[ $field_sub_id ]['crm_field'] = $setting_value;
+						wp_fusion()->settings->set( 'contact_fields', $contact_fields );
 
 					}
+				}
+
+				if ( is_array( wp_fusion()->crm->supports ) && in_array( 'add_tags', wp_fusion()->crm->supports ) ) {
+
+					$output .= '<optgroup label="Tagging">';
+
+						$output .= '<option ' . selected( esc_attr( $setting ), 'add_tag_' . $form_field['id'] ) . ' value="add_tag_' . $form_field['id'] . '">+ Create tag(s) from value</option>';
+
+					$output .= '</optgroup>';
+
+				}
 
 					$output .= '</select>';
 
@@ -447,7 +436,6 @@ class WPF_WPForms extends WPForms_Provider {
 				$output .= '</tr>';
 
 			}
-
 		}
 
 		$output .= '</tbody>';
@@ -465,7 +453,7 @@ class WPF_WPForms extends WPForms_Provider {
 	 * Output options
 	 *
 	 * @param string $connection_id
-	 * @param array $connection
+	 * @param array  $connection
 	 *
 	 * @return string
 	 */
@@ -480,11 +468,11 @@ class WPF_WPForms extends WPForms_Provider {
 
 		$output .= '<h4>' . __( 'Apply Tags', 'wp-fusion' ) . '</h4>';
 
-		if( empty( $connection['options'] ) ) {
+		if ( empty( $connection['options'] ) ) {
 			$connection['options'] = array( 'apply_tags' => array() );
 		}
 
-		if( ! isset( $connection['options']['apply_tags'] ) ) {
+		if ( ! isset( $connection['options']['apply_tags'] ) ) {
 			$connection['options']['apply_tags'] = array();
 		}
 
@@ -507,4 +495,4 @@ class WPF_WPForms extends WPForms_Provider {
 
 }
 
-new WPF_WPForms;
+new WPF_WPForms();

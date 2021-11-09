@@ -7,6 +7,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_wpForo extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'wpforo';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Wpforo';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/forums/wpforo/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_wpForo extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'wpforo';
 
 		// Redirect if they don't have access
 		add_action( 'template_redirect', array( $this, 'template_redirect' ), 15 );
@@ -541,6 +564,7 @@ class WPF_wpForo extends WPF_Integrations_Base {
 									$args = array(
 										'setting'   => $settings[ $forum_id ]['required_tags'],
 										'meta_name' => "wpf_settings[{$forum_id}][required_tags]",
+										'read_only' => true,
 									);
 
 									wpf_render_tag_multiselect( $args );
@@ -594,7 +618,8 @@ class WPF_wpForo extends WPF_Integrations_Base {
 					</thead>
 					<tbody>
 
-						<?php $groups_settings = get_option( 'wpf_wpforo_settings_usergroups', array() );
+						<?php
+						$groups_settings = get_option( 'wpf_wpforo_settings_usergroups', array() );
 
 						if ( empty( $groups_settings ) ) {
 							$groups_settings = array();
@@ -644,7 +669,7 @@ class WPF_wpForo extends WPF_Integrations_Base {
 
 			</form>
 		</div>
-	<?php
+		<?php
 	}
 
 }

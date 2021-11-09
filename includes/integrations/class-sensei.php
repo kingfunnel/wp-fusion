@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Sensei extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'sensei';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Sensei';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/learning-management/sensei/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_Sensei extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'sensei';
 
 		add_action( 'sensei_user_lesson_end', array( $this, 'apply_tags_complete' ), 10, 2 );
 		add_action( 'sensei_user_course_end', array( $this, 'apply_tags_complete' ), 10, 2 );
@@ -42,23 +65,30 @@ class WPF_Sensei extends WPF_Integrations_Base {
 		}
 
 		echo '<p><label for="wpf-apply-tags"><small>Apply tags when a user completes this ' . $post->post_type . ':</small></label>';
-		wpf_render_tag_multiselect( array( 'setting' => $settings['apply_tags_sensei'], 'meta_name' => 'wpf-settings', 'field_id' => 'apply_tags_sensei' ) );
+		wpf_render_tag_multiselect(
+			array(
+				'setting'   => $settings['apply_tags_sensei'],
+				'meta_name' => 'wpf-settings',
+				'field_id'  => 'apply_tags_sensei',
+			)
+		);
 		echo '</p>';
 
 		if ( $post->post_type == 'course' ) {
 
-			$children = get_posts( array(
-				'posts_per_page' => - 1,
-				'post_type'      => array( 'lesson' ),
-				'meta_key'       => '_lesson_course',
-				'meta_value'     => $post->ID,
-				'post_status'    => 'any'
-			) );
+			$children = get_posts(
+				array(
+					'posts_per_page' => - 1,
+					'post_type'      => array( 'lesson' ),
+					'meta_key'       => '_lesson_course',
+					'meta_value'     => $post->ID,
+					'post_status'    => 'any',
+				)
+			);
 
 			if ( count( $children ) > 0 ) {
 				echo '<p><input class="checkbox" type="checkbox" id="wpf-apply-children-courses" name="wpf-settings[apply_children_courses]" value="1" /> <small>Apply to ' . count( $children ) . ' related lessons.</small></p>';
 			}
-
 		}
 
 	}
@@ -74,13 +104,15 @@ class WPF_Sensei extends WPF_Integrations_Base {
 
 		if ( isset( $data['apply_children_courses'] ) ) {
 
-			$children = get_posts( array(
-				'posts_per_page' => - 1,
-				'post_type'      => array( 'lesson' ),
-				'meta_key'       => '_lesson_course',
-				'meta_value'     => $post_id,
-				'post_status'    => 'any'
-			) );
+			$children = get_posts(
+				array(
+					'posts_per_page' => - 1,
+					'post_type'      => array( 'lesson' ),
+					'meta_key'       => '_lesson_course',
+					'meta_value'     => $post_id,
+					'post_status'    => 'any',
+				)
+			);
 
 		}
 
@@ -89,7 +121,6 @@ class WPF_Sensei extends WPF_Integrations_Base {
 			foreach ( $children as $child ) {
 				update_post_meta( $child->ID, 'wpf-settings', $data );
 			}
-
 		}
 
 	}
@@ -110,10 +141,9 @@ class WPF_Sensei extends WPF_Integrations_Base {
 			wp_fusion()->user->apply_tags( $wpf_settings['apply_tags_sensei'], $user_id );
 		}
 
-
 	}
 
 
 }
 
-new WPF_Sensei;
+new WPF_Sensei();

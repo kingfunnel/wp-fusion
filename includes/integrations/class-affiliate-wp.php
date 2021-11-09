@@ -9,6 +9,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_AffiliateWP extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'affiliate-wp';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Affiliate wp';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/other/affiliate-wp/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -17,8 +42,6 @@ class WPF_AffiliateWP extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'affiliate-wp';
 
 		// Settings fields
 		add_filter( 'wpf_configure_settings', array( $this, 'register_settings' ), 15, 2 );

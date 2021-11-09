@@ -7,14 +7,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Woo_Subscriptions extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'woo-subscriptions';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'WooCommerce Subscriptions';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/woocommerce-subscriptions/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
 	 * @return  void
 	 */
 	public function init() {
-
-		$this->slug = 'woo-subscriptions';
 
 		// Subscription statuses.
 		add_action( 'woocommerce_subscription_status_updated', array( $this, 'subscription_status_updated' ), 20, 3 ); // 20 so it runs after the renewal date has been updated?
@@ -257,6 +280,8 @@ class WPF_Woo_Subscriptions extends WPF_Integrations_Base {
 
 		}
 
+		$update_data = apply_filters( 'wpf_woocommerce_subscription_sync_fields', $update_data, $subscription );
+
 		wp_fusion()->user->push_user_meta( $subscription->get_user_id(), $update_data );
 
 	}
@@ -274,7 +299,7 @@ class WPF_Woo_Subscriptions extends WPF_Integrations_Base {
 
 		// Don't run on staging sites
 
-		if ( WC_Subscriptions::is_duplicate_site() && false == $force ) {
+		if ( WC_Subscriptions::is_duplicate_site() ) {
 
 			wpf_log( 'notice', $user_id, 'WooCommerce subscription <a href="' . admin_url( 'post.php?post=' . $subscription->get_id() . '&action=edit' ) . '" target="_blank">#' . $subscription->get_id() . '</a> status changed to <strong>' . ucwords( $status ) . '</strong>, staging site detected so no tags will be modified.' );
 			return;
@@ -359,7 +384,7 @@ class WPF_Woo_Subscriptions extends WPF_Integrations_Base {
 
 			wpf_log( 'info', $user_id, 'Subscription <a href="' . admin_url( 'post.php?post=' . $subscription->get_id() . '&action=edit' ) . '" target="_blank">#' . $subscription->get_id() . '</a> no longer <strong>On-hold</strong>. Nothing to be done.' );
 
-			if ( wpf_is_field_active( 'sub_renewal_date' ) ) {
+			if ( wpf_is_field_active( 'sub_renewal_date' ) || has_filter( 'wpf_woocommerce_subscription_sync_fields' ) ) {
 				$this->sync_subscription_fields( $subscription );
 			}
 
@@ -369,13 +394,13 @@ class WPF_Woo_Subscriptions extends WPF_Integrations_Base {
 
 		wpf_log( 'info', $user_id, 'Subscription <a href="' . admin_url( 'post.php?post=' . $subscription->get_id() . '&action=edit' ) . '" target="_blank">#' . $subscription->get_id() . '</a> still <strong>On-hold</strong>. Processing actions.' );
 
-		// Update meta
+		// Update meta.
 		$this->sync_subscription_fields( $subscription );
 
-		// Update tags
+		// Update tags.
 		$this->apply_tags_for_subscription_status( $subscription, 'on-hold' );
 
-		// Allow other integrations to run based on the subscription status change
+		// Allow other integrations to run based on the subscription status change.
 		foreach ( $subscription->get_items() as $line_item ) {
 
 			$product_id = $line_item->get_product_id();

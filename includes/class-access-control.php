@@ -40,6 +40,7 @@ class WPF_Access_Control {
 		// Query / archive filtering
 		add_action( 'get_terms_args', array( $this, 'get_terms_args' ), 10, 2 );
 		add_action( 'pre_get_posts', array( $this, 'filter_queries' ) );
+		add_filter( 'posts_where', array( $this, 'posts_where_restricted_terms' ), 10, 2 );
 		add_filter( 'the_posts', array( $this, 'exclude_restricted_posts' ), 10, 2 );
 
 		// Protect pseudo-pages
@@ -92,6 +93,30 @@ class WPF_Access_Control {
 
 		// Parse args again in case the filter messed them up.
 		return wp_parse_args( $settings, WPF_Admin_Interfaces::$meta_box_defaults );
+
+	}
+
+
+	/**
+	 * Gets the taxonomy rules.
+	 *
+	 * Since 3.38.22, taxonomy rules are set to autoload. That means if they
+	 * aren't in the object cache, there aren't any taxonomy rules configured,
+	 * and we can avoid a database hit.
+	 *
+	 * @since  3.38.22
+	 *
+	 * @return array The taxonomy rules.
+	 */
+	public function get_taxonomy_rules() {
+
+		$alloptions = wp_load_alloptions();
+
+		if ( isset( $alloptions['wpf_taxonomy_rules'] ) ) {
+			return maybe_unserialize( $alloptions['wpf_taxonomy_rules'] );
+		} else {
+			return array();
+		}
 
 	}
 
@@ -228,7 +253,7 @@ class WPF_Access_Control {
 			return false;
 		}
 
-		$taxonomy_rules = get_option( 'wpf_taxonomy_rules', array() );
+		$taxonomy_rules = $this->get_taxonomy_rules();
 
 		if ( ! isset( $taxonomy_rules[ $term_id ] ) ) {
 			return true;
@@ -290,69 +315,47 @@ class WPF_Access_Control {
 
 	public function user_can_access_term( $post_id, $user_id = false ) {
 
-		$taxonomy_rules = get_option( 'wpf_taxonomy_rules', array() );
+		$restricted_terms = $this->get_restricted_terms( $user_id );
 
-		// Skip early if no taxonomy rules supplied
-		if ( empty( $taxonomy_rules ) ) {
+		if ( empty( $restricted_terms ) ) {
 			return true;
 		}
 
-		if ( false == $user_id ) {
-			$user_id = wpf_get_current_user_id();
+		// Now we've determined which terms the user can't access. Let's see if
+		// this post has any of those terms. This is better for performance than
+		// getting all the terms on the post first and checking them for
+		// permissions.
+
+		global $wpdb;
+
+		// See if the post has the term.
+
+		$in_str = implode( ',', array_map( 'absint', $restricted_terms ) );
+
+		$result = $wpdb->get_var(
+			$wpdb->prepare(
+				"
+				SELECT COUNT(*) FROM
+				$wpdb->term_relationships
+				WHERE object_id = %s
+				AND term_taxonomy_id IN ($in_str)
+				",
+				$post_id,
+				$in_str
+			)
+		);
+
+		if ( ! empty( $result ) ) {
+
+			$can_access = false;
+
+		} else {
+
+			$can_access = true;
+
 		}
 
-		// We need to un-hide hidden terms to see if the post is accessible
-		remove_action( 'get_terms_args', array( $this, 'get_terms_args' ), 10, 2 );
-
-		$user_tags = wpf_get_tags( $user_id );
-
-		$can_access = true;
-
-		foreach ( $taxonomy_rules as $term_id => $settings ) {
-
-			if ( empty( $settings['lock_posts'] ) ) {
-				continue;
-			}
-
-			if ( ! wpf_is_user_logged_in() ) {
-				$can_access = false;
-			} else {
-
-				if ( ! empty( $settings['allow_tags'] ) ) {
-
-					$result = array_intersect( $settings['allow_tags'], $user_tags );
-
-					if ( empty( $result ) ) {
-						$can_access = false;
-					}
-				}
-			}
-
-			if ( false === $can_access ) {
-
-				// Now we've determined the user can't access the term. Let's see if this post has that term.
-				// This is better for performance than getting all the terms first and checking them.
-
-				$term = get_term( $term_id );
-
-				if ( ! empty( $term ) && ! is_wp_error( $term ) && is_object_in_term( $post_id, $term->taxonomy, $term ) ) {
-
-					// is_wp_error(); check in case the term was deleted
-
-					$can_access = false;
-					break;
-
-				} else {
-
-					$can_access = true;
-
-				}
-			}
-		}
-
-		add_action( 'get_terms_args', array( $this, 'get_terms_args' ), 10, 2 );
-
-		return apply_filters( 'wpf_user_can_access_term', $can_access, $user_id, $term_id );
+		return apply_filters( 'wpf_user_can_access_term', $can_access, $user_id );
 
 	}
 
@@ -467,7 +470,7 @@ class WPF_Access_Control {
 
 	public function get_redirect_term( $post_id ) {
 
-		$taxonomy_rules = get_option( 'wpf_taxonomy_rules', array() );
+		$taxonomy_rules = $this->get_taxonomy_rules();
 
 		// Skip early if no taxonomy rules supplied
 		if ( empty( $taxonomy_rules ) ) {
@@ -577,7 +580,7 @@ class WPF_Access_Control {
 				return true;
 			}
 
-			$taxonomy_rules       = get_option( 'wpf_taxonomy_rules', array() );
+			$taxonomy_rules       = $this->get_taxonomy_rules();
 			$archive_restrictions = $taxonomy_rules[ $queried_object->term_id ];
 
 			$redirect         = false;
@@ -922,7 +925,7 @@ class WPF_Access_Control {
 
 	public function seo_content_filter( $content ) {
 
-		$length = wpf_get_option( 'seo_excerpt_length' );
+		$length = wpf_get_option( 'seo_excerpt_length', 55 );
 
 		if ( ! empty( $length ) ) {
 
@@ -1050,7 +1053,7 @@ class WPF_Access_Control {
 			return $args;
 		}
 
-		$taxonomy_rules = get_option( 'wpf_taxonomy_rules', array() );
+		$taxonomy_rules = $this->get_taxonomy_rules();
 
 		if ( empty( $taxonomy_rules ) ) {
 			return $args;
@@ -1221,6 +1224,9 @@ class WPF_Access_Control {
 	 * Used with Filter Queries - Advanced to pass an array of post IDs into
 	 * post__not_in.
 	 *
+	 * This only gets posts that are restricted directly via their postmeta, not
+	 * posts inheriting protetcions or posts protected by taxonomy terms.
+	 *
 	 * @since  3.37.6
 	 *
 	 * @param  array $post_types The post types.
@@ -1239,12 +1245,9 @@ class WPF_Access_Control {
 		}
 
 		$user_id = wpf_get_current_user_id();
-
-		$not_in = wp_cache_get( "wpf_query_filter_{$user_id}_{$post_types[0]}" );
+		$not_in  = wp_cache_get( "wpf_query_filter_{$user_id}_{$post_types[0]}" );
 
 		if ( false === $not_in ) {
-
-			// Exclude any restricted terms
 
 			$args = array(
 				'post_type'      => $post_types,
@@ -1275,6 +1278,8 @@ class WPF_Access_Control {
 
 			remove_action( 'pre_get_posts', array( $this, 'filter_queries' ) );
 
+			// Get the posts.
+
 			$post_ids = get_posts( $args );
 
 			add_action( 'pre_get_posts', array( $this, 'filter_queries' ) );
@@ -1287,18 +1292,100 @@ class WPF_Access_Control {
 
 			foreach ( $post_ids as $post_id ) {
 
-				if ( ! $this->user_can_access( $post_id ) ) {
+				if ( ! $this->user_can_access( $post_id, $user_id ) ) {
 
 					$not_in[] = $post_id;
 
 				}
 			}
 
+			// Cache it so we can use it later.
+
 			wp_cache_set( "wpf_query_filter_{$user_id}_{$post_types[0]}", $not_in, '', MINUTE_IN_SECONDS );
 
 		}
 
 		return $not_in;
+
+	}
+
+	/**
+	 * Extends the WHERE clause on queries filtered in Advanced mode to exclude
+	 * post IDs the user can't access based on the taxonomy rules.
+	 *
+	 * @since  3.38.17
+	 *
+	 * @param  string   $where  The where clause.
+	 * @param  WP_Query $query  The query.
+	 * @return string   The where clause.
+	 */
+	public function posts_where_restricted_terms( $where, $query ) {
+
+		if ( ! $query->get( 'wpf_filtering_query' ) ) {
+			return $where; // only relevant when Filter Queries is running on the query.
+
+		}
+
+		$restricted_terms = $this->get_restricted_terms();
+
+		if ( ! empty( $restricted_terms ) ) {
+
+			global $wpdb;
+
+			$not_in = implode( ',', array_map( 'absint', $restricted_terms ) );
+
+			$where .= " AND ( {$wpdb->posts}.ID NOT IN ( SELECT object_id FROM {$wpdb->term_relationships} WHERE term_taxonomy_id IN ($not_in) ) )";
+
+		}
+
+		return $where;
+
+	}
+
+	/**
+	 * Gets all of the terms that the current user does not have access to.
+	 *
+	 * @since  3.38.17
+	 *
+	 * @param  int $user_id The user ID to check.
+	 * @return array  The restricted termm IDs.
+	 */
+	public function get_restricted_terms( $user_id = false ) {
+
+		$taxonomy_rules = $this->get_taxonomy_rules();
+
+		// Skip early if no taxonomy rules supplied.
+		if ( empty( $taxonomy_rules ) ) {
+			return array();
+		}
+
+		if ( empty( $user_id ) ) {
+			$user_id = wpf_get_current_user_id();
+		}
+
+		$user_tags = wpf_get_tags( $user_id );
+
+		$term_ids = array();
+
+		foreach ( $taxonomy_rules as $term_id => $settings ) {
+
+			if ( empty( $settings['lock_posts'] ) ) {
+				continue;
+			}
+
+			if ( empty( $user_id ) ) {
+
+				$term_ids[] = $term_id; // lock posts is checked and user isn't logged in.
+
+			} elseif ( ! empty( $settings['allow_tags'] ) && ! wpf_has_tag( $settings['allow_tags'], $user_id ) ) {
+
+				// User is logged in and doesn't have the required tags.
+				$term_ids[] = $term_id;
+
+			}
+		}
+
+		return $term_ids;
 
 	}
 
@@ -1344,7 +1431,7 @@ class WPF_Access_Control {
 
 					if ( empty( $allowed_post_types ) ) {
 
-						$post_types = 'any'; // This will be slower but allows filtering to work on search results
+						$post_types = 'any'; // This will be slower but allows filtering to work on search results.
 
 					} else {
 						$post_types = $allowed_post_types;
@@ -1671,7 +1758,7 @@ class WPF_Access_Control {
 
 		// Get term settings.
 
-		$taxonomy_rules = get_option( 'wpf_taxonomy_rules', array() );
+		$taxonomy_rules = $this->get_taxonomy_rules();
 
 		if ( ! empty( $taxonomy_rules ) ) {
 

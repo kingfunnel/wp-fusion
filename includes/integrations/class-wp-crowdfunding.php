@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_WP_Crowdfunding extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'wp-crowdfunding';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Wp crowdfunding';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/wp-crowdfunding/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_WP_Crowdfunding extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'wp-crowdfunding';
 
 		add_filter( 'wpf_woocommerce_customer_data', array( $this, 'merge_customer_data' ), 10, 2 );
 

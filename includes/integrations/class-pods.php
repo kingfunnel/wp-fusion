@@ -7,6 +7,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Pods extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'pods';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Pods';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -17,7 +42,6 @@ class WPF_Pods extends WPF_Integrations_Base {
 	public function init() {
 
 		$this->name = 'Pods';
-		$this->slug = 'pods';
 
 		add_action( 'pods_api_post_save_pod_item_user', array( $this, 'post_save_user' ) );
 
@@ -67,7 +91,6 @@ class WPF_Pods extends WPF_Integrations_Base {
 				$user_meta[ $key ] = $value;
 
 			}
-
 		}
 
 		return $user_meta;
@@ -117,9 +140,7 @@ class WPF_Pods extends WPF_Integrations_Base {
 					);
 
 				}
-
 			}
-
 		}
 
 		return $meta_fields;

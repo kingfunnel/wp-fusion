@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Woo_Appointments extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'woo-appointments';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Woo-appointments';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/events/woocommerce-appointments/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_Woo_Appointments extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'woo-appointments';
 
 		// Status changes
 		add_action( 'woocommerce_appointment_unpaid', array( $this, 'status_transition' ), 10, 2 );
@@ -88,7 +111,7 @@ class WPF_Woo_Appointments extends WPF_Integrations_Base {
 
 					}
 
-					wpf_log( 'info', 0, 'WooCommerce Appointments guest booking applying tag(s) to contact ID ' . $contact_id .': ', array( 'tag_array' => $settings[ 'apply_tags_' . $status ] ) );
+					wpf_log( 'info', 0, 'WooCommerce Appointments guest booking applying tag(s) to contact ID ' . $contact_id . ': ', array( 'tag_array' => $settings[ 'apply_tags_' . $status ] ) );
 
 					wp_fusion()->crm->apply_tags( $settings[ 'apply_tags_' . $status ], $contact_id );
 

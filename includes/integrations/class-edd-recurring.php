@@ -7,6 +7,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_EDD_Recurring extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'edd-recurring';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'EDD Recurring Payments';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/edd-recurring-payments/';
+
+	/**
 	 * Get things started
 	 *
 	 * @access public
@@ -15,19 +40,17 @@ class WPF_EDD_Recurring extends WPF_Integrations_Base {
 
 	public function init() {
 
-		$this->slug = 'edd-recurring';
-
-		// Add additional meta fields
+		// Add additional meta fields.
 		add_action( 'wpf_edd_meta_box', array( $this, 'meta_box_content' ), 10, 2 );
 		add_action( 'edd_download_price_table_row', array( $this, 'variable_meta_box_content' ), 10, 3 );
 
-		// Subscription status triggers
+		// Subscription status triggers.
 		add_action( 'edd_subscription_status_change', array( $this, 'subscription_status_change' ), 10, 3 );
 
-		// Upgrades
+		// Upgrades.
 		add_action( 'edd_recurring_post_create_payment_profiles', array( $this, 'maybe_doing_upgrade' ), 5 ); // 5 so it runs before "handle_subscription_upgrade" in EDD_Recurring_Software_Licensing
 
-		// Export functions
+		// Export functions.
 		add_filter( 'wpf_export_options', array( $this, 'export_options' ) );
 		add_action( 'wpf_batch_edd_recurring_init', array( $this, 'batch_init' ) );
 		add_action( 'wpf_batch_edd_recurring', array( $this, 'batch_step' ) );
@@ -56,7 +79,6 @@ class WPF_EDD_Recurring extends WPF_Integrations_Base {
 					return true;
 				}
 			}
-
 		}
 
 		return false;
@@ -86,39 +108,34 @@ class WPF_EDD_Recurring extends WPF_Integrations_Base {
 
 		wpf_log( 'info', $subscription->customer->user_id, 'EDD subscription <a href="' . admin_url( 'edit.php?post_type=download&page=edd-subscriptions&id=' . $subscription->id ) . '" target="_blank">#' . $subscription->id . '</a> status changed from <strong>' . ucwords( $old_status ) . '</strong> to <strong>' . ucwords( $status ) . '</strong>.' );
 
-		if ( $old_status == $status ) {
-			// No change
-			return;
-		}
-
 		$settings = get_post_meta( $subscription->product_id, 'wpf-settings-edd', true );
 
 		if ( empty( $settings ) ) {
 
-			// No settings, nothing to do
+			// No settings, nothing to do.
 			return;
 		}
 
 		$remove_tags = array();
 		$apply_tags  = array();
 
-		// Remove tags if option is selected
+		// Remove tags if option is selected.
 
 		if ( isset( $settings['remove_tags'] ) && 'active' !== $status ) {
 			$remove_tags = array_merge( $remove_tags, $settings['apply_tags'] );
 		}
 
-		// Apply the tags for the new status
+		// Apply the tags for the new status.
 
 		if ( ! empty( $settings[ 'apply_tags_' . $status ] ) ) {
 			$apply_tags = array_merge( $apply_tags, $settings[ "apply_tags_{$status}" ] );
 		}
 
-		// Maybe get tags from price ID
+		// Maybe get tags from price ID.
 
 		if ( ! empty( $subscription->price_id ) ) {
 
-			// Remove price ID tags if applicable
+			// Remove price ID tags if applicable.
 
 			if ( isset( $settings['remove_tags'] ) && 'active' !== $status ) {
 
@@ -127,16 +144,22 @@ class WPF_EDD_Recurring extends WPF_Integrations_Base {
 				}
 			}
 
-			// If we're applying tags for the status set on the price ID
+			// If we're applying tags for the status set on the price ID.
 
 			if ( ! empty( $settings[ "apply_tags_{$status}_price" ] ) && ! empty( $settings[ "apply_tags_{$status}_price" ][ $subscription->price_id ] ) ) {
 				$apply_tags = array_merge( $apply_tags, $settings[ "apply_tags_{$status}_price" ][ $subscription->price_id ] );
 			}
 		}
 
-		// Possibly remove any of the other status tags if a subscription has come back to active
+		// Converted to paid.
 
-		if ( 'active' == $status && 'pending' !== $old_status ) {
+		if ( 'active' === $status && 'trialling' === $old_status && ! empty( $settings['apply_tags_converted'] ) ) {
+			$apply_tags = array_merge( $apply_tags, $settings['apply_tags_converted'] );
+		}
+
+		// Possibly remove any of the other status tags if a subscription has come back to active.
+
+		if ( 'active' === $status && 'pending' !== $old_status ) {
 
 			$remove_tags_keys = array( 'completed', 'expired', 'failing', 'cancelled' );
 
@@ -146,27 +169,27 @@ class WPF_EDD_Recurring extends WPF_Integrations_Base {
 					$remove_tags = array_merge( $remove_tags, $settings[ "apply_tags_{$key}" ] );
 				}
 
-				// And maybe from the price ID as well
+				// And maybe from the price ID as well.
 
 				if ( ! empty( $settings[ "apply_tags_{$key}_price" ] ) && ! empty( $settings[ "apply_tags_{$key}_price" ][ $subscription->price_id ] ) ) {
 					$remove_tags = array_merge( $remove_tags, $settings[ "apply_tags_{$key}_price" ][ $subscription->price_id ] );
 				}
 			}
 
-			// Re-apply active tags
+			// Re-apply active tags.
 
 			if ( ! empty( $settings['apply_tags'] ) ) {
 				$apply_tags = array_merge( $apply_tags, $settings['apply_tags'] );
 			}
 
-			// Re-apply tags for variations
+			// Re-apply tags for variations.
 
 			if ( ! empty( $settings['apply_tags_price'] ) && ! empty( $settings['apply_tags_price'][ $subscription->price_id ] ) ) {
 				$apply_tags = array_merge( $apply_tags, $settings['apply_tags_price'][ $subscription->price_id ] );
 			}
 		}
 
-		// If there's nothing to be done, don't bother logging it
+		// If there's nothing to be done, don't bother logging it.
 
 		if ( empty( $apply_tags ) && empty( $remove_tags ) ) {
 			return true;
@@ -215,11 +238,13 @@ class WPF_EDD_Recurring extends WPF_Integrations_Base {
 	public function meta_box_content( $post, $settings ) {
 
 		$defaults = array(
-			'remove_tags' 			=> false,
-			'apply_tags_completed' 	=> array(),
-			'apply_tags_failing' 	=> array(),
-			'apply_tags_expired' 	=> array(),
-			'apply_tags_cancelled' 	=> array()
+			'remove_tags'          => false,
+			'apply_tags_completed' => array(),
+			'apply_tags_trialling' => array(),
+			'apply_tags_converted' => array(),
+			'apply_tags_failing'   => array(),
+			'apply_tags_expired'   => array(),
+			'apply_tags_cancelled' => array(),
 		);
 
 		$settings = wp_parse_args( $settings, $defaults );
@@ -228,7 +253,7 @@ class WPF_EDD_Recurring extends WPF_Integrations_Base {
 
 		echo '<table class="form-table wpf-edd-recurring-options' . ( $this->is_recurring( $post->ID ) == true ? '' : ' hidden' ) . '"><tbody>';
 
-		// Remove tags
+		// Remove tags.
 
 		echo '<tr>';
 
@@ -240,49 +265,109 @@ class WPF_EDD_Recurring extends WPF_Integrations_Base {
 
 		echo '</tr>';
 
-		// Completed
+		// Trials.
+
+		echo '<tr>';
+
+		echo '<th scope="row"><label for="apply_tags_trialling">' . __( 'Subscription in Trial', 'wp-fusion' ) . ':</label></th>';
+		echo '<td>';
+		wpf_render_tag_multiselect(
+			array(
+				'setting'   => $settings['apply_tags_trialling'],
+				'meta_name' => 'wpf-settings-edd',
+				'field_id'  => 'apply_tags_trialling',
+			)
+		);
+		echo '<span class="description">' . __( 'Apply these when a subscription is created in trial status.', 'wp-fusion' ) . '</span>';
+		echo '</td>';
+
+		echo '</tr>';
+
+		// Trials.
+
+		echo '<tr>';
+
+		echo '<th scope="row"><label for="apply_tags_trialling">' . __( 'Trial Converted', 'wp-fusion' ) . ':</label></th>';
+		echo '<td>';
+		wpf_render_tag_multiselect(
+			array(
+				'setting'   => $settings['apply_tags_converted'],
+				'meta_name' => 'wpf-settings-edd',
+				'field_id'  => 'apply_tags_converted',
+			)
+		);
+		echo '<span class="description">' . __( 'Apply these when a subscription in trial status converts to a paid subscription.', 'wp-fusion' ) . '</span>';
+		echo '</td>';
+
+		echo '</tr>';
+
+		// Completed.
 
 		echo '<tr>';
 
 		echo '<th scope="row"><label for="apply_tags_completed">' . __( 'Subscription Completed', 'wp-fusion' ) . ':</label></th>';
 		echo '<td>';
-		wpf_render_tag_multiselect( array( 'setting' => $settings['apply_tags_completed'], 'meta_name' => 'wpf-settings-edd', 'field_id' => 'apply_tags_completed' ) );
+		wpf_render_tag_multiselect(
+			array(
+				'setting'   => $settings['apply_tags_completed'],
+				'meta_name' => 'wpf-settings-edd',
+				'field_id'  => 'apply_tags_completed',
+			)
+		);
 		echo '<span class="description">' . __( 'Apply these when a subscription is complete (number of payments matches the Times field).', 'wp-fusion' ) . '</span>';
 		echo '</td>';
 
 		echo '</tr>';
 
-		// Failing
+		// Failing.
 
 		echo '<tr>';
 
 		echo '<th scope="row"><label for="apply_tags_expired">' . __( 'Subscription Failing', 'wp-fusion' ) . ':</label></th>';
 		echo '<td>';
-		wpf_render_tag_multiselect( array( 'setting' => $settings['apply_tags_failing'], 'meta_name' => 'wpf-settings-edd', 'field_id' => 'apply_tags_failing' ) );
+		wpf_render_tag_multiselect(
+			array(
+				'setting'   => $settings['apply_tags_failing'],
+				'meta_name' => 'wpf-settings-edd',
+				'field_id'  => 'apply_tags_failing',
+			)
+		);
 		echo '<span class="description">' . __( 'Apply these when a subscription has a failed payment.', 'wp-fusion' ) . '</span>';
 		echo '</td>';
 
 		echo '</tr>';
 
-		// Expired
+		// Expired.
 
 		echo '<tr>';
 
 		echo '<th scope="row"><label for="apply_tags_expired">' . __( 'Subscription Expired', 'wp-fusion' ) . ':</label></th>';
 		echo '<td>';
-		wpf_render_tag_multiselect( array( 'setting' => $settings['apply_tags_expired'], 'meta_name' => 'wpf-settings-edd', 'field_id' => 'apply_tags_expired' ) );
+		wpf_render_tag_multiselect(
+			array(
+				'setting'   => $settings['apply_tags_expired'],
+				'meta_name' => 'wpf-settings-edd',
+				'field_id'  => 'apply_tags_expired',
+			)
+		);
 		echo '<span class="description">' . __( 'Apply these when a subscription has multiple failed payments or is marked Expired.', 'wp-fusion' ) . '</span>';
 		echo '</td>';
 
 		echo '</tr>';
 
-		// Cancelled
+		// Cancelled.
 
 		echo '<tr>';
 
 		echo '<th scope="row"><label for="apply_tags_cancelled">' . __( 'Subscription Cancelled', 'wp-fusion' ) . ':</label></th>';
 		echo '<td>';
-		wpf_render_tag_multiselect( array( 'setting' => $settings['apply_tags_cancelled'], 'meta_name' => 'wpf-settings-edd', 'field_id' => 'apply_tags_cancelled' ) );
+		wpf_render_tag_multiselect(
+			array(
+				'setting'   => $settings['apply_tags_cancelled'],
+				'meta_name' => 'wpf-settings-edd',
+				'field_id'  => 'apply_tags_cancelled',
+			)
+		);
 		echo '<span class="description">' . __( 'Apply these when a subscription is cancelled.', 'wp-fusion' ) . '</span>';
 		echo '</td>';
 
@@ -292,33 +377,38 @@ class WPF_EDD_Recurring extends WPF_Integrations_Base {
 
 	}
 
-	/** 
-	* //
-	* // OUTPUTS EDD METABOXES
-	* //
-	*  @access public
-	*  @return mixed  
-	**/
+	/**
+	 * //
+	 * // OUTPUTS EDD METABOXES
+	 * //
+	 *
+	 *  @access public
+	 *  @return mixed
+	 **/
 
 	public function variable_meta_box_content( $post_id, $key, $args ) {
 
 		$settings = get_post_meta( $post_id, 'wpf-settings-edd', true );
 
-		if( empty( $settings ) ) {
+		if ( empty( $settings ) ) {
 			$settings = array();
 		}
 
 		$defaults = array(
-			'apply_tags_completed_price' 	=> array(),
-			'apply_tags_failing_price' 		=> array(),
-			'apply_tags_expired_price' 		=> array(),
-			'apply_tags_cancelled_price' 	=> array()
+			'apply_tags_completed_price' => array(),
+			'apply_tags_trialling_price' => array(),
+			'apply_tags_failing_price'   => array(),
+			'apply_tags_expired_price'   => array(),
+			'apply_tags_cancelled_price' => array(),
 		);
 
 		$settings = array_merge( $defaults, $settings );
 
 		if ( empty( $settings['apply_tags_completed_price'][ $key ] ) ) {
 			$settings['apply_tags_completed_price'][ $key ] = array();
+		}
+		if ( empty( $settings['apply_tags_trialling_price'][ $key ] ) ) {
+			$settings['apply_tags_trialling_price'][ $key ] = array();
 		}
 		if ( empty( $settings['apply_tags_failing_price'][ $key ] ) ) {
 			$settings['apply_tags_failing_price'][ $key ] = array();
@@ -339,6 +429,20 @@ class WPF_EDD_Recurring extends WPF_Integrations_Base {
 		}
 
 		echo '<div class="wpf-edd-recurring-options' . ( $recurring == true ? '' : ' hidden' ) . '" style="' . ( $recurring == true ? '' : 'display: none;' ) . '">';
+
+		// trialling
+
+		echo '<div style="display:inline-block; width:50%;margin-bottom:20px;">';
+		echo '<label for="apply_tags_cancelled_price">' . __( 'Subscription In Trial', 'wp-fusion' ) . ':</label>';
+
+		$args = array(
+			'setting'   => $settings['apply_tags_trialling_price'][ $key ],
+			'meta_name' => "wpf-settings-edd[apply_tags_trialling_price][{$key}]",
+		);
+
+		wpf_render_tag_multiselect( $args );
+
+		echo '</div>';
 
 		// Completed
 
@@ -435,11 +539,11 @@ class WPF_EDD_Recurring extends WPF_Integrations_Base {
 
 	public function batch_init() {
 
-		$edd_db = new EDD_Subscriptions_DB;
-		$db_subscriptions = $edd_db->get_subscriptions(array('number' => 0));
+		$edd_db           = new EDD_Subscriptions_DB();
+		$db_subscriptions = $edd_db->get_subscriptions( array( 'number' => 0 ) );
 
 		$subscriptions = array();
-		foreach ($db_subscriptions as $subscription_object) {
+		foreach ( $db_subscriptions as $subscription_object ) {
 			$subscriptions[] = $subscription_object->id;
 		}
 
@@ -464,4 +568,4 @@ class WPF_EDD_Recurring extends WPF_Integrations_Base {
 
 }
 
-new WPF_EDD_Recurring;
+new WPF_EDD_Recurring();

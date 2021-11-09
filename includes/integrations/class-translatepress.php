@@ -9,6 +9,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_TranslatePress extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'translatepress';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Translatepress';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/multilingual/translatepress/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -17,8 +42,6 @@ class WPF_TranslatePress extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'translatepress';
 
 		add_filter( 'wpf_api_add_contact_args', array( $this, 'merge_language_code' ) );
 		add_filter( 'wpf_api_update_contact_args', array( $this, 'merge_language_code' ) );

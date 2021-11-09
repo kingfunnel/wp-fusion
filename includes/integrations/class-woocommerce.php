@@ -9,7 +9,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 	/**
 	 * The slug for WP Fusion's module tracking.
 	 *
-	 * @since 3.38.10
+	 * @since 3.38.14
 	 * @var string $slug
 	 */
 
@@ -18,7 +18,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 	/**
 	 * The plugin name for WP Fusion's module tracking.
 	 *
-	 * @since 3.38.10
+	 * @since 3.38.14
 	 * @var string $name
 	 */
 	public $name = 'WooCommerce';
@@ -26,7 +26,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 	/**
 	 * The link to the documentation on the WP Fusion website.
 	 *
-	 * @since 3.38.10
+	 * @since 3.38.14
 	 * @var string $docs_url
 	 */
 	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/woocommerce/';
@@ -76,6 +76,9 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_async_checkout_script' ) );
 		add_action( 'wp_ajax_wpf_async_woocommerce_checkout', array( $this, 'async_checkout' ) );
 		add_action( 'wp_ajax_nopriv_wpf_async_woocommerce_checkout', array( $this, 'async_checkout' ) );
+
+		// Prevent timeouts when bulk editing.
+		add_filter( 'handle_bulk_actions-edit-shop_order', array( $this, 'handle_bulk_actions' ), 5, 3 );
 
 		// Successful orders
 		add_action( 'woocommerce_order_status_processing', array( $this, 'woocommerce_apply_tags_checkout' ), 10 );
@@ -148,6 +151,10 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 		add_filter( 'woocommerce_form_field', array( $this, 'remove_checkout_optional_fields_label' ), 10, 4 );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_email_optin_checkbox' ) );
 
+		// Customer reviews on products
+		add_action( 'wp_insert_comment', array( $this, 'insert_comment' ), 10, 2 );
+		add_action( 'transition_comment_status', array( $this, 'comment_status_change' ), 10, 3 );
+
 		// Restrict access to shop page
 		add_action( 'template_redirect', array( $this, 'restrict_access_to_shop' ) );
 
@@ -185,7 +192,10 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 		);
 
 		wpf_log(
-			'info', 0, 'Creating contact record from guest for order <a href="' . admin_url( 'post.php?post=' . $order_id . '&action=edit' ) . '" target="_blank">#' . $order_id . '</a>', array(
+			'info',
+			0,
+			'Creating contact record from guest for order <a href="' . admin_url( 'post.php?post=' . $order_id . '&action=edit' ) . '" target="_blank">#' . $order_id . '</a>',
+			array(
 				'source'     => 'woocommerce',
 				'meta_array' => $customer_data,
 			)
@@ -413,20 +423,20 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 			'desc'    => __( 'Runs WP Fusion post-checkout actions asynchronously to speed up load times.', 'wp-fusion' ),
 			'type'    => 'checkbox',
 			'section' => 'integrations',
-			'unlock'  => array( 'woo_async_new' ),
-		);
-
-		$settings['woo_async_new'] = array(
-			'title'   => __( '(New) Asynchronous Checkout', 'wp-fusion' ),
-			'desc'    => __( 'Use the new experimental Asynchronous Checkout (should be more reliable than the original one).', 'wp-fusion' ),
-			'type'    => 'checkbox',
-			'section' => 'integrations',
 		);
 
 		$settings['woo_hide_coupon_field'] = array(
 			'title'   => __( 'Hide Coupon Field', 'wp-fusion' ),
 			'desc'    => __( 'Hide the coupon input field on the checkout / cart screen (used with auto-applied coupons).', 'wp-fusion' ),
 			'type'    => 'checkbox',
+			'section' => 'integrations',
+		);
+
+		$settings['woo_review_tags'] = array(
+			'title'   => __( 'Apply Tags - Left Review', 'wp-fusion' ),
+			'desc'    => __( 'Apply these tags when a user leaves a review on a product.', 'wp-fusion' ),
+			'std'     => array(),
+			'type'    => 'assign_tags',
 			'section' => 'integrations',
 		);
 
@@ -1305,7 +1315,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 		}
 
 		if ( user_can( $user_id, 'manage_options' ) ) {
-			wpf_log( 'notice', $user_id, 'You\'re currently logged into the site as an administrator. This checkout will update your existing contact ID #' . $contact_id . ' in ' . wp_fusion()->crm->name . '. If you\'re testing checkouts, it\'s recommended to use an incognito browser window.', array( 'source' => 'woocommerce' ) );
+			wpf_log( 'notice', $user_id, 'You\'re currently logged into the site as an administrator. This checkout will update your existing contact #' . $contact_id . ' in ' . wp_fusion()->crm->name . '. If you\'re testing checkouts, it\'s recommended to use an incognito browser window.', array( 'source' => 'woocommerce' ) );
 		}
 
 		// Format order data
@@ -1351,7 +1361,10 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 
 			// Logger
 			wpf_log(
-				'info', 0, 'Processing guest checkout for order <a href="' . admin_url( 'post.php?post=' . $order_id . '&action=edit' ) . '" target="_blank">#' . $order_id . '</a>:', array(
+				'info',
+				0,
+				'Processing guest checkout for order <a href="' . admin_url( 'post.php?post=' . $order_id . '&action=edit' ) . '" target="_blank">#' . $order_id . '</a>:',
+				array(
 					'source'     => 'woocommerce',
 					'meta_array' => $order_data,
 				)
@@ -1383,7 +1396,10 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 			if ( empty( $user_id ) ) {
 
 				wpf_log(
-					'info', 0, 'Processing guest checkout for order <a href="' . admin_url( 'post.php?post=' . $order_id . '&action=edit' ) . '" target="_blank">#' . $order_id . '</a>, for existing contact ID ' . $contact_id . ':', array(
+					'info',
+					0,
+					'Processing guest checkout for order <a href="' . admin_url( 'post.php?post=' . $order_id . '&action=edit' ) . '" target="_blank">#' . $order_id . '</a>, for existing contact ID ' . $contact_id . ':',
+					array(
 						'source'     => 'woocommerce',
 						'meta_array' => $order_data,
 					)
@@ -1423,7 +1439,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 	 * @since  3.36.0
 	 * @since  3.36.7 Added $with_prefix parameter.
 	 *
-	 * @param  bool  $with_prefix Whether or not to include the wc- prefix.
+	 * @param  bool $with_prefix Whether or not to include the wc- prefix.
 	 * @return array The valid order statuses.
 	 */
 
@@ -1436,19 +1452,20 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 		$order_statuses = array_map(
 			function( $s ) {
 				return substr( $s, 3 );
-			}, $order_statuses
+			},
+			$order_statuses
 		);
 
-		// By default we don't want to do anything with these statuses
+		// By default we don't want to do anything with these statuses.
 
-		$ignore_statuses = array( 'pending', 'failed', 'refunded', 'cancelled' );
+		$ignore_statuses = array( 'pending', 'failed', 'refunded', 'cancelled', 'on-hold' );
 		$order_statuses  = array_diff( $order_statuses, $ignore_statuses );
 
 		$order_statuses = apply_filters( 'wpf_woocommerce_order_statuses', $order_statuses );
 
-		// Maybe add the wc- prefix (for WP_Querys based on post status)
+		// Maybe add the wc- prefix (for WP_Querys based on post status).
 
-		if ( true == $with_prefix ) {
+		if ( true === $with_prefix ) {
 
 			foreach ( $order_statuses as $i => $status ) {
 				if ( 0 !== strpos( $status, 'wc-' ) ) {
@@ -1470,7 +1487,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 
 	public function enqueue_async_checkout_script() {
 
-		if ( is_checkout() && true == wpf_get_option( 'woo_async_new' ) ) {
+		if ( is_checkout() && wpf_get_option( 'woo_async' ) ) {
 
 			wp_enqueue_script( 'wpf-woocommerce-async', WPF_DIR_URL . 'assets/js/wpf-async-checkout.js', array( 'jquery' ), WP_FUSION_VERSION, true );
 
@@ -1478,7 +1495,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 				'ajaxurl' => admin_url( 'admin-ajax.php' ),
 			);
 
-			// Fallback for cases where it got missed during checkout (for example PayPal)
+			// Fallback for cases where it got missed during checkout (for example PayPal).
 			if ( is_order_received_page() ) {
 
 				$key      = wc_clean( wp_unslash( $_GET['key'] ) );
@@ -1532,7 +1549,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 	 * @link   https://wpfusion.com/documentation/filters/wpf_woocommerce_user_id/
 	 * @link   https://wpfusion.com/documentation/actions/wpf_woocommerce_payment_complete/
 	 *
-	 * @param  int   $order_id The order ID.
+	 * @param  int $order_id The order ID.
 	 * @return bool  Whether or not the order was processed successfully.
 	 */
 
@@ -1567,13 +1584,13 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 		$user_id = apply_filters( 'wpf_woocommerce_user_id', $order->get_user_id(), $order );
 		$status  = $order->get_status();
 
-		// Sometimes the status may have changed between when the function was called and when get_status() is run during an automated renewal
+		// Sometimes the status may have changed between when the function was called and when get_status() is run during an automated renewal.
 
-		if ( 'woocommerce_order_status_failed' == current_filter() ) {
+		if ( 'woocommerce_order_status_failed' === current_filter() ) {
 			$status = 'failed';
 		}
 
-		// These statuses are eligibible for applying tags
+		// These statuses are eligibible for applying tags.
 
 		$valid_statuses = $this->get_valid_order_statuses();
 
@@ -1585,10 +1602,10 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 			$valid_statuses[] = $status;
 		}
 
-		// Logger
+		// Logger.
 		wpf_log( 'info', $user_id, 'New ' . $status . ' WooCommerce order <a href="' . admin_url( 'post.php?post=' . $order_id . '&action=edit' ) . '" target="_blank">#' . $order_id . '</a>', array( 'source' => 'woocommerce' ) );
 
-		// Create / update a contact record for the customer in the CRM
+		// Create / update a contact record for the customer in the CRM.
 
 		$contact_id = $this->create_update_customer( $order );
 
@@ -1599,7 +1616,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 		$apply_tags  = array();
 		$remove_tags = array();
 
-		// Possibly apply tags for any configured coupons
+		// Possibly apply tags for any configured coupons.
 		if ( method_exists( $order, 'get_coupon_codes' ) ) {
 
 			$coupons = $order->get_coupon_codes();
@@ -1790,7 +1807,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 		// Apply the tags
 		if ( ! empty( $apply_tags ) ) {
 
-			if ( empty( $user_id ) ) {
+			if ( empty( $user_id ) || empty( wpf_get_contact_id( $user_id ) ) ) {
 
 				// Guest checkout
 				wpf_log( 'info', 0, 'Applying tags to guest checkout for contact ID ' . $contact_id . ': ', array( 'tag_array' => $apply_tags ) );
@@ -1818,7 +1835,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 			update_post_meta( $order_id, 'wpf_complete', true );
 
 			// Run payment complete action
-			do_action( 'wpf_woocommerce_payment_complete', $order_id, $contact_id );
+			do_action( 'wpf_woocommerce_payment_complete', $order_id, $contact_id, $email );
 
 			$order->add_order_note( 'WP Fusion order actions completed.' );
 
@@ -1826,6 +1843,34 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 
 		// Order is finished, remove locking
 		delete_transient( 'wpf_woo_started_' . $order_id );
+
+	}
+
+	/**
+	 * Handle bulk actions.
+	 *
+	 * Unhook the status change watch when bulk-editing more than 20 orders in
+	 * the admin, to prevent a timeout.
+	 *
+	 * @since  3.38.17
+	 *
+	 * @param  string $redirect_to The redirect URL.
+	 * @param  string $action      The action.
+	 * @param  array  $ids         The order IDs.
+	 * @return string The redirect URL.
+	 */
+	public function handle_bulk_actions( $redirect_to, $action, $ids ) {
+
+		if ( count( $ids ) > 20 ) {
+
+			remove_action( 'woocommerce_order_status_changed', array( $this, 'order_status_changed' ), 10, 4 );
+			remove_action( 'woocommerce_order_status_processing', array( $this, 'woocommerce_apply_tags_checkout' ), 10 );
+			remove_action( 'woocommerce_order_status_completed', array( $this, 'woocommerce_apply_tags_checkout' ), 10 );
+
+			wpf_log( 'notice', 0, 'Bulk order status change detected for ' . count( $ids ) . ' orders. To avoid a timeout, no data will be synced to ' . wp_fusion()->crm->name . '.' );
+		}
+
+		return $redirect_to;
 
 	}
 
@@ -1851,7 +1896,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 
 		$order = wc_get_order( $order_id );
 
-		// Prevents the API calls being sent multiple times for the same order
+		// Prevents the API calls being sent multiple times for the same order.
 
 		if ( get_post_meta( $order_id, 'wpf_complete', true ) ) {
 			return true;
@@ -1863,30 +1908,19 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 			return $this->process_order( $order_id );
 		}
 
-		// Handle async request if async enabled and we're currently in an AJAX checkout
+		// Handle async request if async enabled and we're currently in an AJAX checkout + Don't run on AJAX order status changes in the admin.
 
-		if ( wp_doing_ajax() && true == wpf_get_option( 'woo_async' ) ) {
+		if ( wp_doing_ajax() && wpf_get_option( 'woo_async' ) && ( ! isset( $_REQUEST['action'] ) || 'woocommerce_mark_order_status' !== $_REQUEST['action'] ) ) {
 
 			$order = wc_get_order( $order_id );
 
-			if ( true == wpf_get_option( 'woo_async_new' ) ) {
+			// New method. Do nothing, it will come later via the AJAX request.
+			wpf_log( 'info', $order->get_user_id(), 'New WooCommerce order <a href="' . admin_url( 'post.php?post=' . $order_id . '&action=edit' ) . '" target="_blank">#' . $order_id . '</a>, will be processed via Asynchronous Checkout.' );
+			return true;
 
-				// New method. Do nothing, it will come later via the AJAX request
-				wpf_log( 'info', $order->get_user_id(), 'New WooCommerce order <a href="' . admin_url( 'post.php?post=' . $order_id . '&action=edit' ) . '" target="_blank">#' . $order_id . '</a>, will be processed via Asynchronous Checkout.' );
-				return true;
-
-			} else {
-
-				// Old method, send to WP Background Processing
-				wpf_log( 'info', $order->get_user_id(), 'Dispatching WooCommerce order <a href="' . admin_url( 'post.php?post=' . $order_id . '&action=edit' ) . '" target="_blank">#' . $order_id . '</a> to async checkout queue.' );
-
-				wp_fusion()->batch->quick_add( 'wpf_woocommerce_async_checkout', array( $order_id ) );
-				return true;
-
-			}
 		}
 
-		// Regular checkout
+		// Regular checkout.
 
 		return $this->process_order( $order_id );
 
@@ -1918,6 +1952,12 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 
 		$items = $order->get_items();
 
+		$auto_tagging_prefix = wpf_get_option( 'woo_tagging_prefix', false );
+
+		if ( ! empty( $auto_tagging_prefix ) ) {
+			$auto_tagging_prefix = trim( $auto_tagging_prefix ) . ' ';
+		}
+
 		$remove_tags = array();
 
 		foreach ( $items as $item ) {
@@ -1940,17 +1980,17 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 
 			if ( ! empty( $product ) ) {
 
-				// Auto tagging based on name
-				if ( wpf_get_option( 'woo_name_tagging' ) == true ) {
+				// Auto tagging based on name.
+				if ( wpf_get_option( 'woo_name_tagging' ) ) {
 
-					$remove_tags[] = $product->get_title();
+					$remove_tags[] = $auto_tagging_prefix . $product->get_title();
 
 				}
 
-				// Auto tagging based on SKU
-				if ( wpf_get_option( 'woo_sku_tagging' ) == true ) {
+				// Auto tagging based on SKU.
+				if ( wpf_get_option( 'woo_sku_tagging' ) ) {
 
-					$remove_tags[] = $product->get_sku();
+					$remove_tags[] = $auto_tagging_prefix . $product->get_sku();
 
 				}
 			}
@@ -2018,7 +2058,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 	public function order_status_changed( $order_id, $old_status, $new_status, $order ) {
 
 		if ( 'processing' == $new_status && in_array( 'processing', $this->get_valid_order_statuses() ) ) {
-			// This is going to be processed by the main process_order() function so no need to duplicate it here
+			// This is going to be processed by the main process_order() function so no need to duplicate it here.
 			return;
 		}
 
@@ -2048,7 +2088,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 			return;
 		}
 
-		// If this is an initial failed or pending transaction we may need to create a contat before tags can be applied
+		// If this is an initial failed or pending transaction we may need to create a contact before tags can be applied.
 
 		$contact_id = $this->get_contact_id_from_order( $order );
 
@@ -2066,7 +2106,10 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 		} else {
 
 			wpf_log(
-				'info', 0, 'Order status changed to <strong>' . $new_status . '</strong>. Applying tags to contact ID ' . $contact_id . ' (' . $order->get_billing_email() . '):', array(
+				'info',
+				0,
+				'Order status changed to <strong>' . $new_status . '</strong>. Applying tags to contact ID ' . $contact_id . ' (' . $order->get_billing_email() . '):',
+				array(
 					'tag_array' => $apply_tags,
 					'source'    => 'woocommerce',
 				)
@@ -2280,6 +2323,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 			array(
 				'setting'   => $settings['apply_tags_variation'][ $variation->ID ],
 				'meta_name' => "wpf-settings-woo-variation[apply_tags_variation][$variation->ID]",
+				'read_only' => true,
 			)
 		);
 
@@ -2292,6 +2336,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 			array(
 				'setting'   => $settings['allow_tags_variation'][ $variation->ID ],
 				'meta_name' => "wpf-settings-woo-variation[allow_tags_variation][$variation->ID]",
+				'read_only' => true,
 			)
 		);
 
@@ -2303,6 +2348,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 			array(
 				'setting'   => $settings['allow_tags_not_variation'][ $variation->ID ],
 				'meta_name' => "wpf-settings-woo-variation[allow_tags_not_variation][$variation->ID]",
+				'read_only' => true,
 			)
 		);
 
@@ -2602,6 +2648,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 				'setting'   => $settings['allow_tags'],
 				'meta_name' => 'wpf-settings',
 				'field_id'  => 'allow_tags',
+				'read_only' => true,
 			)
 		);
 
@@ -2730,7 +2777,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 
 				$email = get_user_meta( wpf_get_current_user_id(), 'billing_email', true );
 
-				if ( false == wc()->cart->is_coupon_emails_allowed( [ $email ], $restrictions ) ) {
+				if ( false == wc()->cart->is_coupon_emails_allowed( array( $email ), $restrictions ) ) {
 					$should_apply = false;
 				}
 			}
@@ -2808,7 +2855,7 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 
 				$email = get_user_meta( $user_id, 'billing_email', true );
 
-				if ( false == wc()->cart->is_coupon_emails_allowed( [ $email ], $restrictions ) ) {
+				if ( false == wc()->cart->is_coupon_emails_allowed( array( $email ), $restrictions ) ) {
 					$should_apply = false;
 				}
 			}
@@ -2894,13 +2941,15 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 			$message = wpf_get_option( 'email_optin_message', __( 'I consent to receive marketing emails', 'wp-fusion' ) );
 
 			woocommerce_form_field(
-				'email_optin', array(
+				'email_optin',
+				array(
 					'type'        => 'checkbox',
 					'class'       => array( 'form-row privacy' ),
 					'label_class' => array( 'woocommerce-form__label woocommerce-form__label-for-checkbox checkbox' ),
 					'input_class' => array( 'woocommerce-form__input woocommerce-form__input-checkbox input-checkbox' ),
 					'label'       => $message,
-				), $default
+				),
+				$default
 			);
 
 		}
@@ -2935,6 +2984,80 @@ class WPF_Woocommerce extends WPF_Integrations_Base {
 
 		if ( ! empty( $_POST['email_optin'] ) ) {
 			update_post_meta( $order_id, 'email_optin', sanitize_text_field( $_POST['email_optin'] ) );
+		}
+
+	}
+
+
+	/**
+	 * Apply tags when a product review is approved.
+	 *
+	 * @since 3.38.17
+	 *
+	 * @param string $new_status The comment status.
+	 * @param string $old_status The old comment status.
+	 * @param object $comment    The comment.
+	 */
+	public function comment_status_change( $new_status, $old_status, $comment ) {
+		if ( 'approved' === $new_status ) {
+			$this->apply_tags_leaves_review( $comment );
+		}
+	}
+
+	/**
+	 * Apply tags when a product review is inserted.
+	 *
+	 * @since 3.38.17
+	 *
+	 * @param int    $id      Comment ID.
+	 * @param object $comment The comment.
+	 */
+	public function insert_comment( $id, $comment ) {
+		$this->apply_tags_leaves_review( $comment );
+	}
+
+	/**
+	 * Apply tags to a user who reviews a product.
+	 *
+	 * @since 3.38.17
+	 *
+	 * @param object $comment The comment.
+	 */
+	public function apply_tags_leaves_review( $comment ) {
+
+		$review_tags = wpf_get_option( 'woo_review_tags' );
+
+		if ( empty( $review_tags ) ) {
+			return;
+		}
+
+		if ( 'review' !== $comment->comment_type ) {
+			return;
+		}
+
+		$product_id = $comment->comment_post_ID;
+		if ( get_post_type( $product_id ) !== 'product' ) {
+			return;
+		}
+
+		if ( intval( $comment->comment_approved ) !== 1 ) {
+			return;
+		}
+
+		$user_id = intval( $comment->user_id );
+
+		if ( empty( $user_id ) ) {
+
+			$contact_id = wp_fusion()->crm->get_contact_id( $comment->comment_author_email );
+
+			if ( ! empty( $contact_id ) ) {
+
+				wpf_log( 'info', 0, 'Applying tags for WooCommerce review to contact #' . $contact_id . ': ', array( 'tag_array' => $review_tags ) );
+				wp_fusion()->crm->apply_tags( $review_tags, $contact_id );
+
+			}
+		} else {
+			wp_fusion()->user->apply_tags( $review_tags, $user_id );
 		}
 
 	}

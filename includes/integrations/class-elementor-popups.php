@@ -6,6 +6,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class WPF_Elementor_Popups extends WPF_Integrations_Base {
 
+	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'elementor-popups';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Elementor Popups';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/page-builders/elementor/#elementor-popups';
+
 
 	/**
 	 * Gets things started
@@ -17,8 +42,6 @@ class WPF_Elementor_Popups extends WPF_Integrations_Base {
 
 	public function init() {
 
-		$this->slug = 'elementor-popups';
-
 		// Control styles
 		add_action( 'elementor/editor/after_enqueue_styles', array( $this, 'enqueue_styles' ) );
 
@@ -27,7 +50,6 @@ class WPF_Elementor_Popups extends WPF_Integrations_Base {
 
 		// Filter template loading
 		add_filter( 'elementor/theme/get_location_templates/template_id', array( $this, 'get_template' ) );
-
 
 	}
 
@@ -60,52 +82,51 @@ class WPF_Elementor_Popups extends WPF_Integrations_Base {
 
 		foreach ( $available_tags as $id => $label ) {
 
-			if( is_array( $label ) ) {
+			if ( is_array( $label ) ) {
 				$label = $label['label'];
 			}
 
-			$data[$id] = $label;
+			$data[ $id ] = $label;
 
 		}
 
-
 		// Heading
 
-		$args = [
-			'type' => \Elementor\Controls_Manager::HEADING,
-			'label' => sprintf( __( 'When user has any of the %s tags', 'wp-fusion' ), wp_fusion()->crm->name )
-		];
+		$args = array(
+			'type'  => \Elementor\Controls_Manager::HEADING,
+			'label' => sprintf( __( 'When user has any of the %s tags', 'wp-fusion' ), wp_fusion()->crm->name ),
+		);
 
 		$element->add_control( 'wp_fusion_heading', $args );
 
 		// Condition
 
-		$args = [
-			'type' 		=> \Elementor\Controls_Manager::SELECT,
-			'options' 	=> [
+		$args = array(
+			'type'               => \Elementor\Controls_Manager::SELECT,
+			'options'            => array(
 				'show' => __( 'Show', 'elementor-pro' ),
 				'hide' => __( 'Hide', 'elementor-pro' ),
-			],
-			'default' => 'show',
-			'frontend_available' 	=> true,
-			'condition'				=> array(
-				'wp_fusion'	=> 'yes'
-			)
-		];
+			),
+			'default'            => 'show',
+			'frontend_available' => true,
+			'condition'          => array(
+				'wp_fusion' => 'yes',
+			),
+		);
 
 		$element->add_control( 'wp_fusion_condition', $args );
 
 		// Tags select
 
-		$args = [
-			'type' 					=> \Elementor\Controls_Manager::SELECT2,
-			'multiple' 				=> true,
-			'options' 				=> $data,
-			'frontend_available' 	=> true,
-			'condition'				=> array(
-				'wp_fusion'	=> 'yes'
-			)
-		];
+		$args = array(
+			'type'               => \Elementor\Controls_Manager::SELECT2,
+			'multiple'           => true,
+			'options'            => $data,
+			'frontend_available' => true,
+			'condition'          => array(
+				'wp_fusion' => 'yes',
+			),
+		);
 
 		$element->add_control( 'wp_fusion_popup_tags', $args );
 
@@ -113,13 +134,12 @@ class WPF_Elementor_Popups extends WPF_Integrations_Base {
 
 		$element->add_control(
 			'wp_fusion',
-			[
-				'type' => \Elementor\Controls_Manager::SWITCHER,
-				'classes' => 'elementor-popup__display-settings__group-toggle',
+			array(
+				'type'               => \Elementor\Controls_Manager::SWITCHER,
+				'classes'            => 'elementor-popup__display-settings__group-toggle',
 				'frontend_available' => true,
-			]
+			)
 		);
-
 
 	}
 
@@ -135,13 +155,13 @@ class WPF_Elementor_Popups extends WPF_Integrations_Base {
 
 		$popup_settings = get_post_meta( $post_id, '_elementor_popup_display_settings', true );
 
-		if( empty( $popup_settings ) || ! isset( $popup_settings['timing'] ) || ! isset( $popup_settings['timing']['wp_fusion'] ) || $popup_settings['timing']['wp_fusion'] != 'yes' ) {
+		if ( empty( $popup_settings ) || ! isset( $popup_settings['timing'] ) || ! isset( $popup_settings['timing']['wp_fusion'] ) || $popup_settings['timing']['wp_fusion'] != 'yes' ) {
 			return $post_id;
 		}
 
 		// If no tags set
 
-		if( empty( $popup_settings['timing']['wp_fusion_popup_tags'] ) ) {
+		if ( empty( $popup_settings['timing']['wp_fusion_popup_tags'] ) ) {
 			return $post_id;
 		}
 
@@ -149,36 +169,32 @@ class WPF_Elementor_Popups extends WPF_Integrations_Base {
 
 		$can_access = true;
 
-		if( isset( $popup_settings['timing']['wp_fusion_condition'] ) && $popup_settings['timing']['wp_fusion_condition'] == 'hide' ) {
+		if ( isset( $popup_settings['timing']['wp_fusion_condition'] ) && $popup_settings['timing']['wp_fusion_condition'] == 'hide' ) {
 
-			if( wpf_is_user_logged_in() ) {
+			if ( wpf_is_user_logged_in() ) {
 
 				$user_tags = wp_fusion()->user->get_tags();
 
 				$result = array_intersect( $widget_tags, $user_tags );
 
-				if( ! empty( $result ) ) {
+				if ( ! empty( $result ) ) {
 					$can_access = false;
 				}
-				
 			}
-
-		} elseif( ! isset( $popup_settings['timing']['wp_fusion_condition'] ) || $popup_settings['timing']['wp_fusion_condition'] == 'show' ) {
+		} elseif ( ! isset( $popup_settings['timing']['wp_fusion_condition'] ) || $popup_settings['timing']['wp_fusion_condition'] == 'show' ) {
 
 			$can_access = false;
 
-			if( wpf_is_user_logged_in() ) {
+			if ( wpf_is_user_logged_in() ) {
 
 				$user_tags = wp_fusion()->user->get_tags();
 
 				$result = array_intersect( $widget_tags, $user_tags );
 
-				if( ! empty( $result ) ) {
+				if ( ! empty( $result ) ) {
 					$can_access = true;
 				}
-
 			}
-
 		}
 
 		//
@@ -187,7 +203,7 @@ class WPF_Elementor_Popups extends WPF_Integrations_Base {
 
 		$can_access = apply_filters( 'wpf_user_can_access', $can_access, wpf_get_current_user_id(), $post_id );
 
-		if( $can_access ) {
+		if ( $can_access ) {
 
 			return $post_id;
 
@@ -202,4 +218,4 @@ class WPF_Elementor_Popups extends WPF_Integrations_Base {
 
 }
 
-new WPF_Elementor_Popups;
+new WPF_Elementor_Popups();

@@ -266,29 +266,38 @@ class WPF_Zoho {
 
 			$body_json = json_decode( wp_remote_retrieve_body( $response ) );
 
-			if ( isset( $body_json->code ) && $body_json->code == 'INVALID_TOKEN' ) {
+			if ( isset( $body_json->code ) ) {
 
-				$access_token = $this->refresh_token();
+					// Codes.
 
-				if ( is_wp_error( $access_token ) ) {
-					return $access_token;
+				if ( 'INVALID_TOKEN' === $body_json->code ) {
+
+					$access_token = $this->refresh_token();
+
+					if ( is_wp_error( $access_token ) ) {
+						return $access_token;
+					}
+
+					$args['headers']['Authorization'] = 'Zoho-oauthtoken ' . $access_token;
+
+					$response = wp_safe_remote_request( $url, $args );
+
+				} elseif ( 'INVALID_DATA' === $body_json->code || 'MANDATORY_NOT_FOUND' === $body_json->code ) {
+
+					$response = new WP_Error( 'error', '<strong>Invalid Data</strong> error: <strong>' . $body_json->message . '</strong>.' );
+
+				} else {
+
+					$response = new WP_Error( 'error', '<strong>' . $body_json->code . '</strong>: ' . $body_json->message . '.' );
+
 				}
-
-				$args['headers']['Authorization'] = 'Zoho-oauthtoken ' . $access_token;
-
-				$response = wp_safe_remote_request( $url, $args );
-
-			} elseif ( isset( $body_json->code ) && ( $body_json->code == 'INVALID_DATA' || $body_json->code == 'MANDATORY_NOT_FOUND' ) ) {
-
-				$response = new WP_Error( 'error', '<strong>Invalid Data</strong> error: <strong>' . $body_json->message . '</strong>.' );
-
 			} elseif ( ! empty( $body_json->data ) && isset( $body_json->data[0]->code ) && ( $body_json->data[0]->code == 'INVALID_DATA' || $body_json->data[0]->code == 'MANDATORY_NOT_FOUND' ) ) {
 
-				if ( $body_json->data[0]->code == 'MANDATORY_NOT_FOUND' ) {
+				if ( 'MANDATORY_NOT_FOUND' === $body_json->data[0]->code ) {
 
 					$message = 'Mandatory field not found: <pre>' . wpf_print_r( $body_json, true ) . '</pre>';
 
-				} elseif ( $body_json->data[0]->code == 'INVALID_DATA' ) {
+				} elseif ( 'INVALID_DATA' === $body_json->data[0]->code ) {
 
 					$message  = 'Invalid data passed for field.';
 					$message .= '<br /><br />';
@@ -565,7 +574,7 @@ class WPF_Zoho {
 
 		$body_json = json_decode( wp_remote_retrieve_body( $response ) );
 
-		if ( empty( $body_json ) ) {
+		if ( empty( $body_json ) || empty( $body_json->data ) ) {
 			return false;
 		}
 

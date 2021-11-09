@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Toolset_Forms extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'toolset-forms';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Toolset forms';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/toolset/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_Toolset_Forms extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'toolset-forms';
 
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ), 10 );
 		add_filter( 'wpf_meta_fields', array( $this, 'set_contact_field_names' ), 30 );
@@ -139,9 +162,7 @@ class WPF_Toolset_Forms extends WPF_Integrations_Base {
 					foreach ( $value as $checkbox_value ) {
 						$post_data[ $key ] = array_merge( $post_data[ $key ], $checkbox_value );
 					}
-
 				}
-
 			}
 		}
 
@@ -168,7 +189,6 @@ class WPF_Toolset_Forms extends WPF_Integrations_Base {
 				unset( $user_meta[ $key ] );
 
 			}
-
 		}
 
 		return $user_meta;

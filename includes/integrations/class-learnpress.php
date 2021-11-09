@@ -7,6 +7,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_LearnPress extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'learnpress';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Learnpress';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/learning-management/learnpress/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_LearnPress extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'learnpress';
 
 		add_action( 'learn-press/user-enrolled-course', array( $this, 'user_enrolled_course' ), 10, 3 );
 		add_action( 'learn-press/updated-user-item-meta', array( $this, 'updated_user_item_meta' ) );
@@ -143,9 +166,7 @@ class WPF_LearnPress extends WPF_Integrations_Base {
 				if ( $post_item ) {
 					$post_id = $post_item->ID;
 				}
-
 			}
-
 		}
 
 		return $post_id;
@@ -205,7 +226,7 @@ class WPF_LearnPress extends WPF_Integrations_Base {
 		wp_nonce_field( 'wpf_meta_box_learnpress', 'wpf_meta_box_learnpress_nonce' );
 
 		$settings = array(
-			'apply_tags_start' => array(),
+			'apply_tags_start'    => array(),
 			'apply_tags_complete' => array(),
 		);
 
@@ -221,9 +242,9 @@ class WPF_LearnPress extends WPF_Integrations_Base {
 		echo '<td>';
 
 		$args = array(
-			'setting' 		=> $settings['apply_tags_start'],
-			'meta_name'		=> 'wpf_settings_learnpress',
-			'field_id'		=> 'apply_tags_start',
+			'setting'   => $settings['apply_tags_start'],
+			'meta_name' => 'wpf_settings_learnpress',
+			'field_id'  => 'apply_tags_start',
 		);
 
 		wpf_render_tag_multiselect( $args );
@@ -239,9 +260,9 @@ class WPF_LearnPress extends WPF_Integrations_Base {
 		echo '<td>';
 
 		$args = array(
-			'setting' 		=> $settings['apply_tags_complete'],
-			'meta_name'		=> 'wpf_settings_learnpress',
-			'field_id'		=> 'apply_tags_complete',
+			'setting'   => $settings['apply_tags_complete'],
+			'meta_name' => 'wpf_settings_learnpress',
+			'field_id'  => 'apply_tags_complete',
 		);
 
 		wpf_render_tag_multiselect( $args );
@@ -267,7 +288,7 @@ class WPF_LearnPress extends WPF_Integrations_Base {
 		wp_nonce_field( 'wpf_meta_box_learnpress', 'wpf_meta_box_learnpress_nonce' );
 
 		$settings = array(
-			'apply_tags_start' => array(),
+			'apply_tags_start'    => array(),
 			'apply_tags_complete' => array(),
 		);
 
@@ -283,9 +304,9 @@ class WPF_LearnPress extends WPF_Integrations_Base {
 		echo '<td>';
 
 		$args = array(
-			'setting' 		=> $settings['apply_tags_complete'],
-			'meta_name'		=> 'wpf_settings_learnpress',
-			'field_id'		=> 'apply_tags_complete',
+			'setting'   => $settings['apply_tags_complete'],
+			'meta_name' => 'wpf_settings_learnpress',
+			'field_id'  => 'apply_tags_complete',
 		);
 
 		wpf_render_tag_multiselect( $args );
@@ -296,7 +317,6 @@ class WPF_LearnPress extends WPF_Integrations_Base {
 		echo '</tr>';
 
 		echo '</tbody></table>';
-
 
 	}
 
@@ -329,7 +349,6 @@ class WPF_LearnPress extends WPF_Integrations_Base {
 			return;
 		}
 
-
 		if ( isset( $_POST['wpf_settings_learnpress'] ) ) {
 			$data = $_POST['wpf_settings_learnpress'];
 		} else {
@@ -344,4 +363,4 @@ class WPF_LearnPress extends WPF_Integrations_Base {
 
 }
 
-new WPF_LearnPress;
+new WPF_LearnPress();

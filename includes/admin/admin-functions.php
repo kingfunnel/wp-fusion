@@ -23,6 +23,7 @@ function wpf_render_tag_multiselect( $args = array() ) {
 		'no_dupes'    => array(),
 		'class'       => '',
 		'return'      => false,
+		'read_only'   => false, // should read only tags / lists be shown as options.
 	);
 
 	$args = wp_parse_args( $args, $defaults );
@@ -59,7 +60,7 @@ function wpf_render_tag_multiselect( $args = array() ) {
 
 		foreach ( $args['setting'] as $i => $value ) {
 
-			if ( ! is_numeric( $value ) ) {
+			if ( ! is_numeric( $value ) && ! empty( $value ) && ! is_array( $value ) ) {
 
 				// If the tag is stored as a name, and we're able to find a numeric ID, update it
 
@@ -122,11 +123,18 @@ function wpf_render_tag_multiselect( $args = array() ) {
 
 		foreach ( $tag_categories as $tag_category ) {
 
+			// (read only) lists with HubSpot.
+
+			if ( false !== strpos( $tag_category, 'Read Only' ) && false === $args['read_only'] ) {
+				continue;
+			}
+
 			echo '<optgroup label="' . esc_attr( $tag_category ) . '">';
 
 			foreach ( $available_tags as $id => $field_data ) {
 
-				// (read only) lists with HubSpot.
+				// If we are showing read only lists/tags, add a badge to indicate it.
+
 				if ( strpos( $tag_category, 'Read Only' ) !== false ) {
 					$field_data['label'] .= '<small>(' . esc_html__( 'read only', 'wp-fusion' ) . ')</small>';
 				}

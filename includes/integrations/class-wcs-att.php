@@ -7,6 +7,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_WCS_ATT extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'wcs-att';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Wcs att';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_WCS_ATT extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'wcs-att';
 
 		add_filter( 'wpf_woocommerce_apply_tags_checkout', array( $this, 'apply_tags_checkout' ), 10, 2 );
 		add_action( 'wpf_woocommerce_product_subscription_active', array( $this, 'subscription_active' ), 10, 2 );

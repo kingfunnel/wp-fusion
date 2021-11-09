@@ -470,4 +470,4 @@ class WPF_WS_Form extends WS_Form_Action {
 
 }
 
-new WPF_WS_Form;
+new WPF_WS_Form();

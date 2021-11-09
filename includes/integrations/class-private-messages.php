@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Private_Messages extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'private-messages';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Private messages';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -17,12 +42,10 @@ class WPF_Private_Messages extends WPF_Integrations_Base {
 
 	public function init() {
 
-		$this->slug = 'private-messages';
-
 		add_action( 'pm_new_message', array( $this, 'new_message' ), 10, 2 );
 
 		// Admin settings
-		add_action( 'admin_menu', array( $this, 'admin_menu'), 40 );
+		add_action( 'admin_menu', array( $this, 'admin_menu' ), 40 );
 
 	}
 
@@ -38,13 +61,13 @@ class WPF_Private_Messages extends WPF_Integrations_Base {
 
 		$settings = get_option( 'wpf_private_messages_settings', array() );
 
-		if( ! empty( $settings['apply_tags_sent'] ) ) {
+		if ( ! empty( $settings['apply_tags_sent'] ) ) {
 
 			wp_fusion()->user->apply_tags( $settings['apply_tags_sent'], $thread->author );
 
 		}
 
-		if( ! empty( $settings['apply_tags_received'] ) ) {
+		if ( ! empty( $settings['apply_tags_received'] ) ) {
 
 			wp_fusion()->user->apply_tags( $settings['apply_tags_received'], $thread->recipient );
 
@@ -70,7 +93,6 @@ class WPF_Private_Messages extends WPF_Integrations_Base {
 			'private-messages-wpf-settings',
 			array( $this, 'render_admin_menu' )
 		);
-
 
 		add_action( 'load-' . $id, array( $this, 'enqueue_scripts' ) );
 
@@ -103,9 +125,9 @@ class WPF_Private_Messages extends WPF_Integrations_Base {
 
 		<div class="wrap">
 
-			<h1><?php echo wp_fusion()->crm->name ?> Integration</h1>
+			<h1><?php echo wp_fusion()->crm->name; ?> Integration</h1>
 
-			<?php 
+			<?php
 
 			// Save settings
 
@@ -116,7 +138,6 @@ class WPF_Private_Messages extends WPF_Integrations_Base {
 
 			// Get settings
 			$settings = get_option( 'wpf_private_messages_settings', array() );
-
 
 			?>
 		
@@ -136,9 +157,9 @@ class WPF_Private_Messages extends WPF_Integrations_Base {
 								<?php
 
 								$args = array(
-									'setting' 		=> $settings['apply_tags_sent'],
-									'meta_name' 	=> 'wpf-settings',
-									'field_id'		=> 'apply_tags_sent',
+									'setting'   => $settings['apply_tags_sent'],
+									'meta_name' => 'wpf-settings',
+									'field_id'  => 'apply_tags_sent',
 								);
 
 								wpf_render_tag_multiselect( $args );
@@ -157,9 +178,9 @@ class WPF_Private_Messages extends WPF_Integrations_Base {
 								<?php
 
 								$args = array(
-									'setting' 		=> $settings['apply_tags_received'],
-									'meta_name' 	=> 'wpf-settings',
-									'field_id'		=> 'apply_tags_received',
+									'setting'   => $settings['apply_tags_received'],
+									'meta_name' => 'wpf-settings',
+									'field_id'  => 'apply_tags_received',
 								);
 
 								wpf_render_tag_multiselect( $args );
@@ -178,10 +199,10 @@ class WPF_Private_Messages extends WPF_Integrations_Base {
 
 			</form>
 		</div>
-	<?php
+		<?php
 	}
 
 
 }
 
-new WPF_Private_Messages;
+new WPF_Private_Messages();

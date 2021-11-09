@@ -15,6 +15,31 @@ use SimplePay\Pro\Payments\Subscription;
 class WPF_Simple_Pay extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'simple-pay';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Simple pay';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/wp-simple-pay/';
+
+	/**
 	 * Gets things started.
 	 *
 	 * @since 3.30.4
@@ -22,7 +47,6 @@ class WPF_Simple_Pay extends WPF_Integrations_Base {
 	public function init() {
 
 		$this->name = 'Simple Pay';
-		$this->slug = 'simple-pay';
 
 		add_action( 'simpay_after_customer_created', array( $this, 'customer_created' ) );
 
@@ -280,13 +304,13 @@ class WPF_Simple_Pay extends WPF_Integrations_Base {
 	 *
 	 * @since 3.30.4
 	 *
-	 * @param int   $post_id The post ID.
+	 * @param int $post_id The post ID.
 	 * @return mixed The settings panel output.
 	 */
 	public function settings_options_panel( $post_id ) {
 
 		$defaults = array(
-			'enable'                            => false,
+			'enable'                            => true,
 			'apply_tags'                        => array(),
 			'apply_tags_payment_failed'         => array(),
 			'apply_tags_subscription_cancelled' => array(),
@@ -314,7 +338,8 @@ class WPF_Simple_Pay extends WPF_Integrations_Base {
 						<label for="wpf-enable"><?php echo sprintf( __( 'Sync customers with %s', 'wp-fusion' ), wp_fusion()->crm->name ); ?></label>
 
 						<?php
-						/* <br /><br />
+						/*
+						 <br /><br />
 						<p class="description"><?php _e( 'Field mapping can be configured on the Custom Form Fields tab.', 'wp-fusion' ); ?></p> */
 						?>
 
@@ -400,7 +425,8 @@ class WPF_Simple_Pay extends WPF_Integrations_Base {
 						<label for="wpf-remove-tags"><?php echo __( 'Remove the tags applied with the initial purchase when a subscription is cancelled.', 'wp-fusion' ); ?></label>
 
 						<?php
-						/* <br /><br />
+						/*
+						 <br /><br />
 						<p class="description"><?php _e( 'Field mapping can be configured on the Custom Form Fields tab.', 'wp-fusion' ); ?></p> */
 						?>
 

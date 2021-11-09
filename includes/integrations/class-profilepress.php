@@ -7,6 +7,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_ProfilePress extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'profilepress';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Profilepress';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/profilepress/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_ProfilePress extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'profilepress';
 
 		add_filter( 'admin_menu', array( $this, 'page_menu' ) );
 
@@ -27,7 +50,6 @@ class WPF_ProfilePress extends WPF_Integrations_Base {
 		// User Meta hooks
 		add_action( 'pp_after_profile_update', array( $this, 'user_update' ), 10, 2 );
 		add_filter( 'pp_after_registration', array( $this, 'user_register' ), 10, 3 );
-	
 
 	}
 
@@ -38,22 +60,22 @@ class WPF_ProfilePress extends WPF_Integrations_Base {
 	 * @return void
 	 */
 
-	function page_menu(){
+	function page_menu() {
 
-        $id = add_submenu_page(
-            'pp-config',
-            'WP Fusion - ProfilePress',
-            'WP Fusion',
-            'manage_options',
-            'pp-wpf',
-            array($this, 'wpf_settings_page')
-        );
+		$id = add_submenu_page(
+			'pp-config',
+			'WP Fusion - ProfilePress',
+			'WP Fusion',
+			'manage_options',
+			'pp-wpf',
+			array( $this, 'wpf_settings_page' )
+		);
 
-        add_action( 'load-' . $id, array( $this, 'enqueue_scripts' ) );
+		add_action( 'load-' . $id, array( $this, 'enqueue_scripts' ) );
 
-    }
+	}
 
-    /**
+	/**
 	 * Renders WPPP Styles
 	 *
 	 * @access public
@@ -75,7 +97,7 @@ class WPF_ProfilePress extends WPF_Integrations_Base {
 	 * @return mixed
 	 */
 
-	public function wpf_settings_page(){
+	public function wpf_settings_page() {
 
 		if ( isset( $_POST['PROFILEPRESS_sql::sql_wp_list_table_registration_builder();'] ) && wp_verify_nonce( $_POST['PROFILEPRESS_sql::sql_wp_list_table_registration_builder();'], 'wpf_pp_settings' ) && ! empty( $_POST['wpf-settings'] ) ) {
 
@@ -83,71 +105,72 @@ class WPF_ProfilePress extends WPF_Integrations_Base {
 			echo '<div id="message" class="updated fade"><p><strong>Settings saved.</strong></p></div>';
 		}
 
-		$settings = get_option( 'wpf_pp_settings', array() );			
+		$settings = get_option( 'wpf_pp_settings', array() );
 
 		?>
 		<div id="wrap">
 		
 			<form id="wpf-pp-settings" action="" method="post">
 				<?php wp_nonce_field( 'wpf_pp_settings', 'PROFILEPRESS_sql::sql_wp_list_table_registration_builder();' ); ?>	        	
-	        	<input type="hidden" name="action" value="update">				
+				<input type="hidden" name="action" value="update">				
 					<h4>Registration Forms</h4>
 				
-					<p class="description">For each Registration Form below, specify tags to be applied in <?php echo wp_fusion()->crm->name ?> when user is registered.</p>
-		        
-		            <br/>
+					<p class="description">For each Registration Form below, specify tags to be applied in <?php echo wp_fusion()->crm->name; ?> when user is registered.</p>
+				
+					<br/>
 				
 					<table class="table table-hover" id="wpf-coursewre-levels-table">
 						<thread>
 				
-						    <tr>
+							<tr>
 							
-						        <th style="text-align:left;">Registration Forms</th>
+								<th style="text-align:left;">Registration Forms</th>
 					
 								<th style="text-align:left;">Apply Tags</th>
 					
-						    </tr> 
+							</tr> 
 						</thread>
 						<tbody>
-						    <?php $registration_builder = PROFILEPRESS_sql::sql_wp_list_table_registration_builder(); ?>
+							<?php $registration_builder = PROFILEPRESS_sql::sql_wp_list_table_registration_builder(); ?>
 					
-							<?php foreach ($registration_builder as $data) : ?>
+							<?php foreach ( $registration_builder as $data ) : ?>
 					
 								<?php
 									$title = $data['title'];
-									$id = $data['id'];
-								 ?>
+									$id    = $data['id'];
+								?>
 
 								<?php
 
 								if ( ! isset( $settings[ $id ] ) ) {
 									$settings[ $id ] = array( 'apply_tags' => array() );
-								} ?>
+								}
+								?>
 					
-						        <tr style="border-bottom: 2px solid #ddd !important;">
+								<tr style="border-bottom: 2px solid #ddd !important;">
 					
-						        	<td style="font-weight: bold;text-transform: uppercase;"><?php echo $title; ?></td>
+									<td style="font-weight: bold;text-transform: uppercase;"><?php echo $title; ?></td>
 					
-							        <td>
+									<td>
 					
-						                <?php
+										<?php
 											$args = array(
-												'setting'   => $settings[ $id ]['apply_tags'],
+												'setting' => $settings[ $id ]['apply_tags'],
 												'meta_name' => "wpf-settings[{$id}][apply_tags]",
 											);
 											wpf_render_tag_multiselect( $args );
-										?>
+											?>
 									</td>
 								
 								</tr>
 							<?php endforeach; ?>
 						</tbody>
-			        </table> 
-		        <p class="submit"><input name="Submit" type="submit" class="button-primary" value="Save Changes"/>
-	                </p>
-	        </form>
-	    </div>
-    <?php
+					</table> 
+				<p class="submit"><input name="Submit" type="submit" class="button-primary" value="Save Changes"/>
+					</p>
+			</form>
+		</div>
+		<?php
 	}
 
 
@@ -160,13 +183,15 @@ class WPF_ProfilePress extends WPF_Integrations_Base {
 
 	public function add_meta_field_group( $field_groups ) {
 
-		if( !isset( $field_groups['profilepress'] ) ) {
-			$field_groups['profilepress'] = array( 'title' => 'ProfilePress', 'fields' => array() );
+		if ( ! isset( $field_groups['profilepress'] ) ) {
+			$field_groups['profilepress'] = array(
+				'title'  => 'ProfilePress',
+				'fields' => array(),
+			);
 		}
 
-
 		return $field_groups;
-		
+
 	}
 
 	/**
@@ -180,13 +205,16 @@ class WPF_ProfilePress extends WPF_Integrations_Base {
 
 		$profilepress_fields = PROFILEPRESS_sql::sql_wp_list_table_profile_fields();
 
-		foreach ( $profilepress_fields as $field ){
+		foreach ( $profilepress_fields as $field ) {
 
-			$meta_fields[ $field['field_key'] ] = array( 'label' => $field['label_name'], 'type' => $field['type'], 'group' => 'profilepress');
+			$meta_fields[ $field['field_key'] ] = array(
+				'label' => $field['label_name'],
+				'type'  => $field['type'],
+				'group' => 'profilepress',
+			);
 
 		}
-		
-	
+
 		return $meta_fields;
 
 	}
@@ -201,9 +229,9 @@ class WPF_ProfilePress extends WPF_Integrations_Base {
 
 
 	public function user_update( $user_data, $form_id ) {
-		
+
 		wp_fusion()->user->push_user_meta( $user_data['ID'], $user_data );
-		
+
 	}
 
 	/**
@@ -217,12 +245,12 @@ class WPF_ProfilePress extends WPF_Integrations_Base {
 
 		$settings = get_option( 'wpf_pp_settings', array() );
 
-		if( ! empty( $settings[$form_id] ) && ! empty($settings[$form_id]['apply_tags']) ){
-			wp_fusion()->user->apply_tags( $settings[$form_id]['apply_tags'], $user_id );
+		if ( ! empty( $settings[ $form_id ] ) && ! empty( $settings[ $form_id ]['apply_tags'] ) ) {
+			wp_fusion()->user->apply_tags( $settings[ $form_id ]['apply_tags'], $user_id );
 		}
 
 		wp_fusion()->user->push_user_meta( $user_data['ID'], $user_data );
-	
+
 	}
 
 	/**
@@ -233,13 +261,13 @@ class WPF_ProfilePress extends WPF_Integrations_Base {
 	 */
 
 	public function user_register_filter( $post_data, $user_id ) {
-		
+
 		if ( ! isset( $post_data['pp_current_url'] ) ) {
 			return $post_data;
 		}
 
 		$field_map = array(
-			'reg_password' => 'user_pass'
+			'reg_password' => 'user_pass',
 		);
 
 		$post_data = $this->map_meta_fields( $post_data, $field_map );
@@ -250,4 +278,4 @@ class WPF_ProfilePress extends WPF_Integrations_Base {
 
 }
 
-new WPF_ProfilePress;
+new WPF_ProfilePress();

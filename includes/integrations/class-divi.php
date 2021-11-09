@@ -7,14 +7,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Divi extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'divi';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Divi';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/page-builders/divi/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @since 3.17.2
 	 */
 
 	public function init() {
-
-		$this->slug = 'divi';
 
 		add_filter( 'et_builder_get_parent_modules', array( $this, 'add_field' ) );
 

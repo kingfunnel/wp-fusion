@@ -7,14 +7,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_CoursePress extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'coursepress';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Coursepress';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/learning-management/coursepress/';
+
+	/**
 	 * Gets things started.
 	 *
 	 * @since 3.23.1
 	 */
 
 	public function init() {
-
-		$this->slug = 'coursepress';
 
 		add_action( 'coursepress_student_unit_completed', array( $this, 'unit_completed' ), 10, 4 );
 
@@ -261,4 +284,4 @@ class WPF_CoursePress extends WPF_Integrations_Base {
 
 }
 
-new WPF_CoursePress;
+new WPF_CoursePress();

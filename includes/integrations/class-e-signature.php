@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_E_Signature extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'e-signature';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'WP E-Signature';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/other/e-signature/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,9 +41,6 @@ class WPF_E_Signature extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'e-signature';
-		$this->name = 'WP E-Signature';
 
 		add_action( 'esig_document_basic_closing', array( $this, 'document_signed' ) );
 

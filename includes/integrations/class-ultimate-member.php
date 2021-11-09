@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_UM extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'ultimate-member';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Ultimate Member';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/ultimate-member/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_UM extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'ultimate-member';
 
 		add_filter( 'wpf_configure_settings', array( $this, 'register_settings' ), 15, 2 );
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ), 10 );
@@ -567,12 +590,14 @@ class WPF_UM extends WPF_Integrations_Base {
 
 		add_action( 'set_user_role', array( $this, 'after_user_role_is_updated' ), 10, 3 );
 
-		// Account deactivation / reactivation
+		// Account deactivation / reactivation.
 		$deactivation_tag = wpf_get_option( 'deactivation_tag', array() );
 
 		if ( ! empty( $deactivation_tag ) && ! empty( $deactivation_tag[0] ) ) {
 
 			if ( in_array( $deactivation_tag[0], $user_tags ) ) {
+
+				wpf_log( 'notice', $user_id, 'User\'s account was deactivated by deactivation tag <strong>' . wpf_get_tag_label( $deactivation_tag[0] ) . '</strong>' );
 
 				um_fetch_user( $user_id );
 				UM()->user()->deactivate();

@@ -119,7 +119,6 @@ class WPF_Zoho_Admin {
 
 		$new_settings['zoho_header'] = array(
 			'title'   => __( 'Zoho Configuration', 'wp-fusion' ),
-			'std'     => 0,
 			'type'    => 'heading',
 			'section' => 'setup',
 		);
@@ -138,9 +137,8 @@ class WPF_Zoho_Admin {
 
 			$new_settings['zoho_token'] = array(
 				'title'   => __( 'Access Token', 'wp-fusion' ),
-				'std'     => '',
 				'type'    => 'text',
-				'section' => 'setup'
+				'section' => 'setup',
 			);
 
 			$new_settings['zoho_refresh_token'] = array(
@@ -149,7 +147,7 @@ class WPF_Zoho_Admin {
 				'section'     => 'setup',
 				'class'       => 'api_key',
 				'post_fields' => array( 'zoho_token', 'zoho_refresh_token' ),
-				'desc'        => '<a href="' . esc_url( $auth_url ) . '">' . sprintf( __( 'Re-authorize with %s', 'wp-fusion' ), wp_fusion()->crm->name ) . '</a>',
+				'desc'        => '<a href="' . esc_url( $auth_url ) . '">' . sprintf( __( 'Re-authorize with %s', 'wp-fusion' ), $this->name ) . '</a>',
 			);
 
 		}

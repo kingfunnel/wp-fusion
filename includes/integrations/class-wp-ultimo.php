@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_WP_Ultimo extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'wp-ultimo';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Wp ultimo';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/wp-ultimo/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_WP_Ultimo extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'wp-ultimo';
 
 		add_action( 'wp_ultimo_registration', array( $this, 'registration' ), 10, 4 );
 		add_filter( 'wpf_user_register', array( $this, 'user_register' ), 10, 2 );
@@ -70,7 +93,8 @@ class WPF_WP_Ultimo extends WPF_Integrations_Base {
 
 		$transient = WU_Signup::get_transient( false ); // don't die
 
-		/* $transient contains
+		/*
+		 $transient contains
 
 		(
 			[honeypot_id] => 60fedfb2b21fa
@@ -230,7 +254,6 @@ class WPF_WP_Ultimo extends WPF_Integrations_Base {
 
 			<?php
 			/*
-
 			<p class="form-field">
 				<label><?php _e( 'Link with Tag', 'wp-fusion' ); ?></label>
 

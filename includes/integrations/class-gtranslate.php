@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_GTranslate extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'gtranslate';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Gtranslate';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/multilingual/gtranslate/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_GTranslate extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'gtranslate';
 
 		add_filter( 'wpf_api_add_contact_args', array( $this, 'merge_language_code' ) );
 		add_filter( 'wpf_api_update_contact_args', array( $this, 'merge_language_code' ) );

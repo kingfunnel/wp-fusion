@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_EDD_Software_Licensing extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'edd-software-licensing';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Edd software licensing';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/edd-software-licensing/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_EDD_Software_Licensing extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'edd-software-licensing';
 
 		add_action( 'edd_sl_store_license', array( $this, 'store_license' ), 10, 4 );
 		add_action( 'edd_sl_license_upgraded', array( $this, 'license_upgraded' ), 10, 2 );

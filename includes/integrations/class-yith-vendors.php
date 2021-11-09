@@ -32,6 +32,15 @@ class WPF_YITH_Vendors extends WPF_Integrations_Base {
 	public $name = 'YITH WooCommerce Multi Vendor';
 
 	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/yith-woocommerce-multi-vendor/';
+
+
+	/**
 	 * Get things started.
 	 *
 	 * @since 3.35.20
@@ -150,7 +159,7 @@ class WPF_YITH_Vendors extends WPF_Integrations_Base {
 	 *
 	 * @since 3.35.20
 	 *
-	 * @param int   $owner_id The ID of the approved vendor.
+	 * @param int $owner_id The ID of the approved vendor.
 	 */
 
 	public function account_approved( $owner_id ) {

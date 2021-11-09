@@ -556,8 +556,19 @@ body.memberships_page_pmpro-discountcodes .select4-container {
 
 /* User Profile */
 
+#wp-fusion-user-profile-settings {
+	margin-top: 50px;
+}
+
 #wpf-tags-td .select4 {
 	width: 500px !important;
+}
+
+#wp-fusion-user-profile-settings h2 > svg {
+	color: #E55B10;
+	vertical-align: middle;
+	margin-right: 5px;
+    padding-bottom: 3px;
 }
 
 /* Woo / EDD select4 */

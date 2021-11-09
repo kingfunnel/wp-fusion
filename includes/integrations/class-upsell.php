@@ -16,10 +16,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Upsell extends WPF_Integrations_Base {
 
 	/**
-	 * The plugin slug for WP Fusion's module tracking.
+	 * The slug for WP Fusion's module tracking.
 	 *
-	 * @since 3.37.25
-	 * @var  slug
+	 * @since 3.38.14
+	 * @var string $slug
 	 */
 
 	public $slug = 'upsell';
@@ -27,11 +27,18 @@ class WPF_Upsell extends WPF_Integrations_Base {
 	/**
 	 * The plugin name for WP Fusion's module tracking.
 	 *
-	 * @since 3.37.25
-	 * @var  name
+	 * @since 3.38.14
+	 * @var string $name
 	 */
+	public $name = 'Upsell';
 
-	public $name = 'Upsell Plugin';
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/upsell-plugin/';
 
 	/**
 	 * Gets things started.
@@ -40,8 +47,6 @@ class WPF_Upsell extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'upsell';
 
 		// Custom Fields
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ) );
@@ -60,7 +65,7 @@ class WPF_Upsell extends WPF_Integrations_Base {
 
 		// Subscription status changes
 		add_action( 'upsell_subscription_cancelled', array( $this, 'subscription_status_changed' ) );
-		//add_action( 'upsell_subscription_soft_cancelled', array( $this, 'subscription_status_changed' ) ); // upsell doesn't track cancellations with time left
+		// add_action( 'upsell_subscription_soft_cancelled', array( $this, 'subscription_status_changed' ) ); // upsell doesn't track cancellations with time left
 		add_action( 'upsell_subscription_status_failed', array( $this, 'subscription_status_changed' ) );
 		add_action( 'upsell_subscription_status_expired', array( $this, 'subscription_status_changed' ) );
 
@@ -84,7 +89,7 @@ class WPF_Upsell extends WPF_Integrations_Base {
 	 *
 	 * @since  3.37.25
 	 *
-	 * @param  object       $order  The order.
+	 * @param  object $order  The order.
 	 * @return string|false The contact ID or false.
 	 */
 	public function get_contact_id( $order ) {
@@ -133,7 +138,7 @@ class WPF_Upsell extends WPF_Integrations_Base {
 	 *
 	 * @since  3.37.25
 	 *
-	 * @param  object    $order  The order.
+	 * @param  object $order  The order.
 	 * @return int|false The user ID or false.
 	 */
 	private function get_user_id( $order ) {
@@ -618,7 +623,10 @@ class WPF_Upsell extends WPF_Integrations_Base {
 
 			// Logger
 			wpf_log(
-				'info', 0, 'Processing guest checkout for order <a href="' . admin_url( 'post.php?post=' . $order_id . '&action=edit' ) . '" target="_blank">#' . $order_id . '</a>:', array(
+				'info',
+				0,
+				'Processing guest checkout for order <a href="' . admin_url( 'post.php?post=' . $order_id . '&action=edit' ) . '" target="_blank">#' . $order_id . '</a>:',
+				array(
 					'source'     => 'upsell',
 					'meta_array' => $order_data,
 				)
@@ -653,7 +661,10 @@ class WPF_Upsell extends WPF_Integrations_Base {
 			if ( empty( $user_id ) ) {
 
 				wpf_log(
-					'info', 0, 'Processing guest checkout for order <a href="' . admin_url( 'post.php?post=' . $order_id . '&action=edit' ) . '" target="_blank">#' . $order_id . '</a>, for existing contact ID ' . $contact_id . ':', array(
+					'info',
+					0,
+					'Processing guest checkout for order <a href="' . admin_url( 'post.php?post=' . $order_id . '&action=edit' ) . '" target="_blank">#' . $order_id . '</a>, for existing contact ID ' . $contact_id . ':',
+					array(
 						'source'     => 'upsell',
 						'meta_array' => $order_data,
 					)
@@ -1149,7 +1160,7 @@ class WPF_Upsell extends WPF_Integrations_Base {
 	 *
 	 * @since 3.37.25
 	 *
-	 * @param int   $order_id The order ID.
+	 * @param int $order_id The order ID.
 	 */
 	public function batch_step( $order_id ) {
 
@@ -1197,7 +1208,7 @@ class WPF_Upsell extends WPF_Integrations_Base {
 	 *
 	 * @since 3.37.25
 	 *
-	 * @param int   $order_id The order ID.
+	 * @param int $order_id The order ID.
 	 */
 	public function batch_step_sub( $order_id ) {
 
@@ -1246,7 +1257,7 @@ class WPF_Upsell extends WPF_Integrations_Base {
 	 *
 	 * @since 3.37.25
 	 *
-	 * @param int   $order_id The order ID.
+	 * @param int $order_id The order ID.
 	 */
 	public function batch_step_meta( $order_id ) {
 

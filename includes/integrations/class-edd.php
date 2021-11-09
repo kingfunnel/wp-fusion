@@ -7,6 +7,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_EDD extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'edd';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Easy Digital Downloads';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/edd/';
+
+	/**
 	 * Get things started
 	 *
 	 * @access public
@@ -14,8 +39,6 @@ class WPF_EDD extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'edd';
 
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ) );
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ), 10 );
@@ -603,7 +626,6 @@ class WPF_EDD extends WPF_Integrations_Base {
 				wp_fusion()->crm->apply_tags( $apply_tags, $contact_id );
 
 			}
-
 		} else {
 
 			wp_fusion()->user->apply_tags( $apply_tags, $user_id );
@@ -669,6 +691,7 @@ class WPF_EDD extends WPF_Integrations_Base {
 						'setting'   => $settings['allow_tags'],
 						'meta_name' => 'wpf_settings',
 						'field_id'  => 'allow_tags',
+						'read_only' => true,
 					);
 
 					wpf_render_tag_multiselect( $args );
@@ -691,6 +714,7 @@ class WPF_EDD extends WPF_Integrations_Base {
 						'setting'   => $settings['auto_apply_tags'],
 						'meta_name' => 'wpf_settings',
 						'field_id'  => 'auto_apply_tags',
+						'read_only' => true,
 					);
 
 					wpf_render_tag_multiselect( $args );
@@ -1192,7 +1216,7 @@ class WPF_EDD extends WPF_Integrations_Base {
 				'field_id'  => 'apply_tags',
 			)
 		);
-		echo '<span class="description">' . sprintf( __( 'Apply these tags in %s when purchased', 'wp-fusion' ), wp_fusion()->crm->name ) . '</span>';
+		echo '<span class="description">' . sprintf( __( 'Apply these tags in %s when purchased.', 'wp-fusion' ), wp_fusion()->crm->name ) . '</span>';
 		echo '</td>';
 
 		echo '</tr>';
@@ -1208,7 +1232,7 @@ class WPF_EDD extends WPF_Integrations_Base {
 				'field_id'  => 'apply_tags_refunded',
 			)
 		);
-		echo '<span class="description">' . sprintf( __( 'Apply these tags in %s when refunded', 'wp-fusion' ), wp_fusion()->crm->name ) . '</span>';
+		echo '<span class="description">' . sprintf( __( 'Apply these tags in %s when refunded.', 'wp-fusion' ), wp_fusion()->crm->name ) . '</span>';
 		echo '</td>';
 
 		echo '</tr>';

@@ -21,9 +21,30 @@ add_action( 'elementor_pro/init', 'wpf_add_form_actions' );
 class WPF_Elementor_Forms extends ElementorPro\Modules\Forms\Classes\Integration_Base {
 
 	/**
-	 * @var string
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
 	 */
+
 	public $slug = 'elementor-forms';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Elementor Forms';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/lead-generation/elementor-forms/';
+
 
 	/**
 	 * Gets things started
@@ -148,17 +169,17 @@ class WPF_Elementor_Forms extends ElementorPro\Modules\Forms\Classes\Integration
 
 		$widget->start_controls_section(
 			'section_wpfusion',
-			[
+			array(
 				'label'     => 'WP Fusion',
-				'condition' => [
+				'condition' => array(
 					'submit_actions' => $this->get_name(),
-				],
-			]
+				),
+			)
 		);
 
 		$widget->add_control(
 			'wpf_apply_tags',
-			[
+			array(
 				'label'       => __( 'Apply Tags', 'wp-fusion' ),
 				'description' => sprintf( __( 'The selected tags will be applied in %s when the form is submitted.', 'wp-fusion' ), wp_fusion()->crm->name ),
 				'type'        => Controls_Manager::SELECT2,
@@ -166,18 +187,18 @@ class WPF_Elementor_Forms extends ElementorPro\Modules\Forms\Classes\Integration
 				'multiple'    => true,
 				'label_block' => true,
 				'show_label'  => true,
-			]
+			)
 		);
 
 		$widget->add_control(
 			'wpf_add_only',
-			[
+			array(
 				'label'       => __( 'Add Only', 'wp-fusion' ),
 				'description' => __( 'Only add new contacts, don\'t update existing ones.', 'wp-fusion' ),
 				'type'        => Controls_Manager::SWITCHER,
 				'label_block' => false,
 				'show_label'  => true,
-			]
+			)
 		);
 
 		if ( version_compare( ELEMENTOR_PRO_VERSION, '3.2.0', '>=' ) ) {
@@ -188,22 +209,22 @@ class WPF_Elementor_Forms extends ElementorPro\Modules\Forms\Classes\Integration
 
 			$widget->add_control(
 				'wpf_fields_map',
-				[
+				array(
 					'label'     => sprintf( __( '%s Field Mapping', 'wp-fusion' ), wp_fusion()->crm->name ),
 					'type'      => Fields_Map::CONTROL_TYPE,
 					'separator' => 'before',
-					'fields'    => [
-						[
+					'fields'    => array(
+						array(
 							'name' => 'remote_id',
 							'type' => Controls_Manager::HIDDEN,
-						],
-						[
+						),
+						array(
 							'name' => 'local_id',
 							'type' => Controls_Manager::SELECT,
-						],
-					],
+						),
+					),
 					'default'   => $this->get_fields(),
-				]
+				)
 			);
 
 		}
@@ -447,10 +468,10 @@ class WPF_Elementor_Forms extends ElementorPro\Modules\Forms\Classes\Integration
 	 * @return array The fields map control options.
 	 */
 	protected function get_fields_map_control_options() {
-		return [
+		return array(
 			'default'   => $this->get_fields(),
-			'condition' => [],
-		];
+			'condition' => array(),
+		);
 	}
 
 

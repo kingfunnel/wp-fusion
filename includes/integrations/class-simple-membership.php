@@ -9,6 +9,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Simple_Membership extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'simple-membership';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Simple membership';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/simple-membership/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -17,8 +42,6 @@ class WPF_Simple_Membership extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'simple-membership';
 
 		add_filter( 'wpf_user_register', array( $this, 'user_register' ), 10, 2 );
 		add_action( 'wpf_user_created', array( $this, 'apply_membership_tags' ), 10, 3 );
@@ -39,9 +62,9 @@ class WPF_Simple_Membership extends WPF_Integrations_Base {
 	public function user_register( $post_data, $user_id ) {
 
 		$field_map = array(
-			'user_name'   		=> 'user_login',
-			'email'    			=> 'user_email',
-			'password' 			=> 'user_pass'
+			'user_name' => 'user_login',
+			'email'     => 'user_email',
+			'password'  => 'user_pass',
 		);
 
 		$post_data = $this->map_meta_fields( $post_data, $field_map );
@@ -60,15 +83,16 @@ class WPF_Simple_Membership extends WPF_Integrations_Base {
 	public function apply_membership_tags( $user_id, $contact_id, $post_data ) {
 
 		// Quit early if now SWPM registration
-		if( !isset( $post_data['swpm_level_hash'] ) && !isset( $post_data['swpm_level_hash'] ) )
+		if ( ! isset( $post_data['swpm_level_hash'] ) && ! isset( $post_data['swpm_level_hash'] ) ) {
 			return;
+		}
 
 		// Apply membership tags
 		$level_id = $post_data['membership_level'];
 
 		$settings = get_option( 'wpf_simple_membership_settings', array() );
 
-		if ( isset( $settings[ $level_id ] ) && !empty( $settings[ $level_id ]['apply_tags'] ) ) {
+		if ( isset( $settings[ $level_id ] ) && ! empty( $settings[ $level_id ]['apply_tags'] ) ) {
 			wp_fusion()->user->apply_tags( $settings[ $level_id ]['apply_tags'], $user_id );
 		}
 
@@ -98,23 +122,22 @@ class WPF_Simple_Membership extends WPF_Integrations_Base {
 			<td>
 				<?php
 					$args = array(
-						'setting' 		=> $settings[ $level_id ]['apply_tags'],
-						'meta_name'		=> 'wpf-settings',
-						'field_id'		=> 'apply_tags',
+						'setting'   => $settings[ $level_id ]['apply_tags'],
+						'meta_name' => 'wpf-settings',
+						'field_id'  => 'apply_tags',
 					);
 
 					wpf_render_tag_multiselect( $args );
-				?>
+					?>
 				<span class="description">The selected tags will be applied in <?php echo wp_fusion()->crm->name; ?> at registration</span>
 
 			</td>
 		</tr>
 
-		<?php 
+		<?php
 
 		$output .= ob_get_clean();
 		return $output;
-
 
 	}
 
@@ -129,11 +152,11 @@ class WPF_Simple_Membership extends WPF_Integrations_Base {
 
 		$post_data = $_POST;
 
-		if( isset( $post_data['wpf-settings'] ) ) {
+		if ( isset( $post_data['wpf-settings'] ) ) {
 
-			$settings = get_option( 'wpf_simple_membership_settings', array() );
+			$settings              = get_option( 'wpf_simple_membership_settings', array() );
 			$settings[ $level_id ] = $post_data['wpf-settings'];
-			update_option('wpf_simple_membership_settings', $settings);
+			update_option( 'wpf_simple_membership_settings', $settings );
 
 		}
 
@@ -143,4 +166,4 @@ class WPF_Simple_Membership extends WPF_Integrations_Base {
 
 }
 
-new WPF_Simple_Membership;
+new WPF_Simple_Membership();

@@ -46,7 +46,7 @@ class WPF_ActiveCampaign {
 
 		$this->slug     = 'activecampaign';
 		$this->name     = 'ActiveCampaign';
-		$this->supports = array( 'add_tags', 'add_lists' );
+		$this->supports = array( 'add_tags', 'add_lists','events' );
 		$this->api_url  = wpf_get_option( 'ac_url' );
 
 		if ( is_admin() ) {
@@ -237,15 +237,7 @@ class WPF_ActiveCampaign {
 			return;
 		}
 
-		if ( wpf_is_user_logged_in() ) {
-			$user  = wpf_get_current_user();
-			$email = $user->user_email;
-		} elseif ( isset( $_COOKIE['wpf_guest'] ) ) {
-			$email = sanitize_email( wp_unslash( $_COOKIE['wpf_guest'] ) );
-		} else {
-			$email = '';
-		}
-
+		$email   = wpf_get_current_user_email();
 		$trackid = wpf_get_option( 'site_tracking_id' );
 
 		if ( empty( $trackid ) ) {
@@ -1110,22 +1102,28 @@ class WPF_ActiveCampaign {
 	 *
 	 * @link   https://wpfusion.com/documentation/crm-specific-docs/activecampaign-event-tracking/
 	 *
-	 * @param  string        $event      The event title.
-	 * @param  bool|string   $event_data The event descriotion.
+	 * @param  string      $event         The event title.
+	 * @param  bool|string $event_data    The event description.
+	 * @param  bool|string $email_address The user email address.
 	 * @return bool|WP_Error True if success, WP_Error if failed.
 	 */
-	public function track_event( $event, $event_data = false ) {
+	public function track_event( $event, $event_data = false, $email_address = false ) {
 
-		if ( ! wpf_is_user_logged_in() ) {
-			// Tracking only works if WP Fusion knows who the contact is
-			return;
+		// Get the email address to track.
+
+		if ( empty( $email_address ) ) {
+			$email_address = wpf_get_current_user_email();
 		}
 
-		// Get tracking ID
+		if ( false === $email_address ) {
+			return; // can't track without an email.
+		}
+
+		// Get tracking ID.
 
 		$trackid = wpf_get_option( 'event_tracking_id' );
 
-		if ( false == $trackid ) {
+		if ( ! $trackid ) {
 
 			$this->connect();
 			$me = $this->app->api( 'user/me' );
@@ -1141,21 +1139,12 @@ class WPF_ActiveCampaign {
 
 		}
 
-		// Get account ID
+		// Get account ID.
 
 		$actid = wpf_get_option( 'site_tracking_id' );
 
-		if ( false == $actid ) {
+		if ( ! $actid ) {
 			$actid = $this->get_tracking_id();
-		}
-
-		// Get the email address to track
-
-		if ( doing_wpf_auto_login() ) {
-			$user_email = get_user_meta( wpf_get_current_user_id(), 'user_email', true );
-		} else {
-			$user       = wp_get_current_user();
-			$user_email = $user->user_email;
 		}
 
 		$data = array(
@@ -1164,20 +1153,18 @@ class WPF_ActiveCampaign {
 			'event'     => $event,
 			'eventdata' => $event_data,
 			'visit'     => array(
-				'email' => $user_email,
+				'email' => $email_address,
 			),
 		);
-
-		wpf_log( 'info', wpf_get_current_user_id(), 'Tracking event: ' . $event . ' - ' . $event_data );
 
 		$params                            = $this->get_params();
 		$params['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
 		$params['body']                    = $data;
+		$params['blocking']                = false; // we don't need to wait for a response.
 
 		$response = wp_safe_remote_post( 'https://trackcmp.net/event', $params );
 
 		if ( is_wp_error( $response ) ) {
-			wpf_log( 'error', 0, 'Error tracking event: ' . $response->get_error_message() );
 			return $response;
 		}
 

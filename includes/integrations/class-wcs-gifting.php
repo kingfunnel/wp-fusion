@@ -7,6 +7,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_WCS_Gifting extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'wcs-gifting';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Gifting for WooCommerce Subscriptions';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/gifting-for-woocommerce-subscriptions/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -17,7 +42,6 @@ class WPF_WCS_Gifting extends WPF_Integrations_Base {
 	public function init() {
 
 		$this->name = 'WCS Gifting';
-		$this->slug = 'wcs-gifting';
 
 		add_action( 'wpf_woocommerce_product_subscription_active', array( $this, 'subscription_active' ), 10, 2 );
 		add_action( 'wpf_woocommerce_product_subscription_inactive', array( $this, 'subscription_inactive' ), 10, 2 );

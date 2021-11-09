@@ -8,13 +8,36 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_LD_Group_Registration extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'ld-group-registration';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Ld group registration';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/learning-management/wisdm-group-registration-learndash/';
+
+	/**
 	 * Gets things started.
 	 *
 	 * @since 3.37.7
 	 */
 	public function init() {
-
-		$this->slug = 'ld-group-registration';
 
 		add_action( 'wdm_created_new_group_using_ldgr', array( $this, 'group_user_added' ), 10, 3 );
 		add_action( 'wpf_woocommerce_panel', array( $this, 'panel_content' ) );
@@ -26,10 +49,10 @@ class WPF_LD_Group_Registration extends WPF_Integrations_Base {
 	 *
 	 * @since 3.37.7
 	 *
-	 * @param int   $group_id   The group that was created.
-	 * @param int   $product_id The product ID that triggered the group
-	 *                          creation.
-	 * @param int   $order_id   The new WooCommerce order.
+	 * @param int $group_id   The group that was created.
+	 * @param int $product_id The product ID that triggered the group
+	 *                        creation.
+	 * @param int $order_id   The new WooCommerce order.
 	 */
 	public function group_user_added( $group_id, $product_id, $order_id ) {
 
@@ -59,7 +82,7 @@ class WPF_LD_Group_Registration extends WPF_Integrations_Base {
 	 *
 	 * @since 3.37.7
 	 *
-	 * @param int   $post_id The product ID.
+	 * @param int $post_id The product ID.
 	 */
 	public function panel_content( $post_id ) {
 

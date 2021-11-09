@@ -43,7 +43,7 @@ class WPF_BuddyBoss_IAP extends IntegrationAbstract {
 
 		if ( null === self::$instance ) {
 			$classname      = __CLASS__;
-			self::$instance = new $classname;
+			self::$instance = new $classname();
 		}
 
 		return self::$instance;

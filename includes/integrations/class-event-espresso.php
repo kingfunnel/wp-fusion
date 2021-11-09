@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Event_Espresso extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'event-espresso';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Event espresso';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/events/event-espresso/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,9 +41,6 @@ class WPF_Event_Espresso extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'event-espresso';
-		$this->name = 'Event Espresso';
 
 		add_action( 'AHEE__EE_Registration__set_status__after_update', array( $this, 'registration_status_update' ), 10, 4 );
 		add_action( 'AHEE__EE_Base_Class__save__end', array( $this, 'save_checkin' ), 10, 2 );
@@ -217,7 +239,10 @@ class WPF_Event_Espresso extends WPF_Integrations_Base {
 				// Only create a contact / sync meta on Pending, don't need to do it again once approved (unless we're doing an export)
 
 				wpf_log(
-					'info', 0, 'New registration <a href="' . admin_url( 'admin.php?page=espresso_registrations&action=view_registration&_REG_ID=' . $registration->ID() ) . '" target="_blank">#' . $registration->ID() . '</a> for event <a href="' . admin_url( 'admin.php?page=espresso_events&action=edit&post=' . $event_id . '&action=edit' ) . '" target="_blank">' . $event_title . '</a>: ', array(
+					'info',
+					0,
+					'New registration <a href="' . admin_url( 'admin.php?page=espresso_registrations&action=view_registration&_REG_ID=' . $registration->ID() ) . '" target="_blank">#' . $registration->ID() . '</a> for event <a href="' . admin_url( 'admin.php?page=espresso_events&action=edit&post=' . $event_id . '&action=edit' ) . '" target="_blank">' . $event_title . '</a>: ',
+					array(
 						'meta_array' => $update_data,
 						'source'     => 'event-espresso',
 					)
@@ -249,7 +274,10 @@ class WPF_Event_Espresso extends WPF_Integrations_Base {
 			if ( ! empty( $apply_tags ) ) {
 
 				wpf_log(
-					'info', 0, 'Applying tag(s) for event registration <a href="' . admin_url( 'admin.php?page=espresso_registrations&action=view_registration&_REG_ID=' . $registration->ID() ) . '" target="_blank">#' . $registration->ID() . '</a>: ', array(
+					'info',
+					0,
+					'Applying tag(s) for event registration <a href="' . admin_url( 'admin.php?page=espresso_registrations&action=view_registration&_REG_ID=' . $registration->ID() ) . '" target="_blank">#' . $registration->ID() . '</a>: ',
+					array(
 						'tag_array' => $apply_tags,
 						'source'    => 'event-espresso',
 					)
@@ -334,7 +362,10 @@ class WPF_Event_Espresso extends WPF_Integrations_Base {
 
 				// Identified contact
 				wpf_log(
-					'info', 0, 'Event check-in applying tag(s) to contact ID #' . $contact_id . ' (' . $attendee->email() . '): ', array(
+					'info',
+					0,
+					'Event check-in applying tag(s) to contact ID #' . $contact_id . ' (' . $attendee->email() . '): ',
+					array(
 						'tag_array' => $settings['apply_tags_checked_in'][ $ticket_id ],
 					)
 				);
@@ -357,7 +388,10 @@ class WPF_Event_Espresso extends WPF_Integrations_Base {
 			} elseif ( ! empty( $contact_id ) ) {
 
 				wpf_log(
-					'info', 0, 'Event check-out applying tag(s) to contact ID #' . $contact_id . ' (' . $attendee->email() . '): ', array(
+					'info',
+					0,
+					'Event check-out applying tag(s) to contact ID #' . $contact_id . ' (' . $attendee->email() . '): ',
+					array(
 						'tag_array' => $settings['apply_tags_checked_out'][ $ticket_id ],
 					)
 				);

@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_bbPress extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'bbpress';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'bbPress';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/forums/bbpress/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_bbPress extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'bbpress';
 
 		// Settings
 		add_filter( 'wpf_configure_settings', array( $this, 'register_settings' ), 15, 2 );
@@ -71,10 +94,11 @@ class WPF_bbPress extends WPF_Integrations_Base {
 		);
 
 		$settings['bbp_allow_tags'] = array(
-			'title'   => __( 'Required tags (any)', 'wp-fusion' ),
-			'desc'    => __( 'If the user doesn\'t have any of the tags specified, they will be redirected to the URL below. You must specify a redirect for forum restriction to work.', 'wp-fusion' ),
-			'type'    => 'assign_tags',
-			'section' => 'integrations',
+			'title'     => __( 'Required tags (any)', 'wp-fusion' ),
+			'desc'      => __( 'If the user doesn\'t have any of the tags specified, they will be redirected to the URL below. You must specify a redirect for forum restriction to work.', 'wp-fusion' ),
+			'type'      => 'assign_tags',
+			'section'   => 'integrations',
+			'read_only' => true,
 		);
 
 		$settings['bbp_redirect'] = array(
@@ -375,7 +399,7 @@ class WPF_bbPress extends WPF_Integrations_Base {
 	 * @since  3.36.8
 	 *
 	 * @param  array $user_meta The user meta.
-	 * @param  int $user_id   The user identifier.
+	 * @param  int   $user_id   The user identifier.
 	 * @return array  $data The profile data.
 	 */
 	public function profile_update( $user_meta, $user_id ) {
@@ -421,4 +445,4 @@ class WPF_bbPress extends WPF_Integrations_Base {
 
 }
 
-new WPF_bbPress;
+new WPF_bbPress();

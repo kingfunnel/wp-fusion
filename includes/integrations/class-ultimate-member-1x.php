@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_UM extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'ultimate-member';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Ultimate member';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/ultimate-member/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_UM extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'ultimate-member';
 
 		add_filter( 'wpf_configure_settings', array( $this, 'register_settings' ), 15, 2 );
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ), 10 );
@@ -63,7 +86,7 @@ class WPF_UM extends WPF_Integrations_Base {
 			'title'   => __( 'Ultimate Member Integration', 'wp-fusion' ),
 			'std'     => 0,
 			'type'    => 'heading',
-			'section' => 'integrations'
+			'section' => 'integrations',
 		);
 
 		$settings['um_pull'] = array(
@@ -71,7 +94,7 @@ class WPF_UM extends WPF_Integrations_Base {
 			'desc'    => __( 'Update the local profile data for a given user from ' . wp_fusion()->crm->name . ' before displaying. May slow down profile load times.', 'wp-fusion' ),
 			'std'     => 0,
 			'type'    => 'checkbox',
-			'section' => 'integrations'
+			'section' => 'integrations',
 		);
 
 		$settings['um_defer'] = array(
@@ -79,7 +102,7 @@ class WPF_UM extends WPF_Integrations_Base {
 			'desc'    => __( 'Don\'t send any data to ' . wp_fusion()->crm->name . ' until the account has been activated, either by an administrator or via email activation.', 'wp-fusion' ),
 			'std'     => 0,
 			'type'    => 'checkbox',
-			'section' => 'integrations'
+			'section' => 'integrations',
 		);
 
 		return $settings;
@@ -95,8 +118,11 @@ class WPF_UM extends WPF_Integrations_Base {
 
 	public function add_meta_field_group( $field_groups ) {
 
-		if( !isset( $field_groups['um'] ) ) {
-			$field_groups['um'] = array( 'title' => 'Ultimate Member', 'fields' => array() );
+		if ( ! isset( $field_groups['um'] ) ) {
+			$field_groups['um'] = array(
+				'title'  => 'Ultimate Member',
+				'fields' => array(),
+			);
 		}
 
 		return $field_groups;
@@ -124,13 +150,14 @@ class WPF_UM extends WPF_Integrations_Base {
 				$field['type'] = '';
 			}
 
-			if($field['type'] == 'checkbox')
+			if ( $field['type'] == 'checkbox' ) {
 				$field['type'] = 'checkboxes';
+			}
 
 			$meta_fields[ $key ] = array(
 				'label' => $field['label'],
 				'type'  => $field['type'],
-				'group'	=> 'um'
+				'group' => 'um',
 			);
 
 		}
@@ -192,7 +219,6 @@ class WPF_UM extends WPF_Integrations_Base {
 				$post_data[ $key ] = $value;
 
 			}
-
 		}
 
 		// Adapt Ultimate Member fields to WordPress values
@@ -228,7 +254,6 @@ class WPF_UM extends WPF_Integrations_Base {
 	 */
 
 	public function registration_global_hook( $user_id, $args ) {
-
 
 		$settings = get_post_meta( $args['form_id'], 'wpf-settings-um', true );
 
@@ -343,7 +368,6 @@ class WPF_UM extends WPF_Integrations_Base {
 			if ( isset( $user_meta[ $key ] ) && $field['type'] == 'date' ) {
 				$user_meta[ $key ] = date( $field['format'], strtotime( $user_meta[ $key ] ) );
 			}
-
 		}
 
 		return $user_meta;
@@ -363,16 +387,18 @@ class WPF_UM extends WPF_Integrations_Base {
 			return;
 		}
 
-		$linked_roles = get_posts( array(
-			'post_type'  => 'um_role',
-			'nopaging'   => true,
-			'meta_query' => array(
-				array(
-					'key'     => 'wpf-settings-um',
-					'compare' => 'EXISTS'
+		$linked_roles = get_posts(
+			array(
+				'post_type'  => 'um_role',
+				'nopaging'   => true,
+				'meta_query' => array(
+					array(
+						'key'     => 'wpf-settings-um',
+						'compare' => 'EXISTS',
+					),
 				),
-			),
-		) );
+			)
+		);
 
 		// Update role based on user tags
 		foreach ( $linked_roles as $role ) {
@@ -396,7 +422,6 @@ class WPF_UM extends WPF_Integrations_Base {
 
 				$ultimatemember->user->set_role( $role->post_name );
 			}
-
 		}
 
 	}
@@ -413,10 +438,16 @@ class WPF_UM extends WPF_Integrations_Base {
 		wp_enqueue_style( 'select4', WPF_DIR_URL . 'includes/admin/options/lib/select2/select4.min.css' );
 		wp_enqueue_script( 'select4', WPF_DIR_URL . 'includes/admin/options/lib/select2/select4.min.js', array( 'jquery' ), '4.0.1', true );
 
-		wp_enqueue_script( 'wpf-admin', WPF_DIR_URL . 'assets/js/wpf-admin.js', array(
-			'jquery',
-			'select4'
-		), WP_FUSION_VERSION, true );
+		wp_enqueue_script(
+			'wpf-admin',
+			WPF_DIR_URL . 'assets/js/wpf-admin.js',
+			array(
+				'jquery',
+				'select4',
+			),
+			WP_FUSION_VERSION,
+			true
+		);
 		wp_enqueue_style( 'wpf-admin', WPF_DIR_URL . 'assets/css/wpf-admin.css', array(), WP_FUSION_VERSION );
 
 	}
@@ -433,15 +464,29 @@ class WPF_UM extends WPF_Integrations_Base {
 		global $post;
 
 		if ( get_post_meta( $post->ID, '_um_mode', true ) == 'register' ) {
-			add_meta_box( 'wpf-um-meta', 'WP Fusion', array(
-				$this,
-				'meta_box_callback'
-			), 'um_form', 'side', 'default' );
+			add_meta_box(
+				'wpf-um-meta',
+				'WP Fusion',
+				array(
+					$this,
+					'meta_box_callback',
+				),
+				'um_form',
+				'side',
+				'default'
+			);
 		} elseif ( $post->post_type == 'um_role' ) {
-			add_meta_box( 'wpf-um-meta', 'WP Fusion', array(
-				$this,
-				'meta_box_callback_role'
-			), 'um_role', 'side', 'default' );
+			add_meta_box(
+				'wpf-um-meta',
+				'WP Fusion',
+				array(
+					$this,
+					'meta_box_callback_role',
+				),
+				'um_role',
+				'side',
+				'default'
+			);
 		}
 
 	}
@@ -471,7 +516,13 @@ class WPF_UM extends WPF_Integrations_Base {
 		*/
 
 		echo '<p><label for="wpf-um-apply-tags">Apply these tags when a user registers:</label><br />';
-		wpf_render_tag_multiselect( array( 'setting' => $settings['apply_tags'], 'meta_name' => 'wpf-settings-um', 'field_id' => 'apply_tags' ) );
+		wpf_render_tag_multiselect(
+			array(
+				'setting'   => $settings['apply_tags'],
+				'meta_name' => 'wpf-settings-um',
+				'field_id'  => 'apply_tags',
+			)
+		);
 		echo '</p>';
 
 	}
@@ -503,11 +554,11 @@ class WPF_UM extends WPF_Integrations_Base {
 		echo '<p><label for="wpf-um-apply-tags">Link with ' . wp_fusion()->crm->name . ' tag:</label><br />';
 
 		$args = array(
-			'setting' 		=> $settings['tag_link'],
-			'meta_name'		=> 'wpf-settings-um',
-			'field_id'		=> 'tag_link',
-			'placeholder'	=> 'Select Tag',
-			'limit'			=> 1
+			'setting'     => $settings['tag_link'],
+			'meta_name'   => 'wpf-settings-um',
+			'field_id'    => 'tag_link',
+			'placeholder' => 'Select Tag',
+			'limit'       => 1,
 		);
 
 		wpf_render_tag_multiselect( $args );
@@ -546,12 +597,10 @@ class WPF_UM extends WPF_Integrations_Base {
 			return;
 		}
 
-
 		// Don't update on revisions
 		if ( $_POST['post_type'] == 'revision' ) {
 			return;
 		}
-
 
 		if ( isset( $_POST['wpf-settings-um'] ) ) {
 			update_post_meta( $post_id, 'wpf-settings-um', $_POST['wpf-settings-um'] );
@@ -563,4 +612,4 @@ class WPF_UM extends WPF_Integrations_Base {
 
 }
 
-new WPF_UM;
+new WPF_UM();

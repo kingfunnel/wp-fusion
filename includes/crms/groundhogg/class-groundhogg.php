@@ -31,7 +31,7 @@ class WPF_Groundhogg {
 		$this->slug      = 'groundhogg';
 		$this->name      = 'Groundhogg';
 		$this->menu_name = 'Groundhogg (This Site)';
-		$this->supports  = array();
+		$this->supports  = array( 'events' );
 
 		// $this->supports = array( 'add_tags' ); // Removed in 3.35.10
 
@@ -711,5 +711,48 @@ class WPF_Groundhogg {
 		return $contact_ids;
 
 	}
+
+	/**
+	 * Track event.
+	 *
+	 * Track an event.
+	 *
+	 * @since  3.38.16
+	 *
+	 * @param  string      $event      The event title.
+	 * @param  bool|string $event_data The event description.
+	 * @param  bool|string $email_address The user email address.
+	 * @return bool|WP_Error True if success, WP_Error if failed.
+	 */
+	public function track_event( $event, $event_data = false, $email_address = false ) {
+
+		if ( empty( $email_address ) && ! wpf_is_user_logged_in() ) {
+			// Tracking only works if WP Fusion knows who the contact is.
+			return;
+		}
+
+		// Get the email address to track.
+		if ( empty( $email_address ) ) {
+			$user          = wpf_get_current_user();
+			$email_address = $user->user_email;
+		}
+
+		$contact = \Groundhogg\get_contactdata( $email_address );
+		if ( ! $contact ) {
+			return;
+		}
+
+		$args = array(
+			'contact_id' => $contact->ID,
+		);
+
+		wpf_log( 'info', wpf_get_current_user_id(), 'Tracking event: ' . $event . ' - ' . $event_data );
+
+		$track = \Groundhogg\track_activity( $contact, $event, $args, $event_data );
+
+		return true;
+	}
+
+
 
 }

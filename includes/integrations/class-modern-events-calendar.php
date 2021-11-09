@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Modern_Events_Calendar extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'modern-events-calendar';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Modern events calendar';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/events/modern-events-calendar/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,10 +40,6 @@ class WPF_Modern_Events_Calendar extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'modern-events-calendar';
-
-		$this->name = 'Modern Events Calendar';
 
 		// Metabox
 		add_action( 'custom_field_ticket', array( $this, 'tickets_metabox' ), 10, 2 );

@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Woo_Shipment_Tracking extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'woo-shipment-tracking';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'WooCommerce shipment tracking';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/woocommerce-shipment-tracking/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_Woo_Shipment_Tracking extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'woo-shipment-tracking';
 
 		add_action( 'added_post_meta', array( $this, 'sync_shipping_link' ), 10, 4 );
 		add_action( 'updated_post_meta', array( $this, 'sync_shipping_link' ), 10, 4 );
@@ -60,7 +83,6 @@ class WPF_Woo_Shipment_Tracking extends WPF_Integrations_Base {
 				wp_fusion()->crm->update_contact( $contact_id, $update_data );
 
 			}
-
 		}
 
 	}

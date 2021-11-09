@@ -473,9 +473,14 @@ class WPF_CRM_Base {
 				$value = strtotime( $value );
 			}
 
-			// absint() in case it's a string timestamp, this will make sure subsequent calls to date() don't throw a warning.
+			// intval() in case it's a string timestamp, this will make sure subsequent calls to date() don't throw a warning.
+			// can't use absint(), since dates less than 1/1/70 are negatibe numbers.
 
-			return absint( $value );
+			if ( ! empty( $value ) ) {
+				$value = intval( $value );
+			}
+
+			return $value;
 
 		} elseif ( false !== strpos( $field, 'add_tag_' ) ) {
 
@@ -493,7 +498,7 @@ class WPF_CRM_Base {
 				// Any formatting of arrays is now handled in the CRM integration class.
 
 				if ( ! is_array( $value ) ) { // If it's being synced as multiselect but it's not an array.
-					$value = array( $value );
+					$value = array_map( 'trim', explode( ',', $value ) );
 				}
 
 				// Don't sync multidimensional arrays.

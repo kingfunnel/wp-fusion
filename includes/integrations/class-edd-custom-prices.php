@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_EDD_Custom_Prices extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'edd-custom-prices';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Edd custom prices';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_EDD_Custom_Prices extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'edd-custom-prices';
 
 		add_filter( 'wpf_edd_apply_tags_checkout', array( $this, 'apply_tags' ), 10, 2 );
 		add_action( 'wpf_edd_meta_box_inner', array( $this, 'meta_box' ), 10, 2 );
@@ -44,9 +67,7 @@ class WPF_EDD_Custom_Prices extends WPF_Integrations_Base {
 					$apply_tags = array_merge( $apply_tags, $settings['apply_tags_bonus_item'] );
 					$apply_tags = array_unique( $apply_tags );
 				}
-
 			}
-
 		}
 
 		return $apply_tags;

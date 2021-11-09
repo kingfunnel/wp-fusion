@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_WP_Affiliate_Manager extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'wp-affiliate-manager';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'WP Affiliate Manager';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/other/wp-affiliate-manager/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_WP_Affiliate_Manager extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'wp-affiliate-manager';
 
 		add_action( 'init', array( $this, 'maybe_add_affiliate' ) );
 		add_filter( 'wpf_user_register', array( $this, 'filter_form_fields' ), 10, 2 );
@@ -41,10 +64,10 @@ class WPF_WP_Affiliate_Manager extends WPF_Integrations_Base {
 		if ( get_option( WPAM_PluginConfig::$AutoAffiliateApproveIsEnabledOption ) == false && isset( $_REQUEST['wpam_reg_submit'] ) ) {
 
 			$field_map = array(
-				'_firstName' 	=> 'first_name',
-				'_lastName' 	=> 'last_name',
-				'_phoneNumber'	=> 'billing_phone',
-				'_email'		=> 'user_email',
+				'_firstName'   => 'first_name',
+				'_lastName'    => 'last_name',
+				'_phoneNumber' => 'billing_phone',
+				'_email'       => 'user_email',
 			);
 
 			$post_data = $this->map_meta_fields( $_POST, $field_map );
@@ -53,7 +76,7 @@ class WPF_WP_Affiliate_Manager extends WPF_Integrations_Base {
 
 			wpf_log( 'info', 0, 'Adding pending affiliate to ' . wp_fusion()->crm->name . ':', array( 'meta_array' => $post_data ) );
 
-			if( $contact_id == false ) {
+			if ( $contact_id == false ) {
 
 				$contact_id = wp_fusion()->crm->add_contact( $post_data );
 
@@ -65,10 +88,9 @@ class WPF_WP_Affiliate_Manager extends WPF_Integrations_Base {
 
 			$apply_tags = wpf_get_option( 'wpam_tags_pending' );
 
-			if( ! empty( $apply_tags ) ) {
+			if ( ! empty( $apply_tags ) ) {
 				wp_fusion()->crm->apply_tags( $apply_tags, $contact_id );
 			}
-
 		}
 
 	}
@@ -83,10 +105,10 @@ class WPF_WP_Affiliate_Manager extends WPF_Integrations_Base {
 	public function filter_form_fields( $post_data, $user_id ) {
 
 		$field_map = array(
-			'_firstName' 	=> 'first_name',
-			'_lastName' 	=> 'last_name',
-			'_phoneNumber'	=> 'billing_phone',
-			'_email'		=> 'user_email',
+			'_firstName'   => 'first_name',
+			'_lastName'    => 'last_name',
+			'_phoneNumber' => 'billing_phone',
+			'_email'       => 'user_email',
 		);
 
 		$post_data = $this->map_meta_fields( $post_data, $field_map );
@@ -105,14 +127,17 @@ class WPF_WP_Affiliate_Manager extends WPF_Integrations_Base {
 
 	public function after_add_affiliate( $user_id, $contact_id, $post_data ) {
 
-		if( isset( $_REQUEST['handler'] ) && $_REQUEST['handler'] == 'approveApplication' ) {
+		if (
+			( isset( $_REQUEST['handler'] ) && 'approveApplication' === $_REQUEST['handler'] ) // approval.
+			|| isset( $_REQUEST['wpam_add_affiliate'] ) // new aff added and auto approved via admin.
+			|| isset( $_REQUEST['wpam_reg_submit'] ) // new aff registered and auto approved via frontend.
+		) {
 
 			$apply_tags = wpf_get_option( 'wpam_tags_accepted' );
 
-			if( ! empty( $apply_tags ) ) {
+			if ( ! empty( $apply_tags ) ) {
 				wp_fusion()->user->apply_tags( $apply_tags, $user_id );
 			}
-
 		}
 
 	}
@@ -130,7 +155,7 @@ class WPF_WP_Affiliate_Manager extends WPF_Integrations_Base {
 			'title'   => __( 'WP Affiliate Manager Integration', 'wp-fusion' ),
 			'std'     => 0,
 			'type'    => 'heading',
-			'section' => 'integrations'
+			'section' => 'integrations',
 		);
 
 		$settings['wpam_tags_pending'] = array(
@@ -138,7 +163,7 @@ class WPF_WP_Affiliate_Manager extends WPF_Integrations_Base {
 			'desc'    => __( 'These tags will be applied when affiliates apply.', 'wp-fusion' ),
 			'std'     => array(),
 			'type'    => 'assign_tags',
-			'section' => 'integrations'
+			'section' => 'integrations',
 		);
 
 		$settings['wpam_tags_accepted'] = array(
@@ -146,7 +171,7 @@ class WPF_WP_Affiliate_Manager extends WPF_Integrations_Base {
 			'desc'    => __( 'These tags will be applied when affiliates are accepted.', 'wp-fusion' ),
 			'std'     => array(),
 			'type'    => 'assign_tags',
-			'section' => 'integrations'
+			'section' => 'integrations',
 		);
 
 		return $settings;
@@ -156,4 +181,4 @@ class WPF_WP_Affiliate_Manager extends WPF_Integrations_Base {
 
 }
 
-new WPF_WP_Affiliate_Manager;
+new WPF_WP_Affiliate_Manager();

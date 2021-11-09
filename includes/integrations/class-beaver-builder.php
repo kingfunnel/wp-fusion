@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Gets labels for selected tags in settings
+ *
  * @return array Tags
  */
 
@@ -18,6 +19,31 @@ function fl_wpf_tags_value( $value, $data ) {
 
 class WPF_BeaverBuilder extends WPF_Integrations_Base {
 
+	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'beaver-builder';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Beaver builder';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/page-builders/beaver-builder/';
+
 
 	/**
 	 * Gets things started
@@ -28,8 +54,6 @@ class WPF_BeaverBuilder extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'beaver-builder';
 
 		add_action( 'fl_ajax_before_fl_builder_autosuggest', array( $this, 'get_autosuggest_terms' ), 10, 1 );
 		add_filter( 'fl_builder_register_settings_form', array( $this, 'add_visibility_settings_value' ), 999, 2 );
@@ -103,8 +127,8 @@ class WPF_BeaverBuilder extends WPF_Integrations_Base {
 	 *
 	 * @since   3.12.7
 	 *
-	 * @param   bool    $visible default visibility
-	 * @param   obj     $node    BB node object
+	 * @param   bool $visible default visibility
+	 * @param   obj  $node    BB node object
 	 * @return  boolean
 	 */
 	public function is_node_visible( $visible, $node ) {
@@ -328,7 +352,8 @@ class WPF_BeaverBuilder extends WPF_Integrations_Base {
 				<?php
 
 				FLBuilder::render_settings_field(
-					'wpf_filter_queries', array(
+					'wpf_filter_queries',
+					array(
 						'type'    => 'select',
 						'label'   => __( 'Filter Queries', 'wp-fusion' ),
 						'help'    => __( 'Filter results based on WP Fusion access rules', 'wp-fusion' ),
@@ -340,7 +365,8 @@ class WPF_BeaverBuilder extends WPF_Integrations_Base {
 						'preview' => array(
 							'type' => 'none',
 						),
-					), $settings
+					),
+					$settings
 				);
 
 				?>
@@ -355,4 +381,4 @@ class WPF_BeaverBuilder extends WPF_Integrations_Base {
 
 }
 
-new WPF_BeaverBuilder;
+new WPF_BeaverBuilder();

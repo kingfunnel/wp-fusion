@@ -37,6 +37,7 @@ class WPF_Auto_Login {
 		add_action( 'clear_auto_login_metadata', array( $this, 'clear_auto_login_metadata' ) );
 
 		// End the session when someone logs in.
+		add_action( 'user_register', array( $this, 'end_auto_login' ), 1 );
 		add_action( 'wp_logout', array( $this, 'end_auto_login' ), 1 );
 		add_action( 'wp_authenticate', array( $this, 'end_auto_login' ), 1 );
 
@@ -186,10 +187,17 @@ class WPF_Auto_Login {
 
 			} elseif ( false !== $contact_id ) {
 
-				// If the temp user already exists but ?cid= is in the URL, update their tags anyway
+				// If the temp user already exists but ?cid= is in the URL, update their tags anyway.
 
-				wp_fusion()->user->get_tags( $contact_data['user_id'], true, false );
+				if ( ! isset( $_SERVER['HTTP_CACHE_CONTROL'] ) && empty( $_POST ) ) {
 
+					// We don't need to do this if the page was refreshed
+					// (HTTP_CACHE_CONTROL = max-age=0), or if a form is being
+					// submitted.
+
+					wp_fusion()->user->get_tags( $contact_data['user_id'], true, false );
+
+				}
 			}
 		}
 
@@ -316,7 +324,7 @@ class WPF_Auto_Login {
 		update_user_meta( $user_id, wp_fusion()->crm->slug . '_tags', $user_tags );
 		update_user_meta( $user_id, wp_fusion()->crm->slug . '_contact_id', $contact_id );
 
-		wpf_log( 'info', $user_id, 'Starting auto-login session for contact ID ' . $contact_id . ' with tags:', array( 'tag_array' => $user_tags ) );
+		wpf_log( 'info', $user_id, 'Starting auto-login session for contact #' . $contact_id . ' with tags:', array( 'tag_array' => $user_tags ) );
 
 		// Allow other integrations to quickly access the auto login user ID.
 		$this->auto_login_user['user_id'] = $user_id;
@@ -393,13 +401,12 @@ class WPF_Auto_Login {
 				wp_destroy_current_session();
 				wp_clear_auth_cookie();
 
-			} elseif ( wpf_is_user_logged_in() ) {
+			} else {
 
 				// If headers have been sent, set a transient to clear the cookie on next load (since 3.36.1 we'll use update_option instead of set_transient).
 				update_option( 'wpf_end_auto_login_' . $contact_data['contact_id'], true );
 
 			}
-
 		}
 
 	}

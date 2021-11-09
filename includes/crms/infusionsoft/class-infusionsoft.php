@@ -175,10 +175,10 @@ class WPF_Infusionsoft_iSDK {
 			$value = str_replace('&', '&amp;', $value);
 		}
 
-		if ( $field_type == 'datepicker' || $field_type == 'date' && ! empty( $value ) ) {
+		if ( 'date' === $field_type && ! empty( $value ) ) {
 
-			// Adjust formatting for date fields
-			$date = date( "Ymd\T00:00:00", $value );
+			// Adjust formatting for date fields.
+			$date = date( 'Ymd\TH:i:s', $value );
 
 			return $date;
 
@@ -202,7 +202,7 @@ class WPF_Infusionsoft_iSDK {
 
 		} else {
 
-			return $value;
+			return strval( $value ); // fixes "Error adding: java.lang.Integer cannot be cast to java.lang.String".
 
 		}
 
@@ -347,37 +347,61 @@ class WPF_Infusionsoft_iSDK {
 
 		foreach ( $categories as $category ) {
 
-			// Retrieve tags
-			$query  = array( 'GroupCategoryId' => $category['Id'] );
-			$result = $this->app->dsQuery( 'ContactGroup', 1000, 0, $query, $fields );
+			// Retrieve tags.
 
-			if ( is_wp_error( $result ) ) {
-				wpf_log( 'error', wpf_get_current_user_id(), $result->get_error_message() . '.<br /><br />The tags from the <strong>' . $category['CategoryName'] . '</strong> category have not been loaded.', array( 'source' => 'infusionsoft' ) );
-				continue;
+			$page    = 0;
+			$proceed = true;
+
+			while ( $proceed ) {
+
+				$query  = array( 'GroupCategoryId' => $category['Id'] );
+				$result = $this->app->dsQuery( 'ContactGroup', 1000, $page, $query, $fields );
+
+				if ( is_wp_error( $result ) ) {
+					wpf_log( 'error', wpf_get_current_user_id(), $result->get_error_message() . '.<br /><br />The tags from the <strong>' . $category['CategoryName'] . '</strong> category have not been loaded.', array( 'source' => 'infusionsoft' ) );
+					continue;
+				}
+
+				foreach ( $result as $tag ) {
+					$tags[ $tag['Id'] ]['label']    = sanitize_text_field( $tag['GroupName'] );
+					$tags[ $tag['Id'] ]['category'] = sanitize_text_field( $category['CategoryName'] );
+				}
+
+				if ( count( $result ) < 1000 ) {
+					$proceed = false;
+				} else {
+					$page++;
+				}
 			}
-
-			foreach ( $result as $tag ) {
-				$tags[ $tag['Id'] ]['label']    = sanitize_text_field( $tag['GroupName'] );
-				$tags[ $tag['Id'] ]['category'] = sanitize_text_field( $category['CategoryName'] );
-			}
-
 		}
 
-		// For tags with no category
-		$query  = array( 'GroupCategoryId' => '' );
-		$result = $this->app->dsQuery( 'ContactGroup', 1000, 0, $query, $fields );
+		// For tags with no category.
 
-		if ( is_wp_error( $result ) ) {
+		$page    = 0;
+		$proceed = true;
 
-			wpf_log( 'error', wpf_get_current_user_id(), $result->get_error_message() . '.<br /><br />Tags with <strong>no category</strong> have not been loaded.', array( 'source' => 'infusionsoft' ) );
+		while ( $proceed ) {
 
-		} else {
+			$query  = array( 'GroupCategoryId' => '' );
+			$result = $this->app->dsQuery( 'ContactGroup', 1000, $page, $query, $fields );
 
-			foreach ( $result as $tag ) {
-				$tags[ $tag['Id'] ]['label']    = sanitize_text_field( $tag['GroupName'] );
-				$tags[ $tag['Id'] ]['category'] = 'No Category';
+			if ( is_wp_error( $result ) ) {
+
+				wpf_log( 'error', wpf_get_current_user_id(), $result->get_error_message() . '.<br /><br />Tags with <strong>no category</strong> have not been loaded.', array( 'source' => 'infusionsoft' ) );
+
+			} else {
+
+				foreach ( $result as $tag ) {
+					$tags[ $tag['Id'] ]['label']    = sanitize_text_field( $tag['GroupName'] );
+					$tags[ $tag['Id'] ]['category'] = 'No Category';
+				}
 			}
 
+			if ( count( $result ) < 1000 ) {
+				$proceed = false;
+			} else {
+				$page++;
+			}
 		}
 
 		wp_fusion()->settings->set( 'available_tags', $tags );
@@ -792,8 +816,8 @@ class WPF_Infusionsoft_iSDK {
 
 			$results = $this->app->dsQuery( "ContactGroupAssign", 1000, $page, array( 'GroupId' => $tag ), $return_fields );
 
-			if ( is_wp_error( $result ) ) {
-				return $result;
+			if ( is_wp_error( $results ) ) {
+				return $results;
 			}
 
 			foreach ( $results as $id => $result ) {

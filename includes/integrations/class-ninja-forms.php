@@ -400,7 +400,7 @@ class WPF_Ninja_Forms extends NF_Abstracts_Action {
 	 *
 	 * @since 3.37.21
 	 *
-	 * @param int   $sub_id The submission ID.
+	 * @param int $sub_id The submission ID.
 	 */
 	public function batch_step( $sub_id ) {
 		// Get form id

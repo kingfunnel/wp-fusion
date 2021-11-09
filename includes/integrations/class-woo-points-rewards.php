@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Woo_Points_Rewards extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'woo-points-rewards';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'WooCommerce points rewards';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_Woo_Points_Rewards extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'woo-points-rewards';
 
 		add_filter( 'wpf_meta_fields', array( $this, 'set_contact_field_names' ), 30 );
 
@@ -46,7 +69,11 @@ class WPF_Woo_Points_Rewards extends WPF_Integrations_Base {
 
 	public function set_contact_field_names( $meta_fields ) {
 
-		$meta_fields['wc_points_balance'] = array( 'label' => 'Points Balance', 'type' => 'text', 'group' => 'woocommerce' );
+		$meta_fields['wc_points_balance'] = array(
+			'label' => 'Points Balance',
+			'type'  => 'text',
+			'group' => 'woocommerce',
+		);
 
 		return $meta_fields;
 
@@ -54,4 +81,4 @@ class WPF_Woo_Points_Rewards extends WPF_Integrations_Base {
 
 }
 
-new WPF_Woo_Points_Rewards;
+new WPF_Woo_Points_Rewards();

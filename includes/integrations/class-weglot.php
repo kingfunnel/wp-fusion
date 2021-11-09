@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Weglot extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'weglot';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Weglot';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/multilingual/weglot/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_Weglot extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'weglot';
 
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ), 10 );
 		add_filter( 'wpf_meta_fields', array( $this, 'prepare_meta_fields' ), 10 );
@@ -35,8 +58,11 @@ class WPF_Weglot extends WPF_Integrations_Base {
 
 	public function add_meta_field_group( $field_groups ) {
 
-		if( !isset( $field_groups['weglot'] ) ) {
-			$field_groups['weglot'] = array( 'title' => 'Weglot', 'fields' => array() );
+		if ( ! isset( $field_groups['weglot'] ) ) {
+			$field_groups['weglot'] = array(
+				'title'  => 'Weglot',
+				'fields' => array(),
+			);
 		}
 
 		return $field_groups;
@@ -52,7 +78,11 @@ class WPF_Weglot extends WPF_Integrations_Base {
 
 	public function prepare_meta_fields( $meta_fields ) {
 
-		$meta_fields['language_code'] = array( 'label' => 'Language Code', 'type' => 'text', 'group' => 'weglot' );
+		$meta_fields['language_code'] = array(
+			'label' => 'Language Code',
+			'type'  => 'text',
+			'group' => 'weglot',
+		);
 
 		return $meta_fields;
 
@@ -68,14 +98,14 @@ class WPF_Weglot extends WPF_Integrations_Base {
 
 	public function sync_language() {
 
-		if( ! wpf_is_user_logged_in() ) {
+		if ( ! wpf_is_user_logged_in() ) {
 			return;
 		}
 
-		$language_code = get_user_meta( wpf_get_current_user_id(), 'language_code', true );
+		$language_code         = get_user_meta( wpf_get_current_user_id(), 'language_code', true );
 		$current_language_code = weglot_get_current_language();
 
-		if( $language_code != $current_language_code  ) {
+		if ( $language_code != $current_language_code ) {
 
 			update_user_meta( wpf_get_current_user_id(), 'language_code', $current_language_code );
 
@@ -87,4 +117,4 @@ class WPF_Weglot extends WPF_Integrations_Base {
 
 }
 
-new WPF_Weglot;
+new WPF_Weglot();

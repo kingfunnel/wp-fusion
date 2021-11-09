@@ -211,7 +211,7 @@ class WPF_Admin_Interfaces {
 				'noContact'        => __( 'No contact record found.', 'wp-fusion' ),
 				'noTags'           => __( 'No tags applied.', 'wp-fusion' ),
 				'foundTags'        => __( 'Reload page to see tags.', 'wp-fusion' ),
-				'resyncContact'    => __( 'Resync Contact', 'wp-fusion' ),
+				'resyncContact'    => __( 'Resync Tags', 'wp-fusion' ),
 				'maxSelected'      => sprintf(
 					__( 'You can only select %s item', 'wp-fusion' ),
 					'MAX'
@@ -498,6 +498,7 @@ class WPF_Admin_Interfaces {
 							'meta_name' => 'wpf-settings',
 							'field_id'  => 'allow_tags',
 							'disabled'  => $disabled,
+							'read_only' => true,
 						);
 
 						wpf_render_tag_multiselect( $args );
@@ -574,17 +575,17 @@ class WPF_Admin_Interfaces {
 			}
 
 			// Save the option array.
-			update_option( 'wpf_taxonomy_rules', $taxonomy_rules, false );
+			update_option( 'wpf_taxonomy_rules', $taxonomy_rules, true ); // yes to autoload, so there's no DB hit.
 
 		} else {
 
-			// No option
+			// No option.
 			if ( isset( $taxonomy_rules[ $term_id ] ) ) {
 
 				unset( $taxonomy_rules[ $term_id ] );
 
 				if ( ! empty( $taxonomy_rules ) ) {
-					update_option( 'wpf_taxonomy_rules', $taxonomy_rules, false );
+					update_option( 'wpf_taxonomy_rules', $taxonomy_rules, true ); // yes to autoload, so there's no DB hit.
 				} else {
 					delete_option( 'wpf_taxonomy_rules' );
 				}
@@ -896,6 +897,7 @@ class WPF_Admin_Interfaces {
 				'setting'   => $settings['allow_tags'],
 				'meta_name' => 'wpf-nav-menu[' . $item->ID . ']',
 				'field_id'  => 'allow_tags',
+				'read_only' => true,
 			);
 
 			wpf_render_tag_multiselect( $args );
@@ -1038,6 +1040,7 @@ class WPF_Admin_Interfaces {
 			'meta_name' => 'wpf-settings',
 			'field_id'  => 'allow_tags',
 			'disabled'  => $disabled,
+			'read_only' => true,
 		);
 
 		wpf_render_tag_multiselect( $args );
@@ -1053,6 +1056,7 @@ class WPF_Admin_Interfaces {
 			'meta_name' => 'wpf-settings',
 			'field_id'  => 'allow_tags_all',
 			'disabled'  => $disabled,
+			'read_only' => true,
 		);
 
 		wpf_render_tag_multiselect( $args );
@@ -1071,6 +1075,7 @@ class WPF_Admin_Interfaces {
 			'setting'   => $settings['allow_tags_not'],
 			'meta_name' => 'wpf-settings',
 			'field_id'  => 'allow_tags_not',
+			'read_only' => true,
 		);
 
 		wpf_render_tag_multiselect( $args );

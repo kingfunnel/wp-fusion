@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Popup_Maker extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'popup-maker';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Popup maker';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/other/popup-maker/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,9 +41,6 @@ class WPF_Popup_Maker extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'popup-maker';
-		$this->name = 'Popup Maker';
 
 		add_filter( 'wpf_configure_settings', array( $this, 'register_settings' ), 8, 2 );
 

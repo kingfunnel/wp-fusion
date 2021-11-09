@@ -8,6 +8,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_LaunchFlows extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'launchflows';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Launch Flows';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/launchflows/';
+
+
+	/**
 	 * Gets things started
 	 *
 	 * @since 3.35.20
@@ -16,8 +42,6 @@ class WPF_LaunchFlows extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'launchflows';
 
 		if ( ! shortcode_exists( 'lf-apply-tags' ) ) {
 			add_shortcode( 'lf-apply-tags', array( $this, 'layout_apply_tags' ) );
@@ -49,7 +73,9 @@ class WPF_LaunchFlows extends WPF_Integrations_Base {
 					'tags'  => false,
 					'debug' => false,
 
-				), $atts, 'lf-apply-tags'
+				),
+				$atts,
+				'lf-apply-tags'
 			);
 
 			if ( $a['tags'] ) {
@@ -114,7 +140,9 @@ class WPF_LaunchFlows extends WPF_Integrations_Base {
 					'tags'  => false,
 					'debug' => false,
 
-				), $atts, 'lf-remove-tags'
+				),
+				$atts,
+				'lf-remove-tags'
 			);
 
 			if ( $a['tags'] ) {

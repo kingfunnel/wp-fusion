@@ -10,7 +10,32 @@ use FluentForm\Framework\Helpers\ArrayHelper;
 
 class WPF_FluentForms extends IntegrationManager {
 
-	public $slug;
+	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'fluent-forms';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Fluent Forms';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/lead-generation/fluent-forms/';
+
+
 
 	public function __construct() {
 		parent::__construct(
@@ -31,7 +56,7 @@ class WPF_FluentForms extends IntegrationManager {
 		$this->slug                                 = 'fluent-forms';
 		wp_fusion()->integrations->{'fluent-forms'} = $this;
 
-		// If we're using Form Auto Login the form actions acn't be processed asynchronously 
+		// If we're using Form Auto Login the form actions can't be processed asynchronously.
 		if ( wpf_get_option( 'auto_login_forms' ) ) {
 			add_filter( 'fluentform_notifying_async_wpfusion', '__return_false' );
 		}
@@ -39,14 +64,14 @@ class WPF_FluentForms extends IntegrationManager {
 	}
 
 	public function getGlobalFields( $fields ) {
-		return [
+		return array(
 			'logo'             => $this->logo,
 			'menu_title'       => __( 'WP Fusion Settings', 'wp-fusion' ),
 			'menu_description' => sprintf( __( 'Fluent Forms is already connected to %s by WP Fusion, there\'s nothing to configure here. You can set up WP Fusion your individual forms under Settings &raquo; Marketing &amp; CRM Integrations. For more information <a href="https://wpfusion.com/documentation/lead-generation/fluent-forms/" target="_blank">see the documentation</a>.', 'wp-fusion' ), wp_fusion()->crm->name ),
 			'valid_message'    => __( 'Your Mailchimp API Key is valid', 'fluentform' ),
 			'invalid_message'  => ' ',
 			'save_button_text' => ' ',
-		];
+		);
 	}
 
 	/**
@@ -69,7 +94,7 @@ class WPF_FluentForms extends IntegrationManager {
 
 	public function pushIntegration( $integrations, $form_id ) {
 
-		$integrations[ $this->integrationKey ] = [
+		$integrations[ $this->integrationKey ] = array(
 			'title'                 => $this->title . ' Integration',
 			'logo'                  => $this->logo,
 			'is_active'             => true,
@@ -77,7 +102,7 @@ class WPF_FluentForms extends IntegrationManager {
 			'global_configure_url'  => admin_url( 'admin.php?page=fluent_forms_settings#general-wpfusion-settings' ),
 			'configure_message'     => 'WP Fusion is not configured yet! Please configure your WP Fusion API first',
 			'configure_button_text' => 'Set WP Fusion API',
-		];
+		);
 
 		return $integrations;
 
@@ -92,22 +117,22 @@ class WPF_FluentForms extends IntegrationManager {
 
 	public function getIntegrationDefaults( $settings, $form_id ) {
 
-		return [
+		return array(
 			'name'                    => '',
 			'fieldEmailAddress'       => '',
-			'custom_field_mappings'   => (object) [],
-			'default_fields'          => (object) [],
+			'custom_field_mappings'   => (object) array(),
+			'default_fields'          => (object) array(),
 			'note'                    => '',
 			'tags'                    => '',
-			'conditionals'            => [
-				'conditions' => [],
+			'conditionals'            => array(
+				'conditions' => array(),
 				'status'     => false,
 				'type'       => 'all',
-			],
+			),
 			'instant_responders'      => false,
 			'last_broadcast_campaign' => false,
 			'enabled'                 => true,
-		];
+		);
 	}
 
 	/**
@@ -118,16 +143,16 @@ class WPF_FluentForms extends IntegrationManager {
 	 */
 
 	public function getSettingsFields( $settings, $form_id ) {
-		return [
-			'fields'              => [
-				[
+		return array(
+			'fields'              => array(
+				array(
 					'key'         => 'name',
 					'label'       => 'Name',
 					'required'    => true,
 					'placeholder' => 'Your Feed Name',
 					'component'   => 'text',
-				],
-				[
+				),
+				array(
 					'key'                => 'custom_field_mappings',
 					'require_list'       => false,
 					'label'              => 'Map Fields',
@@ -136,33 +161,33 @@ class WPF_FluentForms extends IntegrationManager {
 					'field_label_remote' => wp_fusion()->crm->name . ' Field',
 					'field_label_local'  => 'Form Field',
 					'default_fields'     => $this->getMergeFields( false, false, $form_id ),
-				],
-				[
+				),
+				array(
 					'key'          => 'tags',
 					'require_list' => false,
 					'label'        => __( 'Tags', 'wp-fusion' ),
 					'tips'         => __( 'Associate tags to your contacts with a comma separated list (e.g. new lead, FluentForms, web source).', 'wp-fusion' ),
 					'component'    => 'value_text',
 					'inline_tip'   => __( 'Enter tag names or tag IDs, separated by commas', 'wp-fusion' ),
-				],
-				[
+				),
+				array(
 					'require_list' => false,
 					'key'          => 'conditionals',
 					'label'        => 'Conditional Logics',
 					'tips'         => __( 'Allow WP Fusion integration conditionally based on your submission values', 'wp-fusion' ),
 					'component'    => 'conditional_block',
-				],
-				[
+				),
+				array(
 					'require_list'    => false,
 					'key'             => 'enabled',
 					'label'           => 'Status',
 					'component'       => 'checkbox-single',
 					'checkobox_label' => 'Enable This feed',
-				],
-			],
+				),
+			),
 			'button_require_list' => false,
 			'integration_title'   => $this->title,
-		];
+		);
 	}
 
 	/**

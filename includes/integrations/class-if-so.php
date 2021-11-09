@@ -15,13 +15,36 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_If_So extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'if_so';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'If_so';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/other/if-so/';
+
+	/**
 	 * Gets things started.
 	 *
 	 * @since 3.38.0
 	 */
 	public function init() {
-
-		$this->slug = 'if_so';
 
 		add_filter( 'ifso_data_rules_model_filter', array( $this, 'add_rule' ) );
 		add_filter( 'ifso_custom_conditions_expand_data_reset_by_selector', array( $this, 'add_data' ) );
@@ -142,7 +165,7 @@ class WPF_If_So extends WPF_Integrations_Base {
 						$available_tags = wp_fusion()->settings->get( 'available_tags', array() );
 						if ( ! empty( $available_tags ) && is_array( $available_tags ) ) {
 							foreach ( $available_tags as $tag ) {
-								//$selected = ( ( ! empty( $rule['wpf-tags'] ) && in_array( $tag, $rule['wpf-tags'] ) ) ? 'SELECTED' : '' );
+								// $selected = ( ( ! empty( $rule['wpf-tags'] ) && in_array( $tag, $rule['wpf-tags'] ) ) ? 'SELECTED' : '' );
 								echo '<option value="' . esc_attr( $tag ) . '" ' . selected( in_array( $tag, $rule['wpf-tags'] ), true, false ) . '>' . esc_html( $tag ) . '</option>';
 							}
 						}

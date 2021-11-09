@@ -3,7 +3,7 @@ Contributors: verygoodplugins
 Tags: infusionsoft, crm, marketing automation, user meta, sync, woocommerce, wpfusion
 Requires at least: 4.6
 Tested up to: 5.8.1
-Stable tag: 3.38.13
+Stable tag: 3.38.23
 Requires PHP: 5.6
 
 The only plugin you need for integrating your WordPress site with your CRM.
@@ -34,6 +34,121 @@ Upload and activate the plugin, then go to Settings >> WP Fusion. Select your de
 See our [FAQ](https://wpfusion.com/documentation/).
 
 == Changelog ==
+
+= 3.38.23 - 11/8/2021 =
+* Added `IN` and `NOT IN` comparisons (to the `user_meta_if` shortcode)[https://wpfusion.com/documentation/getting-started/shortcodes/#in-and-not-in]
+* Added Apply Tags - Trialing and Apply Tags - Converted to EDD Recurring Payments integration
+* Added Export to CSV button to Activity Logs
+* Improved - Mailchimp Audience select box is moved to the Setup tab and fields and tags can be loaded for a new audience without having to save the settings first
+* Improved - Added a notice to the logs when a new ConvertKit subscriber is being created with a random tag due to no default tag being set
+* Improved - Mailchimp setup will now show a warning if you try to connect and there are no audiences in your account
+* Fixed WooCommerce order status changes in the admin list table not applying tags when Asynchronous Checkout was enabled
+* Fixed LearnDash course progress tags not being applied when the Autocomplete Lessons & Topics Pro module was enabled in Uncanny Toolkit Pro for LearnDash
+* Fixed MemberPress Memberships Statuses batch operation not applying tags for cancelled, trial, and expired subscription statuses
+* Fixed Subscription Cancelled tags not be applied with MemberPress when a subscription is cancelled after its expiration date
+* Fixed new users registered via Gravity Forms User Registration not being synced during an auto-login session
+* Fixed Intercom rejecting new subscribers without a last name
+* Fixed `unknown class FrmRegEntryHelper` error when registering new users on older versions of Formidable Forms
+* Fixed PHP warning loading subscriber with no tags from Intercom
+* Fixed upgrade to 3.38.22 not setting autoload = yes on `wpf_taxonomy_rules`, which made content protected by taxonomy rules un-protected until saved again
+* Developers - Added `wpf_woocommerce_subscription_sync_fields` filter
+* Developers - Added function `wpf_get_current_user_email()`
+
+= 3.38.22 - 11/1/2021 =
+* Improved performance with checking post access against taxonomy term restrictions
+* Improved - If a field type is set to multiselect and it is stored as a comma-separated text value, the value will be synced as an array with supported CRMs
+* Improved - If a page using an auto-login query string (?cid=) is refreshed, for example due to a form submission, this will no longer force reload the contact's tags from the CRM
+* Improved Zoho error handling
+* Fixed tags linked to BuddyBoss profile types not being assigned during registration when new user accounts are auto-activated
+* Fixed restricted LearnDash lessons not being hidden by Filter Course Steps in Focus Mode with the BuddyBoss theme
+* Fixed Lock Lessons with LearnDash outputting lock icon on lessons that were already locked by LearnDash core
+
+= 3.38.21 - 10/26/2021 =
+* Fixed all content being protected when no term taxonomy rules were set since 3.38.20
+
+= 3.38.20 - 10/26/2021 =
+* Fixed SQL warning checking term access restrictions since 3.38.17
+* Fixed `wpf_salesforce_auth_url` filter (for connecting to sandboxes) not working with new OAuth integration from 3.38.17
+* Fixed WP Affiliate Manager integration not applying Approved tags when affiliates are auto-approved at registration
+
+= 3.38.19 - 10/25/2021 =
+* Fixed error with WP Remote Users Sync `Cannot redeclare WPF_WP_Remote_Users_Sync::$slug`
+
+= 3.38.18 - 10/25/2021 =
+* Fixed error with Advanced Ads `Cannot redeclare WPF_Advanced_Ads::$slug`
+* Fixed - Infusionsoft integration will force all numeric values to sync as text to get around "java.lang.Integer cannot be cast to java.lang.String" errors
+
+= 3.38.17 - 10/25/2021 =
+* **Added Salesforce OAuth integration - Salesforce users will need to go to the WP Fusion settings page one time and grant OAuth permissions to use the new API**
+* Added setting to apply tags when a review is left on a WooCommerce product
+* Added option to sync total points earned on a LearnDash quiz to a custom field in the CRM
+* Improved - When using Filter Queries - Advanced, posts protected by taxonomy terms will be properly excluded
+* Improved performance for Filter Queries with Elementor posts lists
+* Improved - If "Create contacts for new users" is disabled, a WooCommerce checkout by a registered user will now correctly apply the product tags directly to the contact record in the CRM
+* Improved - Removed "old" WooCommerce asynchronous checkout processor via WP Background Processing in favor of an AJAX request bound to the successful payment response from the gateway
+* Improved - If the LearnDash - WooCommerce plugin triggers an enrollment into a course or group which results in tags being applied, this will be indicated in the logs
+* Improved - Slowed down batch exporter with Bento to get around API throttling
+* Improved - When bulk editing more than 20 WooCommerce orders in the admin, WP Fusion will bypass applying any tags to avoid a timeout
+* Fixed fatal error `undefined method FacetWP_Settings::get_field_html()` in FacetWP 3.9
+* Fixed read only lists not showing on admin user profile with HubSpot since 3.38.16
+* Fixed Infusionsoft not loading more than 1000 available tags per category
+* Fixed custom fields not syncing when creating a new Bento contact
+* Fixed 429 / "API limits exceeded" errors not being logged with Bento
+* Fixed Salesforce automatic access token refresh failing when the password contains an ampersand
+* Developers — Added `track_event()` method to supported CRMs in advance of the new Event Tracking addon
+
+= 3.38.16 - 10/18/2021 =
+* Added support for syncing to Date/Time fields with Keap and Infusionsoft
+* Added option to sync LearnDash course progress percentage with a custom field in the CRM
+* Added JetEngine integration
+* Improved - Read-only tags and lists will no longer show up in Apply Tags dropdowns (only Required Tags dropdowns)
+* Improved - If a user is auto-enrolled into a course via a linked tag, the tags in the Apply Tags - Enrolled setting will now be applied. This can be used in an automation to confirm that the auto-enrollment was successful
+* Improved - Dates displayed with the [[user_meta]] shortcode will now use the site's current timezone
+* Improved - WP Remote Users Sync integration will no longer sync tag changes to a remote site when they've just been loaded from a remote site (safeguard against infinite loops)
+* Improved - WP Remote Users Sync integration will not send updated tags to remote sites more than once per pageload
+* Improved - A successful API response from Drip for a subscriber will remove the Inactive badge in the admin
+* Fixed not being able to de-select a selected pipeline and stage for ecommerce deals in the WooCommerce Order Status Stages section of the WP Fusion settings
+* Fixed automatic WooCommerce Subscriptions duplicate site detection not working
+* Fixed Prevent Reapplying Tags setting not being respected
+* Fixed an empty API response from Drip marking users as Inactive
+* Fixed fatal error "Too few arguments to function" when applying BuddyBoss profile type tags since 3.38.14
+* Fixed error syncing array values with Sendinblue
+* Fixed Sendinblue error "attributes should be an object" when syncing data without any custom fields
+* Fixed PHP notice "Trying to access array offset on value of type null" in Uncanny LearnDash Groups integration during group member enrollment
+
+= 3.38.15 -10/11/2021 =
+* Added Emercury site tracking
+* Added safety checks against infinite loops when using LearnDash and BuddyBoss auto-enrollments in conjunction with the Group Sync feature
+* Fixed bug since 3.38.14 that could cause content to become restricted if it was associated with a deleted taxonomy term
+* Fixed HTML not saving in the Default Restricted Content Message since 3.38.0
+* Fixed empty date fields being synced as 0 which could evaluate to January 1st 1970 in some CRMs
+* Fixed WooCommerce Product Addons integration not syncing Quantity type fields
+* Fixed WooCommerce Product Addons integration not syncing Text type fields
+* Fixed Async Checkout (New) for WooCommerce applying tags for On Hold orders (i.e. BACS)
+* Fixed dynamic tags with a text prefix not getting automatically removed when a WooCommerce order is refunded
+* Fixed WPF trying (and failing) to unenroll BuddyPress group moderators from groups when they were missing the group member linked tag
+* Fixed WPF settings not saving in CPT-UI since CPT-UI v1.10.0
+* Developers - Added function `wpf_clean_tags()` (same as `wpf_clean()` but allows special characters)
+
+= 3.38.14 - 10/5/2021 =
+* Added panel in the WP Fusion settings showing the loaded integrations, with links to the documentation for each
+* Improved Mailchimp API performance when loading available tags
+* Fixed error `Uncaught Error: Class 'WPF_Plugin_Updater' not found` conflict with WPMU Dev Dashboard v4.11.4
+* Fixed "Failed to apply tags - no contact ID" message when a registered user without a contact record filled out a form
+* Fixed special characters getting synced to the CRM HTML encoded since 3.38.0
+* Fixed Filter Course Steps with LearnDash not working when Shared Course Steps was off
+* Fixed category-based tag access rules not working
+* Fixed BuddyPress XProfile updates not syncing since BuddyPress v9.1.0
+* Fixed linked tags not being removed from the previous profile type when switching a user's profile types in BuddyBoss
+* Fixed form submissions during an auto-login session not updating the correct contact record when there was no email address on the form
+* Fixed error with Gravity Forms when using "Create tag(s) from value" on a form field and no tags had been configured generally for the feed
+* Fixed custom fields not syncing with FooEvents when the customer who purchased the ticket is also an attendee
+* Fixed Salesforce integration not accepting a new security token until Refresh Topics and Fields was pressed
+* Fixed import tool with Drip not importing unsubscribed subscribers
+* Fixed import tool with Drip not importing more than 1000 subscribers
+* Fixed countries with e-acute symbol in their name not syncing to the Country field with Infusionsoft
+* Fixed date values before 1970 not being synced correctly
+* Fixed PHP notice Undefined index: step_display in LearnDash integration
 
 = 3.38.13 - 9/22/2021 =
 * Fixed Divi modules not respecting tag access rules with Divi Builder 4.10.8+

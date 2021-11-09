@@ -33,6 +33,7 @@ class WPF_MailChimp {
 	/**
 	 * Lets us link directly to editing a contact record.
 	 * Not working, get_contact_id() returns an id but the edit URL uses variable web_id.
+	 *
 	 * @var string
 	 */
 
@@ -49,7 +50,7 @@ class WPF_MailChimp {
 
 		$this->slug     = 'mailchimp';
 		$this->name     = 'Mailchimp';
-		$this->supports = array();
+		$this->supports = array( 'events' );
 
 		// Set up admin options
 		if ( is_admin() ) {
@@ -76,7 +77,6 @@ class WPF_MailChimp {
 		add_filter( 'wpf_auto_login_contact_id', array( $this, 'auto_login_contact_id' ) );
 
 		// $this->edit_url = 'https://'.$this->dc.'.admin.mailchimp.com/lists/members/view?id=%d';
-
 	}
 
 	/**
@@ -261,12 +261,12 @@ class WPF_MailChimp {
 		}
 
 		$this->params = array(
-			'timeout' => 30,
-			'headers' => array(
+			'timeout'    => 30,
+			'headers'    => array(
 				'Authorization' => 'Basic ' . base64_encode( 'user:' . $api_key ),
 				'Content-Type'  => 'application/json',
 			),
-			'user-agent'  => 'WP Fusion; ' . home_url(),
+			'user-agent' => 'WP Fusion; ' . home_url(),
 		);
 
 		$this->dc   = $dc;
@@ -293,11 +293,14 @@ class WPF_MailChimp {
 			$this->get_params( $dc, $api_key );
 		}
 
-		$request  = 'https://' . $this->dc . '.api.mailchimp.com/3.0/';
-		$response = wp_safe_remote_get( $request, $this->params );
+		$response = $this->sync_lists(); // make sure the API credentials are valid and there's a list.
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
+		}
+
+		if ( empty( $response ) ) {
+			return new WP_Error( 'error', 'You must create at least one audience in Mailchimp to use with WP Fusion. Please create an audience and then try connecting again.' );
 		}
 
 		return true;
@@ -316,7 +319,6 @@ class WPF_MailChimp {
 			return false;
 		}
 
-		$this->sync_lists();
 		$this->sync_tags();
 		$this->sync_crm_fields();
 
@@ -335,10 +337,14 @@ class WPF_MailChimp {
 
 	public function sync_lists() {
 
+		if ( ! $this->params ) {
+			$this->get_params();
+		}
+
 		$available_lists = array();
 
 		$request  = 'https://' . $this->dc . '.api.mailchimp.com/3.0/lists/?count=1000';
-		$response = wp_safe_remote_get( $request, $this->get_params() );
+		$response = wp_safe_remote_get( $request, $this->params );
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
@@ -352,7 +358,7 @@ class WPF_MailChimp {
 
 		wp_fusion()->settings->set( 'mc_lists', $available_lists );
 
-		// Set default
+		// Set default.
 		$default_list = wpf_get_option( 'mc_default_list', false );
 
 		if ( empty( $default_list ) ) {
@@ -379,7 +385,7 @@ class WPF_MailChimp {
 
 		$available_tags = array();
 
-		$request  = 'https://' . $this->dc . '.api.mailchimp.com/3.0/lists/' . $this->list . '/segments/?count=1000';
+		$request  = 'https://' . $this->dc . '.api.mailchimp.com/3.0/lists/' . $this->list . '/segments/?count=1000&type=static';
 		$response = wp_safe_remote_get( $request, $this->get_params() );
 
 		if ( is_wp_error( $response ) ) {
@@ -842,6 +848,62 @@ class WPF_MailChimp {
 		return $contact_ids;
 
 	}
+
+	/**
+	 * Track event.
+	 *
+	 * Track an event with the Mailchimp site tracking API.
+	 *
+	 * @since  3.38.16
+	 *
+	 * @param  string      $event      The event title.
+	 * @param  bool|string $event_data The event description.
+	 * @param  bool|string $email_address The user email address.
+	 * @return bool|WP_Error True if success, WP_Error if failed.
+	 */
+	public function track_event( $event, $event_data = false, $email_address = false ) {
+
+		if ( empty( $email_address ) && ! wpf_is_user_logged_in() ) {
+			// Tracking only works if WP Fusion knows who the contact is.
+			return;
+		}
+
+		// Get the email address to track.
+		if ( empty( $email_address ) ) {
+			$user          = wpf_get_current_user();
+			$email_address = $user->user_email;
+		}
+
+		$contact_id = md5( strtolower( $email_address ) ); // Mailchimp contact IDs are just a hash of the email address.
+
+		if ( ! $contact_id ) {
+			return;
+		}
+
+		// Mailchimp event name must not have spaces.
+		$event = str_replace( ' ', '_', $event );
+
+		$body = array(
+			'name'       => $event,
+			'properties' => array( $event_data ),
+		);
+
+		wpf_log( 'info', wpf_get_current_user_id(), 'Tracking event: ' . $event, array( 'meta_array_nofilter' => $body ) );
+
+		$request        = 'https://' . $this->dc . '.api.mailchimp.com/3.0/lists/' . $this->list . '/members/' . $contact_id . '/events';
+		$params         = $this->get_params();
+		$params['body'] = wp_json_encode( $body );
+
+		$response = wp_safe_remote_post( $request, $params );
+
+		if ( is_wp_error( $response ) ) {
+			wpf_log( 'error', 0, 'Error tracking event: ' . $response->get_error_message() );
+			return $response;
+		}
+
+		return true;
+	}
+
 
 
 }

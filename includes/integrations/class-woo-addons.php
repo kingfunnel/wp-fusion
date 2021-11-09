@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Woo_Addons extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'woo-addons';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'WooCommerce Product Addons';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/woocommerce-addons/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,15 +41,13 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 
 	public function init() {
 
-		$this->slug = 'woo-addons';
-
 		// Admin settings
 		add_action( 'woocommerce_product_addons_panel_option_heading', array( $this, 'panel_option_heading' ), 10, 3 );
 		add_action( 'woocommerce_product_addons_panel_option_row', array( $this, 'panel_option_row' ), 10, 4 );
 		add_action( 'save_post', array( $this, 'save_meta_box_data' ) );
 
 		// Handle tags and fields at checkout
-		add_action( 'wpf_woocommerce_payment_complete', array($this, 'payment_complete'), 10, 2);
+		add_action( 'wpf_woocommerce_payment_complete', array( $this, 'payment_complete' ), 10, 2 );
 
 		// Add text-type addons to meta fields list
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ) );
@@ -70,6 +93,10 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 				return 'multiselect';
 				break;
 
+			case 'input_multiplier':
+				return 'int';
+				break;
+
 			case 'multiple_choice':
 				return 'select';
 				break;
@@ -91,11 +118,11 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 
 	public function panel_option_heading( $post, $addon, $loop ) {
 
-		if( empty( $post ) ) {
+		if ( empty( $post ) ) {
 			return;
 		}
 
-		if( $this->is_v3() ) {
+		if ( $this->is_v3() ) {
 
 			echo '<div class="wc-pao-addon-content-tags-header">Apply tags if selected</div>';
 
@@ -114,42 +141,40 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 
 	public function panel_option_row( $post, $product_addons, $loop, $option ) {
 
-		if( empty( $post ) ) {
+		if ( empty( $post ) ) {
 			return;
 		}
 
 		$sub_field_id = false;
 
-		foreach( $product_addons as $addon ) {
+		foreach ( $product_addons as $addon ) {
 
-			foreach( $addon['options'] as $i => $addon_options ) {
+			foreach ( $addon['options'] as $i => $addon_options ) {
 
-				if( $addon_options == $option ) {
+				if ( $addon_options == $option ) {
 					$sub_field_id = $i;
 				}
-
 			}
-
 		}
 
-		if( ! $this->is_v3() ) {
+		if ( ! $this->is_v3() ) {
 			echo '<td class="wpf_column">';
 		}
 
-		if( is_numeric($loop) ) {
+		if ( is_numeric( $loop ) ) {
 
 			$setting = get_post_meta( $post->ID, 'wpf_woo_addons', true );
 
 			// Set defaults
-			if( empty( $setting ) ) {
+			if ( empty( $setting ) ) {
 				$setting = array();
 			}
 
-			if( empty( $setting[ $loop ] ) ) {
+			if ( empty( $setting[ $loop ] ) ) {
 				$setting[ $loop ] = array();
 			}
 
-			if( empty( $setting[ $loop ][ $sub_field_id ] ) ) {
+			if ( empty( $setting[ $loop ][ $sub_field_id ] ) ) {
 				$setting[ $loop ][ $sub_field_id ] = array();
 			}
 
@@ -162,10 +187,10 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 
 		}
 
-		if( ! $this->is_v3() ) {
+		if ( ! $this->is_v3() ) {
 			echo '</td>';
 		}
-			
+
 	}
 
 	/**
@@ -197,12 +222,10 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 			return;
 		}
 
-
 		if ( isset( $_POST['wpf_woo_addons'] ) ) {
 
 			$data = $_POST['wpf_woo_addons'];
 			update_post_meta( $post_id, 'wpf_woo_addons', $data );
-
 
 		}
 
@@ -219,7 +242,7 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 
 		$order = wc_get_order( $order_id );
 
-		$apply_tags = array();
+		$apply_tags  = array();
 		$update_data = array();
 
 		foreach ( $order->get_items() as $item_id => $item ) {
@@ -228,19 +251,19 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 
 			$item_meta = $item->get_meta_data();
 
-			if( empty( $item_meta ) ) {
+			if ( empty( $item_meta ) ) {
 				continue;
 			}
 
 			$wpf_settings = get_post_meta( $product_id, 'wpf_woo_addons', true );
 
-			if( empty( $wpf_settings ) ) {
+			if ( empty( $wpf_settings ) ) {
 				$wpf_settings = array();
 			}
 
 			$addon_settings = get_post_meta( $product_id, '_product_addons', true );
 
-			foreach( $item_meta as $meta ) {
+			foreach ( $item_meta as $meta ) {
 
 				$data = $meta->get_data();
 
@@ -248,71 +271,59 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 
 				if ( ! empty( $addon_settings ) ) {
 
-					foreach( $addon_settings as $i => $addon_setting ) {
+					foreach ( $addon_settings as $i => $addon_setting ) {
 
-						if( strpos( $data['key'], $addon_setting['name'] ) !== false ) {
+						if ( strpos( $data['key'], $addon_setting['name'] ) !== false ) {
 
-							foreach( $addon_setting['options'] as $ii => $addon_setting_option ) {
+							if ( in_array( $addon_setting['type'], array( 'custom', 'custom_textarea', 'custom_text', 'input_multiplier' ) ) ) {
 
-								if( $addon_setting['type'] == 'custom' || $addon_setting['type'] == 'custom_textarea' || $addon_setting['type'] == 'custom_text' ) {
+								// Text types.
 
-									// Text types
+								$update_data[ $product_id . '_' . $i ] = $data['value'];
 
-									if( empty( $addon_setting_option['label'] ) || strpos( $data['key'], $addon_setting_option['label'] ) !== false ) {
+							} else {
 
-										$update_data[ $product_id . '_' . $i . '_' . $ii ] = $data['value'];
+								// Array types.
 
-										if( isset( $wpf_settings[ $i ] ) && isset( $wpf_settings[ $i ][ $ii ] ) ) {
-											$apply_tags = array_merge( $apply_tags, $wpf_settings[ $i ][ $ii ] );
-										}
-
-									}
-
-								} else {
+								foreach ( $addon_setting['options'] as $ii => $addon_setting_option ) {
 
 									// Others
 
-									if( $data['value'] == $addon_setting_option['label'] ) {
+									if ( $data['value'] == $addon_setting_option['label'] ) {
 
 										// Tags
 
-										if( isset( $wpf_settings[ $i ] ) && isset( $wpf_settings[ $i ][ $ii ] ) ) {
+										if ( isset( $wpf_settings[ $i ] ) && isset( $wpf_settings[ $i ][ $ii ] ) ) {
 											$apply_tags = array_merge( $apply_tags, $wpf_settings[ $i ][ $ii ] );
 										}
 
 										// Data
 
-										if( $addon_setting['type'] == 'checkbox' ) {
+										if ( $addon_setting['type'] == 'checkbox' ) {
 
 											// Combine them
 
-											if( ! isset( $update_data[ $product_id . '_' . $i ] ) ) {
+											if ( ! isset( $update_data[ $product_id . '_' . $i ] ) ) {
 												$update_data[ $product_id . '_' . $i ] = array();
 											}
 
 											$update_data[ $product_id . '_' . $i ][] = $data['value'];
 
-										} elseif( $addon_setting['type'] == 'multiple_choice' ) {
+										} elseif ( $addon_setting['type'] == 'multiple_choice' ) {
 
 											$update_data[ $product_id . '_' . $i ] = $data['value'];
 
 										}
-
 									}
-
 								}
-
 							}
-
 						}
-
 					}
-
 				}
 
 				// Global addons
 
-				$key  = str_replace( '-', '_', sanitize_title( $data['key'] ) );
+				$key = str_replace( '-', '_', sanitize_title( $data['key'] ) );
 
 				if ( ! isset( $update_data[ $key ] ) ) {
 
@@ -331,24 +342,20 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 						$update_data[ $key ]        = array( $update_data[ $key ] );
 
 					}
-					
+
 					$index                              = count( $update_data[ $key ] );
 					$update_data[ $key ][]              = $data['value'];
 					$update_data[ $key . '_' . $index ] = $data['value'];
 
 				}
-
-
-
 			}
-
 		}
 
-		if( ! empty( $apply_tags ) ) {
+		if ( ! empty( $apply_tags ) ) {
 
 			$user_id = wp_fusion()->user->get_user_id( $contact_id );
 
-			if( ! empty( $user_id ) ) {
+			if ( ! empty( $user_id ) ) {
 
 				wp_fusion()->user->apply_tags( $apply_tags, $user_id );
 
@@ -358,14 +365,13 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 				wp_fusion()->crm->apply_tags( $apply_tags, $contact_id );
 
 			}
-
 		}
 
-		if( ! empty( $update_data ) ) {
+		if ( ! empty( $update_data ) ) {
 
 			$user_id = wp_fusion()->user->get_user_id( $contact_id );
 
-			if( ! empty( $user_id ) ) {
+			if ( ! empty( $user_id ) ) {
 
 				wp_fusion()->user->push_user_meta( $user_id, $update_data );
 
@@ -375,7 +381,6 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 				wp_fusion()->crm->update_contact( $contact_id, $update_data );
 
 			}
-
 		}
 
 	}
@@ -390,8 +395,11 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 
 	public function add_meta_field_group( $field_groups ) {
 
-		if( !isset( $field_groups['wc_addons'] ) ) {
-			$field_groups['wc_addons'] = array( 'title' => 'WooCommerce Addons', 'fields' => array() );
+		if ( ! isset( $field_groups['wc_addons'] ) ) {
+			$field_groups['wc_addons'] = array(
+				'title'  => 'WooCommerce Addons',
+				'fields' => array(),
+			);
 		}
 
 		return $field_groups;
@@ -417,7 +425,7 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 
 		$addons = get_posts( $args );
 
-		if( empty( $addons ) ) {
+		if ( empty( $addons ) ) {
 			return $meta_fields;
 		}
 
@@ -436,26 +444,30 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 						continue;
 					}
 
-					$meta_fields[ $key ] = array( 'label' => $setting['name'], 'type' => $type, 'group' => 'wc_addons' );
+					$meta_fields[ $key ] = array(
+						'label' => $setting['name'],
+						'type'  => $type,
+						'group' => 'wc_addons',
+					);
 
-					if( $type == 'multiselect' && ! empty( $setting['options'] ) ) {
+					if ( $type == 'multiselect' && ! empty( $setting['options'] ) ) {
 
-						foreach( $setting['options'] as $i => $option ) {
+						foreach ( $setting['options'] as $i => $option ) {
 
-							if( ! empty( $option['label'] ) ) {
+							if ( ! empty( $option['label'] ) ) {
 								$option['label'] = ' - ' . $option['label'];
 							}
 
-							$meta_fields[ $key . '_' . $i ] = array( 'label' => $setting['name'] . $option['label'], 'type' => 'checkbox', 'group' => 'wc_addons' );
+							$meta_fields[ $key . '_' . $i ] = array(
+								'label' => $setting['name'] . $option['label'],
+								'type'  => 'checkbox',
+								'group' => 'wc_addons',
+							);
 
 						}
-
 					}
-
 				}
-
 			}
-
 		}
 
 		// Get product specific options
@@ -474,15 +486,15 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 
 		$products = get_posts( $args );
 
-		if( empty( $products ) ) {
+		if ( empty( $products ) ) {
 			return $meta_fields;
 		}
 
-		foreach( $products as $product_id ) {
+		foreach ( $products as $product_id ) {
 
 			$addon_settings = get_post_meta( $product_id, '_product_addons', true );
 
-			foreach( $addon_settings as $i => $setting ) {
+			foreach ( $addon_settings as $i => $setting ) {
 
 				$type = $this->convert_field_type( $setting['type'] );
 
@@ -490,26 +502,30 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 					continue;
 				}
 
-				$meta_fields[ $product_id . '_' . $i ] = array( 'label' => $setting['name'], 'type' => $type, 'group' => 'wc_addons' );
+				$meta_fields[ $product_id . '_' . $i ] = array(
+					'label' => $setting['name'],
+					'type'  => $type,
+					'group' => 'wc_addons',
+				);
 
-				if( $type == 'multiselect' && ! empty( $setting['options'] ) ) {
+				if ( $type == 'multiselect' && ! empty( $setting['options'] ) ) {
 
-					foreach( $setting['options'] as $ii => $option ) {
+					foreach ( $setting['options'] as $ii => $option ) {
 
-						if( ! empty( $option['label'] ) ) {
+						if ( ! empty( $option['label'] ) ) {
 							$option['label'] = ' - ' . $option['label'];
 						}
 
-						$meta_fields[ $product_id . '_' . $i . '_' . $ii ] = array( 'label' => $setting['name'] . $option['label'], 'type' => 'checkbox', 'group' => 'wc_addons' );
+						$meta_fields[ $product_id . '_' . $i . '_' . $ii ] = array(
+							'label' => $setting['name'] . $option['label'],
+							'type'  => 'checkbox',
+							'group' => 'wc_addons',
+						);
 
 					}
-
 				}
-
 			}
-
 		}
-
 
 		return $meta_fields;
 
@@ -517,4 +533,4 @@ class WPF_Woo_Addons extends WPF_Integrations_Base {
 
 }
 
-new WPF_Woo_Addons;
+new WPF_Woo_Addons();

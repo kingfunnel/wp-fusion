@@ -9,6 +9,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Apprentice extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'thrive-apprentice';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Thrive-apprentice';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -17,8 +42,6 @@ class WPF_Apprentice extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'thrive-apprentice';
 
 		add_action( 'wpf_meta_box_content', array( $this, 'meta_box_content' ), 40, 2 );
 		add_action( 'wp_ajax_thrive_appr_set_progress', array( $this, 'lesson_complete' ), 5 );
@@ -39,7 +62,13 @@ class WPF_Apprentice extends WPF_Integrations_Base {
 		}
 
 		echo '<p><label for="wpf-apply-tags-complete"><small>Apply these tags when lesson marked complete:</small></label>';
-		wpf_render_tag_multiselect( array( 'setting' => $settings['apply_tags_complete'], 'meta_name' => 'wpf-settings', 'field_id' => 'apply_tags_complete' ) );
+		wpf_render_tag_multiselect(
+			array(
+				'setting'   => $settings['apply_tags_complete'],
+				'meta_name' => 'wpf-settings',
+				'field_id'  => 'apply_tags_complete',
+			)
+		);
 
 	}
 
@@ -70,4 +99,4 @@ class WPF_Apprentice extends WPF_Integrations_Base {
 
 }
 
-new WPF_Apprentice;
+new WPF_Apprentice();

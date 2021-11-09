@@ -14,14 +14,36 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Tribe_Events extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'tribe-events';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Tribe events';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Gets things started
 	 *
 	 * @since 3.37.24
 	 */
 	public function init() {
-
-		$this->slug = 'tribe-events';
-		$this->name = 'Tribe Events';
 
 		add_filter( 'wpf_compatibility_notices', array( $this, 'compatibility_notices' ) );
 

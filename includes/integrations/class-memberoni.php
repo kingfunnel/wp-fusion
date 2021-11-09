@@ -8,6 +8,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Memberoni extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'memberoni';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Memberoni';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/learning-management/memberoni/';
+
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -112,7 +138,7 @@ class WPF_Memberoni extends WPF_Integrations_Base {
 		$args = array(
 			'setting'   => $settings['apply_tags_complete'],
 			'meta_name' => 'wpf_settings_memberoni',
-			'field_id'  => 'apply_tags_complete'
+			'field_id'  => 'apply_tags_complete',
 		);
 
 		wpf_render_tag_multiselect( $args );

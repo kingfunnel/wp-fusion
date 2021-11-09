@@ -96,6 +96,10 @@ class WPF_Log_Handler {
 		add_action( 'load-tools_page_wpf-settings-logs', array( $this, 'add_screen_options' ) );
 		add_filter( 'set_screen_option_wpf_status_log_items_per_page', array( $this, 'set_screen_option' ), 10, 3 );
 
+		// Export & Flush logs.
+		add_action( 'admin_init', array( $this, 'export_logs' ) );
+		add_action( 'admin_init', array( $this, 'flush_logs' ) );
+
 		// HTTP API logging.
 		if ( wpf_get_option( 'logging_http_api' ) ) {
 			add_action( 'http_api_debug', array( $this, 'http_api_debug' ), 10, 5 );
@@ -294,7 +298,9 @@ class WPF_Log_Handler {
 		}
 
 		$page['sections'] = wp_fusion()->settings->insert_setting_after(
-			'advanced', $page['sections'], array(
+			'advanced',
+			$page['sections'],
+			array(
 				'logs' => array(
 					'title' => $title . ' &rarr;',
 					'slug'  => 'wpf-settings-logs',
@@ -349,16 +355,11 @@ class WPF_Log_Handler {
 	}
 
 	/**
-	 * Logging tab content
+	 * Flush all logs.
 	 *
-	 * @access public
 	 * @return void
 	 */
-
-	public function show_logs_section() {
-
-		include_once WPF_DIR_PATH . 'includes/admin/logging/class-log-table-list.php';
-
+	public function flush_logs() {
 		// Flush logs.
 		if ( ! empty( $_REQUEST['flush-logs'] ) ) { // phpcs:ignore
 
@@ -372,6 +373,38 @@ class WPF_Log_Handler {
 			wp_redirect( esc_url_raw( admin_url( 'tools.php?page=wpf-settings-logs' ) ) );
 			exit;
 		}
+	}
+
+
+	/**
+	 * Export logs from db to a csv file.
+	 *
+	 * @since 3.38.23
+	 */
+	public function export_logs() {
+
+		if ( ! empty( $_REQUEST['export-logs'] ) ) {
+
+			if ( empty( $_REQUEST['wpf_logs_submit'] ) || ! wp_verify_nonce( $_REQUEST['wpf_logs_submit'], 'wp-fusion-status-logs' ) ) { // @codingStandardsIgnoreLine.
+				wp_die( esc_html__( 'Action failed. Please refresh the page and retry.', 'wp-fusion' ) );
+			}
+
+			self::export();
+
+		}
+	}
+
+
+	/**
+	 * Logging tab content
+	 *
+	 * @access public
+	 * @return void
+	 */
+
+	public function show_logs_section() {
+
+		include_once WPF_DIR_PATH . 'includes/admin/logging/class-log-table-list.php';
 
 		// Bulk actions.
 		if ( isset( $_REQUEST['action'] ) && isset( $_REQUEST['log'] ) ) { // @codingStandardsIgnoreLine.
@@ -395,6 +428,8 @@ class WPF_Log_Handler {
 
 				<input style="vertical-align: baseline;" type="submit" name="flush-logs" id="flush-logs" class="button delete" value="<?php esc_attr_e( 'Flush all logs', 'wp-fusion' ); ?>">
 
+				<input style="vertical-align: baseline;" type="submit" name="export-logs" id="export-logs" class="button" value="<?php esc_attr_e( 'Export to .csv', 'wp-fusion' ); ?>">
+
 				<hr class="wp-header-end" />
 
 				<span class="description" style="display: inline-block; padding: 5px 0;">
@@ -405,7 +440,7 @@ class WPF_Log_Handler {
 				<?php if ( wpf_get_option( 'logging_errors_only' ) ) : ?>
 
 					<div class="notice notice-warning">
-						<p><?php esc_html_e( '<strong>Note:</strong> The logs are currently set to record <strong>Only Errors</strong>, from the Advanced tab in the WP Fusion settings. Informational and debugging messages are not being recorded.', 'wp-fusion' ); ?></p>
+						<p><?php echo wp_kses_post( __( '<strong>Note:</strong> The logs are currently set to record <strong>Only Errors</strong>, from the Advanced tab in the WP Fusion settings. Informational and debugging messages are not being recorded.', 'wp-fusion' ) ); ?></p>
 					</div>
 
 				<?php endif; ?>
@@ -475,7 +510,7 @@ class WPF_Log_Handler {
 	 *
 	 * @type string $source Optional. Source will be available in log table. If
 	 * no source is provided, attempt to provide sensible default. }
-	 * @param int   $timestamp Log timestamp.
+	 * @param int    $timestamp Log timestamp.
 	 *
 	 * @see    WPF_Log_Handler::get_log_source() for default source.
 	 * @return bool   False if value was not handled and true if value was handled.
@@ -484,7 +519,7 @@ class WPF_Log_Handler {
 
 		$timestamp = current_time( 'timestamp' );
 
-		if ( isset( $context['source'] ) && $context['source'] ) {
+		if ( ! empty( $context['source'] ) ) {
 			$source = $context['source'];
 		} else {
 			$source = $this->get_log_source();
@@ -612,7 +647,7 @@ class WPF_Log_Handler {
 			'level'     => self::get_level_severity( $level ),
 			'user'      => $user,
 			'message'   => $message,
-			'source'    => $source,
+			'source'    => maybe_serialize( $source ),
 		);
 
 		$format = array(
@@ -647,6 +682,54 @@ class WPF_Log_Handler {
 	}
 
 	/**
+	 * Export all db data to csv file.
+	 *
+	 * @since 3.38.23
+	 */
+	public static function export() {
+		global $wpdb;
+		$results = $wpdb->get_results( "SELECT * from {$wpdb->prefix}wpf_logging" );
+		if ( ! empty( $results ) ) {
+
+			$delimiter = ',';
+			$filename  = 'wp-fusion-activity-logs' . gmdate( 'Y-m-d' ) . '.csv';
+
+			// Create a file pointer.
+			$output = fopen( 'php://output', 'w' );
+
+			// Set column headers.
+			$fields = array( 'ID', 'Time', 'Level', 'User', 'Source', 'Message', 'Context' );
+			fputcsv( $output, $fields );
+
+			// Output each row of the data, format line as csv and write to file pointer.
+			foreach ( $results as $result ) {
+				$line_data = array(
+					$result->log_id,
+					$result->timestamp,
+					$result->level,
+					$result->user,
+					$result->source,
+					$result->message,
+					$result->context,
+				);
+
+				fputcsv( $output, $line_data );
+			}
+
+			header( 'Pragma: public' );
+			header( 'Expires: 0' );
+			header( 'Cache-Control: must-revalidate, post-check=0, pre-check=0' );
+			header( 'Cache-Control: private', false );
+			header( 'Content-Type: text/csv; charset=utf-8' );
+			header( 'Content-Disposition: attachment; filename=' . $filename . '' );
+			header( 'Content-Transfer-Encoding: binary' );
+			exit;
+		}
+
+	}
+
+
+	/**
 	 * Clear all logs from the DB.
 	 *
 	 * @return bool True if flush was successful.
@@ -671,7 +754,7 @@ class WPF_Log_Handler {
 
 		$log_ids = array_map( 'absint', (array) $_REQUEST['log'] );
 
-		if ( 'delete' === $_REQUEST['action'] || 'delete' === $_REQUEST['action2'] ) { 
+		if ( 'delete' === $_REQUEST['action'] || 'delete' === $_REQUEST['action2'] ) {
 			self::delete( $log_ids );
 		}
 	}
@@ -747,7 +830,8 @@ class WPF_Log_Handler {
 		// This allows us to preprend a source manually
 
 		if ( ! empty( $this->event_sources ) ) {
-			$found_integrations = array_merge( $found_integrations, $this->event_sources );
+			$found_integrations  = array_merge( $found_integrations, $this->event_sources );
+			$this->event_sources = array(); // clear it out.
 		}
 
 		$full_trace = array_reverse( debug_backtrace( $debug_backtrace_arg ) );
@@ -774,11 +858,9 @@ class WPF_Log_Handler {
 			}
 		}
 
-		// Figure out most likely integration
+		// Figure out most likely integration.
 		if ( ! empty( $found_integrations ) ) {
-
-			$source = serialize( array_unique( $found_integrations ) );
-
+			$source = array_unique( $found_integrations );
 		} else {
 			$source = 'unknown';
 		}

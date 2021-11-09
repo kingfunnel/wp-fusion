@@ -23,13 +23,18 @@ class WPF_BuddyBoss_App_Segment extends SegmentsAbstract {
 		$this->add_group( 'wp_fusion', __( 'WP Fusion', 'wp-fusion' ) );
 
 		$this->add_filter(
-			'wp_fusion', 'user_tags', array( 'wp_fusion_tag_select' ), array(
+			'wp_fusion',
+			'user_tags',
+			array( 'wp_fusion_tag_select' ),
+			array(
 				'label' => sprintf( __( '%s Tags', 'wp-fusion' ), wp_fusion()->crm->name ),
 			)
 		);
 
 		$this->add_field(
-			'wp_fusion_tag_select', 'Checkbox', array(
+			'wp_fusion_tag_select',
+			'Checkbox',
+			array(
 				'options'       => wp_fusion()->settings->get_available_tags_flat(),
 				'multiple'      => true,
 				'title'         => sprintf( __( 'If the user has any of these %s tags', 'wp-fusion' ), wp_fusion()->crm->name ),
@@ -93,4 +98,4 @@ class WPF_BuddyBoss_App_Segment extends SegmentsAbstract {
 	}
 }
 
-new WPF_BuddyBoss_App_Segment;
+new WPF_BuddyBoss_App_Segment();

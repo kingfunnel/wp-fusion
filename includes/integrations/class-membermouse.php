@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_MemberMouse extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'membermouse';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Membermouse';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/membermouse/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_MemberMouse extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'membermouse';
 
 		// Settings
 		add_filter( 'wpf_user_register', array( $this, 'user_register' ), 10, 2 );
@@ -352,9 +375,9 @@ class WPF_MemberMouse extends WPF_Integrations_Base {
 		);
 
 		// Custom fields
-		$view     = new MM_CustomFieldView();
+		$view      = new MM_CustomFieldView();
 		$data_grid = new MM_DataGrid( $_REQUEST, 'id', 'desc', 10 );
-		$data     = $view->getViewData( $data_grid );
+		$data      = $view->getViewData( $data_grid );
 
 		foreach ( $data as $field_object ) {
 

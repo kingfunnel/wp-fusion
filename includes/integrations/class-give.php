@@ -7,6 +7,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Give extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'give';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Give';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/give/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_Give extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'give';
 
 		add_action( 'give_insert_payment', array( $this, 'insert_payment' ), 10, 2 );
 		add_action( 'give_update_payment_status', array( $this, 'update_status' ), 105, 3 ); // 105 so it's after give_complete_purchase
@@ -90,7 +113,6 @@ class WPF_Give extends WPF_Integrations_Base {
 		}
 
 		wpf_log( 'info', $payment_data['user_info']['id'], 'New Give donation <a href="' . admin_url( 'edit.php?post_type=give_forms&page=give-payment-history&view=view-payment-details&id=' . $payment_id ) . '">#' . $payment_id . '</a>' );
-
 
 		// Create / update the contact
 
@@ -590,7 +612,7 @@ class WPF_Give extends WPF_Integrations_Base {
 							)
 						);
 						?>
-									" class="button-secondary"><?php _e( 'Process WP Fusion actions again ', 'wp-fusion' ); ?></a>
+									" class="button-secondary"><?php _e( 'Process WP Fusion actions again ', 'wp-fusion' ); ?> &raquo;</a>
 					</p>
 
 				</div>
@@ -1103,7 +1125,7 @@ class WPF_Give extends WPF_Integrations_Base {
 	 *
 	 * @since 3.37.30
 	 *
-	 * @param int   $form_id The donation form ID.
+	 * @param int $form_id The donation form ID.
 	 * @return mixed HTML Output.
 	 */
 	function add_optin_field( $form_id ) {

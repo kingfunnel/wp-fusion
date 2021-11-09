@@ -7,6 +7,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_PeepSo extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'peepso';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Peepso';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/peepso/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_PeepSo extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'peepso';
 
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ), 15 );
 		add_filter( 'wpf_meta_fields', array( $this, 'prepare_meta_fields' ) );
@@ -100,7 +123,7 @@ class WPF_PeepSo extends WPF_Integrations_Base {
 		foreach ( $custom_fields as $post ) {
 
 			// No need to track these separately
-			if( $post->post_name == 'first_name' || $post->post_name == 'last_name' ) {
+			if ( $post->post_name == 'first_name' || $post->post_name == 'last_name' ) {
 				continue;
 			}
 
@@ -297,8 +320,6 @@ class WPF_PeepSo extends WPF_Integrations_Base {
 							}
 						}
 					}
-
-
 				} elseif ( is_a( $field, 'PeepSoFieldSelectSingle' ) ) {
 
 					// Single select
@@ -308,13 +329,9 @@ class WPF_PeepSo extends WPF_Integrations_Base {
 						if ( $post_data[ $field_key ] == $key ) {
 							$post_data[ $field_key ] = $value;
 						}
-
 					}
-
 				}
-
 			}
-
 		}
 
 		$field_map = array(
@@ -525,7 +542,7 @@ class WPF_PeepSo extends WPF_Integrations_Base {
 
 					<?php $settings = get_option( 'wpf_peepso_settings', array() ); ?>
 
-					<?php $groups   = PeepSoGroups::admin_get_groups( 0, null ); ?>
+					<?php $groups = PeepSoGroups::admin_get_groups( 0, null ); ?>
 
 					<style> .select4-container { min-width: 300px; } </style>
 
@@ -619,7 +636,7 @@ class WPF_PeepSo extends WPF_Integrations_Base {
 
 		</div>
 
-	<?php
+		<?php
 
 	}
 

@@ -29,6 +29,16 @@ class WPF_WooFunnels extends WPF_Integrations_Base {
 
 	public $name = 'WooFunnels';
 
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/ecommerce/woofunnels/';
+
+
 	/**
 	 * Get things started.
 	 *
@@ -100,7 +110,7 @@ class WPF_WooFunnels extends WPF_Integrations_Base {
 	 *
 	 * @since 3.37.19
 	 *
-	 * @param int $order_id   The order ID.
+	 * @param int    $order_id   The order ID.
 	 * @param string $contact_id The contact ID.
 	 */
 	public function maybe_block_ecom_addon( $order_id, $contact_id ) {
@@ -283,7 +293,7 @@ class WPF_WooFunnels extends WPF_Integrations_Base {
 	 * @return array The actions defaults.
 	 */
 	public function optin_default( $actions_defaults ) {
-		$actions_defaults['op_wpfusion_optin_tags'] = [];
+		$actions_defaults['op_wpfusion_optin_tags'] = array();
 		$actions_defaults['op_wpfusion_enable']     = 'false';
 
 		return $actions_defaults;
@@ -333,7 +343,7 @@ class WPF_WooFunnels extends WPF_Integrations_Base {
 	public function upsell_localize() {
 		if ( ! empty( WFOCU_Core()->admin ) && WFOCU_Core()->admin->is_upstroke_page( 'offers' ) ) {
 
-			$data               = [];
+			$data               = array();
 			$all_available_tags = wp_fusion()->settings->get_available_tags_flat();
 
 			foreach ( $all_available_tags as $id => $label ) {
@@ -426,8 +436,8 @@ class WPF_WooFunnels extends WPF_Integrations_Base {
 	 * @return object The object.
 	 */
 	public function upsell_defaults( $object ) {
-		$object->wfocu_wpfusion_offer_accept_tags = [];
-		$object->wfocu_wpfusion_offer_reject_tags = [];
+		$object->wfocu_wpfusion_offer_accept_tags = array();
+		$object->wfocu_wpfusion_offer_reject_tags = array();
 
 		return $object;
 	}

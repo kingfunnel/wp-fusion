@@ -7,6 +7,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_WP_Members extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'wp-members';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'WP Members';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/wp-members/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,9 +40,6 @@ class WPF_WP_Members extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->name = 'WP Members';
-		$this->slug = 'wp-members';
 
 		add_action( 'user_register', array( $this, 'user_register' ), 10 );
 		add_action( 'wpmem_user_activated', array( $this, 'user_activated' ) );

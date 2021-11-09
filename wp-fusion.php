@@ -4,7 +4,7 @@
  * Plugin Name: WP Fusion
  * Description: WP Fusion connects your website to your CRM or marketing automation tool, with support for dozens of CRMs and 100+ WordPress plugins.
  * Plugin URI: https://wpfusion.com/
- * Version: 3.38.13
+ * Version: 3.38.23
  * Author: Very Good Plugins
  * Author URI: https://verygoodplugins.com/
  * Text Domain: wp-fusion
@@ -33,7 +33,7 @@
  * **********************************************************************
  */
 
-define( 'WP_FUSION_VERSION', '3.38.13' );
+define( 'WP_FUSION_VERSION', '3.38.23' );
 
 // deny direct access.
 if ( ! function_exists( 'add_action' ) ) {
@@ -183,17 +183,17 @@ final class WP_Fusion {
 			self::$instance->check_install();
 			self::$instance->init_includes();
 
-			// Create settings
+			// Create settings.
 			self::$instance->settings = new WPF_Settings();
 			self::$instance->logger   = new WPF_Log_Handler();
 			self::$instance->batch    = new WPF_Batch();
 
 			// Integration modules are stored here for easy access, for
-			// example wp_fusion()->integrations->{'woocommerce'}->process_order( $order_id );
+			// example wp_fusion()->integrations->{'woocommerce'}->process_order( $order_id );.
 
 			self::$instance->integrations = new stdClass();
 
-			// Load the CRM modules
+			// Load the CRM modules.
 			add_action( 'plugins_loaded', array( self::$instance, 'init_crm' ) );
 
 			// Only useful if a CRM is selected
@@ -475,6 +475,7 @@ final class WP_Fusion {
 				'download-monitor'             => 'WP_DLM',
 				'simply-schedule-appointments' => 'Simply_Schedule_Appointments',
 				'woo-payment-plans'            => 'WC_Payment_Plans',
+				'jet-engine'                   => 'Jet_Engine',
 			)
 		);
 
@@ -512,61 +513,61 @@ final class WP_Fusion {
 		return apply_filters(
 			'wpf_crms',
 			array(
-				'infusionsoft'   => 'WPF_Infusionsoft_iSDK',
-				'activecampaign' => 'WPF_ActiveCampaign',
-				'ontraport'      => 'WPF_Ontraport',
-				'drip'           => 'WPF_Drip',
-				'convertkit'     => 'WPF_ConvertKit',
-				'agilecrm'       => 'WPF_AgileCRM',
-				'salesforce'     => 'WPF_Salesforce',
-				'mautic'         => 'WPF_Mautic',
-				'intercom'       => 'WPF_Intercom',
+				'infusionsoft'    => 'WPF_Infusionsoft_iSDK',
+				'activecampaign'  => 'WPF_ActiveCampaign',
+				'ontraport'       => 'WPF_Ontraport',
+				'drip'            => 'WPF_Drip',
+				'convertkit'      => 'WPF_ConvertKit',
+				'agilecrm'        => 'WPF_AgileCRM',
+				'salesforce'      => 'WPF_Salesforce',
+				'mautic'          => 'WPF_Mautic',
+				'intercom'        => 'WPF_Intercom',
 				//'aweber'         => 'WPF_AWeber',
-				'mailerlite'     => 'WPF_MailerLite',
-				'capsule'        => 'WPF_Capsule',
-				'zoho'           => 'WPF_Zoho',
-				'kartra'         => 'WPF_Kartra',
-				'userengage'     => 'WPF_UserEngage',
-				'convertfox'     => 'WPF_ConvertFox',
-				'salesflare'     => 'WPF_Salesflare',
+				'mailerlite'      => 'WPF_MailerLite',
+				'capsule'         => 'WPF_Capsule',
+				'zoho'            => 'WPF_Zoho',
+				'kartra'          => 'WPF_Kartra',
+				'userengage'      => 'WPF_UserEngage',
+				'convertfox'      => 'WPF_ConvertFox',
+				'salesflare'      => 'WPF_Salesflare',
 				//'vtiger'         => 'WPF_Vtiger',
-				'flexie'         => 'WPF_Flexie',
-				'tubular'        => 'WPF_Tubular',
-				'maropost'       => 'WPF_Maropost',
-				'mailchimp'      => 'WPF_MailChimp',
-				'sendinblue'     => 'WPF_SendinBlue',
-				'hubspot'        => 'WPF_HubSpot',
-				'platformly'     => 'WPF_Platformly',
-				'drift'          => 'WPF_Drift',
-				'staging'        => 'WPF_Staging',
-				'autopilot'      => 'WPF_Autopilot',
-				'customerly'     => 'WPF_Customerly',
-				'copper'         => 'WPF_Copper',
-				'nationbuilder'  => 'WPF_NationBuilder',
-				'groundhogg'     => 'WPF_Groundhogg',
-				'mailjet'        => 'WPF_Mailjet',
-				'sendlane'       => 'WPF_Sendlane',
-				'getresponse'    => 'WPF_GetResponse',
-				'mailpoet'       => 'WPF_MailPoet',
-				'klaviyo'        => 'WPF_Klaviyo',
-				'birdsend'       => 'WPF_BirdSend',
-				'zerobscrm'      => 'WPF_ZeroBSCRM',
-				'mailengine'     => 'WPF_MailEngine',
-				'klick-tipp'     => 'WPF_KlickTipp',
-				'sendfox'        => 'WPF_SendFox',
-				'quentn'         => 'WPF_Quentn',
+				'flexie'          => 'WPF_Flexie',
+				'tubular'         => 'WPF_Tubular',
+				'maropost'        => 'WPF_Maropost',
+				'mailchimp'       => 'WPF_MailChimp',
+				'sendinblue'      => 'WPF_SendinBlue',
+				'hubspot'         => 'WPF_HubSpot',
+				'platformly'      => 'WPF_Platformly',
+				'drift'           => 'WPF_Drift',
+				'staging'         => 'WPF_Staging',
+				'autopilot'       => 'WPF_Autopilot',
+				'customerly'      => 'WPF_Customerly',
+				'copper'          => 'WPF_Copper',
+				'nationbuilder'   => 'WPF_NationBuilder',
+				'groundhogg'      => 'WPF_Groundhogg',
+				'mailjet'         => 'WPF_Mailjet',
+				'sendlane'        => 'WPF_Sendlane',
+				'getresponse'     => 'WPF_GetResponse',
+				'mailpoet'        => 'WPF_MailPoet',
+				'klaviyo'         => 'WPF_Klaviyo',
+				'birdsend'        => 'WPF_BirdSend',
+				'zerobscrm'       => 'WPF_ZeroBSCRM',
+				'mailengine'      => 'WPF_MailEngine',
+				'klick-tipp'      => 'WPF_KlickTipp',
+				'sendfox'         => 'WPF_SendFox',
+				'quentn'          => 'WPF_Quentn',
 				//'loopify'        => 'WPF_Loopify',
-				'wp-erp'         => 'WPF_WP_ERP',
-				'engagebay'      => 'WPF_EngageBay',
-				'fluentcrm'      => 'WPF_FluentCRM',
-				'growmatik'      => 'WPF_Growmatik',
-				'highlevel'      => 'WPF_HighLevel',
-				'emercury'       => 'WPF_Emercury',
-				'fluentcrm-rest' => 'WPF_FluentCRM_REST',
-				'pulsetech'      => 'WPF_PulseTechnologyCRM',
-				'autonami'       => 'WPF_Autonami',
-				'bento'          => 'WPF_Bento',
-				'groundhogg-rest'          => 'WPF_Groundhogg_REST',
+				'wp-erp'          => 'WPF_WP_ERP',
+				'engagebay'       => 'WPF_EngageBay',
+				'fluentcrm'       => 'WPF_FluentCRM',
+				'growmatik'       => 'WPF_Growmatik',
+				'highlevel'       => 'WPF_HighLevel',
+				'emercury'        => 'WPF_Emercury',
+				'fluentcrm-rest'  => 'WPF_FluentCRM_REST',
+				'pulsetech'       => 'WPF_PulseTechnologyCRM',
+				'autonami'        => 'WPF_Autonami',
+				'bento'           => 'WPF_Bento',
+				'groundhogg-rest' => 'WPF_Groundhogg_REST',
 			)
 		);
 
@@ -596,16 +597,17 @@ final class WP_Fusion {
 
 			require_once WPF_DIR_PATH . 'includes/admin/class-notices.php';
 			require_once WPF_DIR_PATH . 'includes/admin/admin-functions.php';
+			require_once WPF_DIR_PATH . 'includes/admin/class-upgrades.php';
 
 			if ( ! $this->is_full_version() ) {
 				require_once WPF_DIR_PATH . 'includes/admin/class-lite-helper.php';
 			}
 		}
 
-		// Plugin updater
+		// Plugin updater.
 
-		if ( is_admin() && $this->is_full_version() ) {
-			require_once WPF_DIR_PATH . 'includes/admin/class-updater.php';
+		if ( $this->is_full_version() ) {
+			include WPF_DIR_PATH . 'includes/admin/class-updater.php';
 		}
 
 	}
@@ -771,14 +773,17 @@ final class WP_Fusion {
 
 	public function updater() {
 
-		if ( ! is_admin() ) {
+		// To support auto-updates, this needs to run during the wp_version_check cron job for privileged users.
+		$doing_cron = defined( 'DOING_CRON' ) && DOING_CRON;
+
+		if ( ! current_user_can( 'manage_options' ) && ! $doing_cron ) {
 			return;
 		}
 
 		$license_key    = $this->settings->get( 'license_key' );
 		$license_status = $this->settings->edd_check_license( $license_key );
 
-		if ( 'valid' == $license_status ) {
+		if ( 'valid' === $license_status ) {
 
 			// setup the updater
 			$edd_updater = new WPF_Plugin_Updater(
@@ -792,7 +797,7 @@ final class WP_Fusion {
 				)
 			);
 
-		} elseif ( 'error' == $license_status ) {
+		} elseif ( 'error' === $license_status ) {
 
 			global $pagenow;
 

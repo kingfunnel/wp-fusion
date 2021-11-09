@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Beaver_Themer extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'beaver-themer';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Beaver themer';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/page-builders/beaver-builder/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_Beaver_Themer extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'beaver-themer';
 
 		add_action( 'bb_logic_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 
@@ -54,9 +77,11 @@ class WPF_Beaver_Themer extends WPF_Integrations_Base {
 
 	public function logic_init() {
 
-		BB_Logic_Rules::register( array(
-			'wp-fusion/user-tags' => __CLASS__ . '::evaluate_rule',
-		) );
+		BB_Logic_Rules::register(
+			array(
+				'wp-fusion/user-tags' => __CLASS__ . '::evaluate_rule',
+			)
+		);
 
 	}
 
@@ -103,7 +128,9 @@ class WPF_Beaver_Themer extends WPF_Integrations_Base {
 	public function register_rest_route() {
 
 		register_rest_route(
-			'wp-fusion', '/available-tags', array(
+			'wp-fusion',
+			'/available-tags',
+			array(
 				array(
 					'methods'  => WP_REST_Server::READABLE,
 					'callback' => __CLASS__ . '::get_tags',
@@ -125,7 +152,7 @@ class WPF_Beaver_Themer extends WPF_Integrations_Base {
 		$response = array();
 
 		$available_tags = wp_fusion()->settings->get_available_tags_flat();
-		
+
 		foreach ( $available_tags as $id => $label ) {
 			$response[] = array(
 				'label' => $label,

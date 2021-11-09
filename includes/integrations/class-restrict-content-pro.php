@@ -9,6 +9,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'restrict-content-pro';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Restrict content pro';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/restrict-content-pro/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -17,8 +42,6 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'restrict-content-pro';
 
 		// Meta fields
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ), 20 );
@@ -83,7 +106,7 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 
 		$post_data = $this->map_meta_fields( $post_data, $field_map );
 
-		if( isset( $post_data['rcp_level'] ) ) {
+		if ( isset( $post_data['rcp_level'] ) ) {
 			$post_data['rcp_level'] = rcp_get_subscription_name( $post_data['rcp_level'] );
 		}
 
@@ -101,11 +124,11 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 	public function user_update( $post_data, $user_id ) {
 
 		$field_map = array(
-			'rcp_first_name'    => 'first_name',
-			'rcp_last_name'		=> 'last_name',
-			'rcp_display_name'	=> 'display_name',
-			'rcp_email'			=> 'user_email',
-			'rcp_new_user_pass1' => 'user_pass'
+			'rcp_first_name'     => 'first_name',
+			'rcp_last_name'      => 'last_name',
+			'rcp_display_name'   => 'display_name',
+			'rcp_email'          => 'user_email',
+			'rcp_new_user_pass1' => 'user_pass',
 		);
 
 		$post_data = $this->map_meta_fields( $post_data, $field_map );
@@ -179,8 +202,11 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 
 	public function add_meta_field_group( $field_groups ) {
 
-		if( !isset( $field_groups['rcp'] ) ) {
-			$field_groups['rcp'] = array( 'title' => 'Restrict Content Pro', 'fields' => array() );
+		if ( ! isset( $field_groups['rcp'] ) ) {
+			$field_groups['rcp'] = array(
+				'title'  => 'Restrict Content Pro',
+				'fields' => array(),
+			);
 		}
 
 		return $field_groups;
@@ -303,14 +329,14 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 				<?php
 
 				$settings = array(
-					'apply_tags'			=> array(),
-					'remove_tags'			=> false,
-					'tag_link'				=> array(),
-					'status_active'			=> array(),
-					'status_cancelled'		=> array(),
-					'status_expired'		=> array(),
-					'status_free'			=> array(),
-					'status_payment_failed'	=> array()
+					'apply_tags'            => array(),
+					'remove_tags'           => false,
+					'tag_link'              => array(),
+					'status_active'         => array(),
+					'status_cancelled'      => array(),
+					'status_expired'        => array(),
+					'status_free'           => array(),
+					'status_payment_failed' => array(),
 				);
 
 				if ( is_object( $level ) && isset( $saved_settings[ $level->id ] ) ) {
@@ -321,17 +347,17 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 
 				?>
 
-				<?php 
-				
+				<?php
+
 					$args = array(
-						'setting' 		=> $settings['apply_tags'],
-						'meta_name'		=> 'wpf-settings',
-						'field_id'		=> 'apply_tags'
+						'setting'   => $settings['apply_tags'],
+						'meta_name' => 'wpf-settings',
+						'field_id'  => 'apply_tags',
 					);
 
 					wpf_render_tag_multiselect( $args );
 
-				?>
+					?>
 
 				<p class="description"><?php printf( __( 'These tags will be applied to the user in %s when they register or are added to the membership level.', 'wp-fusion' ), wp_fusion()->crm->name ); ?></p>
 			</td>
@@ -343,7 +369,7 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 			</th>
 			<td>
 
-				<input class="checkbox" type="checkbox" id="remove-tags" name="wpf-settings[remove_tags]" value="1" <?php checked( $settings['remove_tags'], 1 ) ?> />
+				<input class="checkbox" type="checkbox" id="remove-tags" name="wpf-settings[remove_tags]" value="1" <?php checked( $settings['remove_tags'], 1 ); ?> />
 				<label for="remove-tags"><?php _e( 'Remove original tags (above) when the membership expires', 'wp-fusion' ); ?>.</label>
 
 			</td>
@@ -355,18 +381,18 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 			</th>
 			<td>
 				<?php
-				
+
 					$args = array(
-						'setting' 		=> $settings['tag_link'],
-						'meta_name'		=> 'wpf-settings',
-						'field_id'		=> 'tag_link',
-						'limit'			=> 1,
-						'placeholder'	=> 'Select a tag'
+						'setting'     => $settings['tag_link'],
+						'meta_name'   => 'wpf-settings',
+						'field_id'    => 'tag_link',
+						'limit'       => 1,
+						'placeholder' => 'Select a tag',
 					);
 
 					wpf_render_tag_multiselect( $args );
 
-				?>
+					?>
 
 				<p class="description"><?php _e( 'This tag will be applied to the user when they register or are added to the membership level. This tag will be removed if the membership expires, or if the member is removed from the level. You can also grant any user this membership level by manually applying the tag. If the tag is removed the level will be removed.', 'wp-fusion' ); ?></p>
 
@@ -389,16 +415,16 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 					</th>
 					<td>
 						<?php
-						
+
 							$args = array(
-								'setting' 		=> $settings['status_active'],
-								'meta_name'		=> 'wpf-settings',
-								'field_id'		=> 'status_active'
+								'setting'   => $settings['status_active'],
+								'meta_name' => 'wpf-settings',
+								'field_id'  => 'status_active',
 							);
 
 							wpf_render_tag_multiselect( $args );
 
-						?>
+							?>
 
 						<p class="description"><?php _e( 'These tags will be applied when a user\'s membership status is set to active. These tags will not be removed if the status changes.', 'wp-fusion' ); ?></p>
 
@@ -411,16 +437,16 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 					</th>
 					<td>
 						<?php
-						
+
 							$args = array(
-								'setting' 		=> $settings['status_free'],
-								'meta_name'		=> 'wpf-settings',
-								'field_id'		=> 'status_free'
+								'setting'   => $settings['status_free'],
+								'meta_name' => 'wpf-settings',
+								'field_id'  => 'status_free',
 							);
 
 							wpf_render_tag_multiselect( $args );
 
-						?>
+							?>
 
 						<p class="description"><?php _e( 'These tags will be applied when a user registers for a free membership. These tags will not be removed if the status changes.', 'wp-fusion' ); ?></p>
 
@@ -435,14 +461,14 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 						<?php
 
 							$args = array(
-								'setting' 		=> $settings['status_trial'],
-								'meta_name'		=> 'wpf-settings',
-								'field_id'		=> 'status_trial'
+								'setting'   => $settings['status_trial'],
+								'meta_name' => 'wpf-settings',
+								'field_id'  => 'status_trial',
 							);
 
 							wpf_render_tag_multiselect( $args );
 
-						?>
+							?>
 
 						<p class="description"><?php _e( 'These tags will be applied when a member signs up for a trial. These tags will not be removed if the status changes.', 'wp-fusion' ); ?></p>
 
@@ -457,14 +483,14 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 						<?php
 
 							$args = array(
-								'setting' 		=> $settings['status_cancelled'],
-								'meta_name'		=> 'wpf-settings',
-								'field_id'		=> 'status_cancelled'
+								'setting'   => $settings['status_cancelled'],
+								'meta_name' => 'wpf-settings',
+								'field_id'  => 'status_cancelled',
 							);
 
 							wpf_render_tag_multiselect( $args );
 
-						?>
+							?>
 
 						<p class="description"><?php _e( 'These tags will be applied when a user\'s membership is cancelled. These tags will be removed if the membership is reactivated.', 'wp-fusion' ); ?></p>
 
@@ -477,16 +503,16 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 					</th>
 					<td>
 						<?php
-						
+
 							$args = array(
-								'setting' 		=> $settings['status_expired'],
-								'meta_name'		=> 'wpf-settings',
-								'field_id'		=> 'status_expired'
+								'setting'   => $settings['status_expired'],
+								'meta_name' => 'wpf-settings',
+								'field_id'  => 'status_expired',
 							);
 
 							wpf_render_tag_multiselect( $args );
 
-						?>
+							?>
 
 						<p class="description"><?php _e( 'These tags will be applied when a user\'s membership expires. These tags will be removed if the membership is reactivated.', 'wp-fusion' ); ?></p>
 
@@ -499,16 +525,16 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 					</th>
 					<td>
 						<?php
-						
+
 							$args = array(
-								'setting' 		=> $settings['status_payment_failed'],
-								'meta_name'		=> 'wpf-settings',
-								'field_id'		=> 'status_payment_failed'
+								'setting'   => $settings['status_payment_failed'],
+								'meta_name' => 'wpf-settings',
+								'field_id'  => 'status_payment_failed',
 							);
 
 							wpf_render_tag_multiselect( $args );
 
-						?>
+							?>
 
 						<p class="description"><?php _e( 'These tags will be applied when a renewal payment fails. These tags will be removed if a sucessful renewal payment is received.', 'wp-fusion' ); ?></p>
 
@@ -541,8 +567,8 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 			return;
 		}
 
-		$settings           = get_option( 'wpf_rcp_tags', array() );
-		$settings[ $id ] 	= $args['wpf-settings'];
+		$settings        = get_option( 'wpf_rcp_tags', array() );
+		$settings[ $id ] = $args['wpf-settings'];
 
 		update_option( 'wpf_rcp_tags', $settings );
 
@@ -623,9 +649,7 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 					add_action( 'wpf_tags_modified', array( $this, 'change_level' ), 10, 2 );
 
 				}
-
 			}
-
 		}
 
 		// Update sub name
@@ -658,15 +682,15 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 
 			// Apply / remove tags
 
-			if( $new_status == 'active' || $new_status == 'free' ) {
+			if ( $new_status == 'active' || $new_status == 'free' ) {
 
 				// Apply tags for active
 
-				if( ! empty( $tags[ $subscription_id ]['apply_tags'] ) ) {
+				if ( ! empty( $tags[ $subscription_id ]['apply_tags'] ) ) {
 					$apply_tags = array_merge( $apply_tags, $tags[ $subscription_id ]['apply_tags'] );
 				}
 
-				if( ! empty( $tags[ $subscription_id ]['tag_link'] ) ) {
+				if ( ! empty( $tags[ $subscription_id ]['tag_link'] ) ) {
 					$apply_tags = array_merge( $apply_tags, $tags[ $subscription_id ]['tag_link'] );
 				}
 
@@ -676,15 +700,13 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 
 				foreach ( $statuses as $status ) {
 
-					if ( ! empty( $tags[ $subscription_id ][ 'status_' .  $status ] ) ) {
+					if ( ! empty( $tags[ $subscription_id ][ 'status_' . $status ] ) ) {
 
-						$remove_tags = array_merge( $remove_tags, $tags[ $subscription_id ][ 'status_' .  $status ] );
+						$remove_tags = array_merge( $remove_tags, $tags[ $subscription_id ][ 'status_' . $status ] );
 
 					}
-
 				}
-
-			} elseif( $new_status == 'expired' ) {
+			} elseif ( $new_status == 'expired' ) {
 
 				// "Cancelled" means it was admin or user cancelled but it is still active until the end of the period, so we'll only remove linked tags when it actually becomes Expired
 
@@ -695,30 +717,29 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 				if ( ! empty( $tags[ $subscription_id ]['remove_tags'] ) ) {
 					$remove_tags = array_merge( $remove_tags, $tags[ $subscription_id ]['apply_tags'] );
 				}
-
 			}
 
 			// Apply additional tags based on current status
 
-			if( ! empty( $tags[ $subscription_id ][ 'status_' .  $new_status ] ) ) {
+			if ( ! empty( $tags[ $subscription_id ][ 'status_' . $new_status ] ) ) {
 				$apply_tags = array_merge( $apply_tags, $tags[ $subscription_id ][ 'status_' . $new_status ] );
 			}
 
 			// Trials
 
-			if( $member->is_trialing() && ! empty( $tags[ $subscription_id ]['status_trial'] ) ) {
+			if ( $member->is_trialing() && ! empty( $tags[ $subscription_id ]['status_trial'] ) ) {
 				$apply_tags = array_merge( $apply_tags, $tags[ $subscription_id ]['status_trial'] );
 			}
 
 			// Remove tags
 
-			if( ! empty( $remove_tags ) ) {
+			if ( ! empty( $remove_tags ) ) {
 				wp_fusion()->user->remove_tags( $remove_tags, $user_id );
 			}
 
 			// Apply tags
 
-			if( ! empty( $apply_tags ) ) {
+			if ( ! empty( $apply_tags ) ) {
 				wp_fusion()->user->apply_tags( $apply_tags, $user_id );
 			}
 
@@ -1176,7 +1197,6 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 			foreach ( $members as $member ) {
 				$user_ids[] = $member->ID;
 			}
-
 		}
 
 		return $user_ids;
@@ -1243,4 +1263,4 @@ class WPF_Restrict_Content_Pro extends WPF_Integrations_Base {
 
 }
 
-new WPF_Restrict_Content_Pro;
+new WPF_Restrict_Content_Pro();

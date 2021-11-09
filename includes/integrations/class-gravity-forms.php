@@ -235,7 +235,7 @@ class WPF_GForms_Integration extends GFFeedAddOn {
 		$args = array(
 			'email_address'    => $email_address,
 			'update_data'      => $update_data,
-			'apply_tags'       => $feed['meta']['wpf_tags'],
+			'apply_tags'       => (array) $feed['meta']['wpf_tags'],
 			'integration_slug' => 'gform',
 			'integration_name' => 'Gravity Forms',
 			'form_id'          => $form['id'],
@@ -255,7 +255,9 @@ class WPF_GForms_Integration extends GFFeedAddOn {
 
 			gform_update_meta( $entry['id'], 'wpf_contact_id', $contact_id );
 
-			$this->add_note( $entry['id'], 'Entry synced to ' . wp_fusion()->crm->name . ' (contact ID ' . $contact_id . ')' );
+			// Note: can't link to contact ID here because GForms does an esc_html() on the note display.
+
+			$this->add_note( $entry['id'], 'Entry synced to ' . wp_fusion()->crm->name . ' (contact ID #' . $contact_id . ')' );
 
 		}
 
@@ -271,13 +273,16 @@ class WPF_GForms_Integration extends GFFeedAddOn {
 			if ( ! empty( $url ) && wpf_user_can_access( $post_id ) ) {
 
 				add_filter(
-					'gform_confirmation', function( $confirmation, $form, $entry ) use ( &$url ) {
+					'gform_confirmation',
+					function( $confirmation, $form, $entry ) use ( &$url ) {
 
 						$confirmation = array( 'redirect' => $url );
 
 						return $confirmation;
 
-					}, 10, 3
+					},
+					10,
+					3
 				);
 
 			}
@@ -306,7 +311,6 @@ class WPF_GForms_Integration extends GFFeedAddOn {
 					if ( $this->is_feed_condition_met( $feed, $form, $entry ) ) {
 						$this->process_feed( $feed, $entry, $form );
 					}
-
 				}
 			}
 		}
@@ -331,7 +335,6 @@ class WPF_GForms_Integration extends GFFeedAddOn {
 				if ( $this->is_feed_condition_met( $feed, $form, $entry ) ) {
 					$this->process_feed( $feed, $entry, $form );
 				}
-
 			}
 		}
 

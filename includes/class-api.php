@@ -229,14 +229,14 @@ class WPF_API {
 
 	public function update_tags( $post_data ) {
 
-		ob_start(); // Catch output from other plugins
+		ob_start(); // Catch output from other plugins.
 
 		if ( isset( $post_data['tags'] ) ) {
 
-			$tags = $post_data['tags'];
+			// ActiveCampaign and Mautic can read the tags out of the payload, we don't need another API call.
+			wp_fusion()->user->set_tags( $post_data['tags'], $post_data['user_id'] );
 
-			// ActiveCampaign and Mautic can read the tags out of the payload, we don't need another API call
-			wp_fusion()->user->set_tags( $tags, $post_data['user_id'] );
+			$tags = $post_data['tags']; // for the debug output.
 
 		} else {
 

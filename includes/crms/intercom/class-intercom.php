@@ -409,7 +409,7 @@ class WPF_Intercom {
 		$response = json_decode( wp_remote_retrieve_body( $response ), true );
 
 		if ( empty( $response['tags']['tags'] ) ) {
-			return false;
+			return array();
 		}
 
 		foreach ( $response['tags']['tags'] as $tag ) {
@@ -509,19 +509,27 @@ class WPF_Intercom {
 			$data = wp_fusion()->crm_base->map_meta_fields( $data );
 		}
 
-		// General cleanup and restructuring
+		// General cleanup and restructuring.
 
 		$body = array( 'email' => $data['email'] );
 
-		// Maybe use the combined name
+		// Intercom requires a name.
 
-		if ( isset( $data['firstname'] ) && isset( $data['lastname'] ) ) {
+		if ( ! isset( $data['firstname'] ) ) {
+			$data['firstname'] = '';
+		}
 
-			$body['name'] = $data['firstname'] . ' ' . $data['lastname'];
+		if ( ! isset( $data['lastname'] ) ) {
+			$data['lastname'] = '';
+		}
 
-			unset( $data['firstname'] );
-			unset( $data['lastname'] );
+		$body['name'] = trim( $data['firstname'] . ' ' . $data['lastname'] );
 
+		unset( $data['firstname'] );
+		unset( $data['lastname'] );
+
+		if ( empty( $body['name'] ) ) {
+			$body['name'] = 'unknown';
 		}
 
 		require_once dirname( __FILE__ ) . '/admin/intercom-fields.php';

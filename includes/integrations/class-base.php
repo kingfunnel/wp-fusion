@@ -21,7 +21,7 @@ abstract class WPF_Integrations_Base {
 	/**
 	 * The link to the documentation on the WP Fusion website.
 	 *
-	 * @since 3.38.10
+	 * @since 3.38.14
 	 * @var string $docs_url
 	 */
 	public $docs_url;
@@ -139,7 +139,6 @@ abstract class WPF_Integrations_Base {
 			if ( ! is_wp_error( $contact_id ) ) {
 				do_action( 'wpf_guest_contact_created', $contact_id, $email_address );
 			}
-
 		} else {
 
 			wp_fusion()->crm->update_contact( $contact_id, $update_data );

@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Tutor_LMS extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'tutor-lms';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Tutor lms';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/learning-management/tutor-lms/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_Tutor_LMS extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'tutor-lms';
 
 		add_action( 'tutor_course_complete_after', array( $this, 'course_complete' ) );
 		add_action( 'tutor_after_enroll', array( $this, 'after_enroll' ), 10, 2 );
@@ -122,9 +145,12 @@ class WPF_Tutor_LMS extends WPF_Integrations_Base {
 					remove_action( 'tutor_after_enroll', array( $this, 'after_enroll' ), 10, 2 );
 
 					// Make TutorLMS think this is a free course, so we can enroll them without a purchase
-					add_filter( 'is_course_purchasable', function() {
-						return false;
-					} );
+					add_filter(
+						'is_course_purchasable',
+						function() {
+							return false;
+						}
+					);
 
 					tutor_utils()->do_enroll( $course_id, 0, $user_id );
 

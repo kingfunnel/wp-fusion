@@ -14,13 +14,36 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Download_Monitor extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'download-monitor';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Download monitor';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Gets things started.
 	 *
 	 * @since 3.38.9
 	 */
 	public function init() {
-
-		$this->slug = 'download-monitor';
 
 		add_filter( 'dlm_can_download', array( $this, 'check_downloads' ), 10, 2 );
 

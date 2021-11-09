@@ -8,9 +8,33 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Login With AJAX plugin compatibility.
  *
  * @since 3.38.5
- *
  */
 class WPF_Login_With_Ajax extends WPF_Integrations_Base {
+
+	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'login-with-ajax';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Login-with-ajax';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
 
 	/**
 	 * Gets things started.
@@ -18,8 +42,6 @@ class WPF_Login_With_Ajax extends WPF_Integrations_Base {
 	 * @since 3.38.5
 	 */
 	public function init() {
-
-		$this->slug = 'login-with-ajax';
 
 		add_filter( 'lwa_ajax_login', array( $this, 'lwa_login' ) );
 

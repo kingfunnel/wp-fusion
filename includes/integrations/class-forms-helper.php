@@ -23,30 +23,37 @@ class WPF_Forms_Helper {
 
 		extract( $args );
 
-		// If no email and user not logged in don't bother
+		// If no email and user not logged in don't bother.
 
 		if ( empty( $email_address ) && ! wpf_is_user_logged_in() ) {
 
-			wpf_log( 'error', 0, 'Unable to process feed. No email address found.', array( 'source' => sanitize_title( $integration_name ) ) );
+			wpf_log(
+				'error',
+				0,
+				'Unable to process feed. No email address found.',
+				array(
+					'source'              => sanitize_title( $integration_name ),
+					'meta_array_nofilter' => $update_data,
+				)
+			);
 
 			return new WP_Error( 'error', 'Unable to process feed. No email address found.' );
 
 		} elseif ( empty( $email_address ) && wpf_is_user_logged_in() ) {
 
-			global $current_user;
-			$contact_id = wp_fusion()->user->get_contact_id( $current_user->ID );
+			// If no email address, but user is logged in.
 
-			if( empty( $contact_id ) ) {
+			$contact_id = wpf_get_contact_id();
+			$user_id    = wpf_get_current_user_id();
 
-				// If not found, check in the CRM and update locally
-				$contact_id = wp_fusion()->user->get_contact_id( $current_user->ID, true );
+			if ( empty( $contact_id ) ) {
+
+				// If not found, check in the CRM and update locally.
+				$contact_id = wpf_get_contact_id( $user_id, true );
 			}
-
-			$user_id = $current_user->ID;
-
 		} else {
 
-			// Email is set
+			// Email is set.
 
 			if ( is_object( get_user_by( 'email', $email_address ) ) ) {
 
@@ -55,7 +62,7 @@ class WPF_Forms_Helper {
 				$user       = get_user_by( 'email', $email_address );
 				$contact_id = wp_fusion()->user->get_contact_id( $user->ID );
 
-				if( empty( $contact_id ) ) {
+				if ( empty( $contact_id ) ) {
 
 					// If not found, check in the CRM and update locally
 					$contact_id = wp_fusion()->user->get_contact_id( $user->ID, true );
@@ -64,21 +71,20 @@ class WPF_Forms_Helper {
 
 				$user_id = $user->ID;
 
-			} elseif( doing_wpf_auto_login() ) {
+			} elseif ( doing_wpf_auto_login() ) {
 
 				// Auto login situations
 				$user_id    = wpf_get_current_user_id();
 				$contact_id = wp_fusion()->user->get_contact_id( $user_id );
 
 			}
-
 		}
 
-		if( empty( $user_id ) && wpf_is_user_logged_in() ) {
+		if ( empty( $user_id ) && wpf_is_user_logged_in() ) {
 
 			$user_id = wpf_get_current_user_id();
 
-		} elseif( empty( $user_id ) && ! wpf_is_user_logged_in() ) {
+		} elseif ( empty( $user_id ) && ! wpf_is_user_logged_in() ) {
 
 			$user_id = false;
 
@@ -92,10 +98,9 @@ class WPF_Forms_Helper {
 			$current_user_contact_id = wp_fusion()->user->get_contact_id();
 
 			// Update contact ID if not set locally
-			if( wpf_is_user_logged_in() && ! empty( $contact_id ) && ! is_object( $contact_id ) && empty( $current_user_contact_id ) ) {
+			if ( wpf_is_user_logged_in() && ! empty( $contact_id ) && ! is_object( $contact_id ) && empty( $current_user_contact_id ) ) {
 				update_user_meta( $user_id, wp_fusion()->crm->slug . '_contact_id', $contact_id );
 			}
-
 		}
 
 		if ( is_wp_error( $contact_id ) ) {
@@ -140,7 +145,12 @@ class WPF_Forms_Helper {
 			return;
 		}
 
-		// Dynamic tagging
+		// Dynamic tagging.
+
+		if ( ! is_array( $apply_tags ) ) {
+			$apply_tags = array();
+		}
+
 		if ( in_array( 'add_tags', wp_fusion()->crm->supports ) ) {
 
 			foreach ( $update_data as $key => $value ) {
@@ -185,9 +195,17 @@ class WPF_Forms_Helper {
 			$log_text .= ' Creating new contact: ';
 		}
 
-		wpf_log( 'info', $user_id, $log_text, array( 'meta_array_nofilter' => $update_data, 'source' => sanitize_title( $integration_name ) ) );
+		wpf_log(
+			'info',
+			$user_id,
+			$log_text,
+			array(
+				'meta_array_nofilter' => $update_data,
+				'source'              => sanitize_title( $integration_name ),
+			)
+		);
 
-		if( ! empty( $contact_id ) && isset( $add_only ) && $add_only == true ) {
+		if ( ! empty( $contact_id ) && isset( $add_only ) && $add_only == true ) {
 
 			wpf_log( 'info', $user_id, 'Contact already exists and <em>Add Only</em> is enabled. Aborting.', array( 'source' => sanitize_title( $integration_name ) ) );
 			return;
@@ -218,15 +236,17 @@ class WPF_Forms_Helper {
 
 			}
 
-			if ( wpf_is_user_logged_in() && wp_fusion()->user->get_contact_id() == false ) {
-				update_user_meta( $user_id, wp_fusion()->crm->slug . '_contact_id', $contact_id );
-			}
-
 			do_action( 'wpf_guest_contact_created', $contact_id, $email_address );
 
 		}
 
-		// Start auto login for guests (before tags are applied)
+		// If the user is logged in but doesn't have a contact ID, we'll set that here so that subsequent calls to apply_tags() work.
+
+		if ( wpf_is_user_logged_in() && ! wpf_get_contact_id() ) {
+			update_user_meta( $user_id, wp_fusion()->crm->slug . '_contact_id', $contact_id );
+		}
+
+		// Start auto login for guests (before tags are applied).
 
 		if ( wpf_get_option( 'auto_login_forms', false ) == true && ! wpf_is_user_logged_in() ) {
 
@@ -274,20 +294,27 @@ class WPF_Forms_Helper {
 
 			}
 
-			if ( is_object( $user_info ) && ( $user_info->user_email == $email_address || empty( $email_address ) ) ) {
+			if ( is_object( $user_info ) && ( $user_info->user_email === $email_address || empty( $email_address ) ) ) {
 
-				// If user exists locally and the email address matches, apply the tags locally as well
+				// If user exists locally and the email address matches, apply the tags locally as well.
 				wp_fusion()->user->apply_tags( $apply_tags, $user_id );
 
 			} else {
 
 				// Logger
-				wpf_log( 'info', 0, $integration_name . ' applying tags: ', array( 'tag_array' => $apply_tags, 'source' => sanitize_title( $integration_name ) ) );
+				wpf_log(
+					'info',
+					0,
+					$integration_name . ' applying tags: ',
+					array(
+						'tag_array' => $apply_tags,
+						'source'    => sanitize_title( $integration_name ),
+					)
+				);
 
 				wp_fusion()->crm->apply_tags( $apply_tags, $contact_id );
 
 			}
-
 		}
 
 		do_action( 'wpf_forms_post_submission', $update_data, $user_id, $contact_id, $form_id );

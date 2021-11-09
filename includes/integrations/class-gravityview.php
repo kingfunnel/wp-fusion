@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_GravityView extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'gravityview';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'GravityView';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/lead-generation/gravityview/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_GravityView extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'gravityview';
 
 		add_filter( 'wpf_gform_settings_fields', array( $this, 'settings_fields' ) );
 		add_action( 'gravityview/approve_entries/approved', array( $this, 'approved' ) );
@@ -63,7 +86,7 @@ class WPF_GravityView extends WPF_Integrations_Base {
 
 		if ( ! empty( $feeds ) ) {
 
-			foreach( $feeds as $feed ) {
+			foreach ( $feeds as $feed ) {
 
 				if ( ! empty( $feed['meta']['wpf_tags_gravityview_approved'] ) ) {
 
@@ -79,18 +102,14 @@ class WPF_GravityView extends WPF_Integrations_Base {
 
 						if ( ! empty( $contact_id ) ) {
 
-							wpf_log( 'info', 0, 'Entry #' . $entry_id .' marked approved in GravityView. Applying tags to contact ID #' . $contact_id, array( 'tag_array' => $feed['meta']['wpf_tags_gravityview_approved'] ) );
+							wpf_log( 'info', 0, 'Entry #' . $entry_id . ' marked approved in GravityView. Applying tags to contact ID #' . $contact_id, array( 'tag_array' => $feed['meta']['wpf_tags_gravityview_approved'] ) );
 
 							wp_fusion()->crm->apply_tags( $feed['meta']['wpf_tags_gravityview_approved'], $contact_id );
 
 						}
-
 					}
-
 				}
-
 			}
-
 		}
 
 	}
@@ -119,7 +138,6 @@ class WPF_GravityView extends WPF_Integrations_Base {
 				$this->approved( $entry_id );
 
 			}
-
 		}
 
 	}

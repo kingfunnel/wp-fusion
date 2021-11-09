@@ -71,6 +71,30 @@ class WPF_User {
 	}
 
 	/**
+	 * Gets the current user's email address, with support for auto-logged-in
+	 * users, and guests that are being tracked via cookie.
+	 *
+	 * @since  3.38.23
+	 *
+	 * @return string|bool Email address or false.
+	 */
+	public function get_current_user_email() {
+
+		$user = $this->get_current_user();
+
+		if ( $user ) {
+			$email = $user->user_email;
+		} elseif ( isset( $_COOKIE['wpf_guest'] ) ) {
+			$email = sanitize_email( wp_unslash( $_COOKIE['wpf_guest'] ) );
+		} else {
+			$email = false;
+		}
+
+		return $email;
+
+	}
+
+	/**
 	 * Gets the current user, with support for auto-logged-in users
 	 *
 	 * @since  3.37.3
@@ -283,7 +307,11 @@ class WPF_User {
 				'notice',
 				$user_id,
 				/* translators: %s: CRM Name */
-				sprintf( __( 'User registration not synced to %s because email address wasn\'t detected in the submitted data.', 'wp-fusion' ), wp_fusion()->crm->name )
+				sprintf( __( 'User registration not synced to %s because email address wasn\'t detected in the submitted data.', 'wp-fusion' ), wp_fusion()->crm->name ),
+				array(
+					'source'              => 'user-register',
+					'meta_array_nofilter' => $post_data,
+				)
 			);
 
 			return false;
@@ -335,6 +363,7 @@ class WPF_User {
 				/* translators: %s: CRM Name */
 				sprintf( __( 'New user registration. Adding contact to %s:', 'wp-fusion' ), wp_fusion()->crm->name ),
 				array(
+					'source'     => 'user-register',
 					'meta_array' => $post_data,
 				)
 			);
@@ -806,7 +835,7 @@ class WPF_User {
 						)
 					);
 
-				} elseif ( $key == 'role' ) {
+				} elseif ( $key == 'role' && ! empty( $value ) ) {
 
 					if ( user_can( $user_id, 'manage_options' ) ) {
 						continue; // Don't run on admins.
@@ -821,7 +850,7 @@ class WPF_User {
 					if ( wp_roles()->is_role( $value ) && ! in_array( $value, (array) $user->roles ) ) {
 
 						// Don't send it back again
-						remove_action( 'set_user_role', array( $this, 'update_user_role' ), 10, 3 );
+						remove_action( 'set_user_role', array( $this, 'add_remove_user_role' ), 10, 3 );
 						wp_update_user(
 							array(
 								'ID'   => $user_id,
@@ -961,10 +990,9 @@ class WPF_User {
 
 	public function set_tags( $tags, $user_id ) {
 
-		// Tags should be stored as an array of strings.
-		$tags = array_map( 'sanitize_text_field', (array) $tags );
+		// Clean and sanitize.
 
-		$tags = array_map( 'htmlspecialchars_decode', $tags ); // sanitize_text_field removes HTML special characters so we'll add them back.
+		$tags = wpf_clean_tags( $tags );
 
 		wpf_log( 'info', $user_id, __( 'Loaded tag(s)', 'wp-fusion' ) . ': ', array( 'tag_array' => $tags ) );
 
@@ -976,6 +1004,11 @@ class WPF_User {
 		}
 
 		if ( ! empty( $tags ) && $tags == $user_tags ) {
+
+			if ( did_action( 'wpf_tags_modified' ) || doing_action( 'wpf_tags_modified' ) ) {
+				// Don't fire a tags modified inside a tags modified if they haven't changed
+				return;
+			}
 
 			// Doing the action here so that automated enrollments are triggered.
 			do_action( 'wpf_tags_modified', $user_id, $user_tags );
@@ -1066,13 +1099,9 @@ class WPF_User {
 			return;
 		}
 
-		// Remove any empty ones that may have snuck in.
-
-		$tags = array_filter( $tags );
-
 		// Sanitize!
 
-		$tags = array_map( 'sanitize_text_field', $tags );
+		$tags = wpf_clean_tags( $tags );
 
 		if ( false === $user_id ) {
 			$user_id = $this->get_current_user_id();
@@ -1120,7 +1149,7 @@ class WPF_User {
 
 		$prevent_reapply = apply_filters( 'wpf_prevent_reapply_tags', wpf_get_option( 'prevent_reapply', true ) );
 
-		if ( empty( $diff ) && true === $prevent_reapply ) {
+		if ( empty( $diff ) && $prevent_reapply ) {
 
 			wpf_log( 'info', $user_id, __( 'Applying Tag(s). No API call will be sent since the user already has the tag(s)', 'wp-fusion' ) . ': ', array( 'tag_array' => $tags ) );
 			return true;
@@ -1135,7 +1164,7 @@ class WPF_User {
 
 		// Check for chaining.
 
-		if ( doing_action( 'wpf_tags_modified' ) ) {
+		if ( doing_action( 'wpf_tags_modified' ) && ! doing_wpf_webhook() ) {
 			wpf_log( 'warning', $user_id, __( '<strong>Chaining situation detected</strong>. WP Fusion is about to apply tags as the result of an automated enrollment, which was triggered by other tags being applied. This kind of setup should be avoided and may result in unexpected behavior or site instability.', 'wp-fusion' ) );
 		}
 
@@ -1208,13 +1237,9 @@ class WPF_User {
 			return;
 		}
 
-		// Remove any empty ones that may have snuck in.
-
-		$tags = array_filter( $tags );
-
 		// Sanitize!
 
-		$tags = array_map( 'sanitize_text_field', $tags );
+		$tags = wpf_clean_tags( $tags );
 
 		if ( false === $user_id ) {
 			$user_id = $this->get_current_user_id();
@@ -1269,7 +1294,7 @@ class WPF_User {
 
 		// Check for chaining.
 
-		if ( doing_action( 'wpf_tags_modified' ) ) {
+		if ( doing_action( 'wpf_tags_modified' ) && ! doing_wpf_webhook() ) {
 			wpf_log( 'warning', $user_id, __( '<strong>Chaining situation detected</strong>. WP Fusion is about to remove tags as the result of an automated enrollment, which was triggered by other tags being removed. This kind of setup should be avoided and may result in unexpected behavior or site instability.', 'wp-fusion' ) );
 		}
 
@@ -2013,7 +2038,7 @@ class WPF_User {
 		// Don't push updates back to CRM.
 		remove_action( 'updated_user_meta', array( $this, 'push_user_meta_single' ), 10, 4 );
 		remove_action( 'added_user_meta', array( $this, 'push_user_meta_single' ), 10, 4 );
-		remove_action( 'set_user_role', array( $this, 'update_user_role' ), 10, 3 );
+		remove_action( 'set_user_role', array( $this, 'add_remove_user_role' ), 10, 3 );
 
 		// Prevent mail from being sent.
 		if ( false === $send_notification && ! wpf_get_option( 'send_welcome_email' ) ) {

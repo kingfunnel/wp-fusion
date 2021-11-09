@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_ACF extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'acf';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Advanced Custom Fields';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/other/advanced-custom-fields/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_ACF extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'acf';
 
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ), 15 );
 		add_filter( 'wpf_meta_fields', array( $this, 'prepare_meta_fields' ), 10 );

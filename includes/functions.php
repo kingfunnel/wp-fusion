@@ -108,6 +108,20 @@ if ( ! function_exists( 'wpf_get_current_user' ) ) {
 }
 
 /**
+ * Gets the current user's email address, with support for auto-logged-in
+ * users, and guests that are being tracked via cookie.
+ *
+ * @since  3.38.23
+ *
+ * @return string|bool Email address or false.
+ */
+function wpf_get_current_user_email() {
+
+	return wp_fusion()->user->get_current_user_email();
+
+}
+
+/**
  * Gets the WordPress user ID from a contact ID.
  *
  * @since 3.35.17
@@ -367,8 +381,6 @@ function wpf_get_datetime_format() {
  *
  * @since  3.6.26
  *
- * @param int $user_id The user ID.
- *
  * @return bool  Whether or not to do an admin override.
  */
 function wpf_admin_override() {
@@ -416,8 +428,37 @@ function wpf_clean( $var ) {
 
 		$allowed_html = apply_filters( 'wpf_wp_kses_allowed_html', wp_kses_allowed_html( 'post' ) );
 
-		return is_scalar( $var ) ? wp_kses( $var, $allowed_html ) : $var;
+		if ( is_scalar( $var ) ) {
+			$var = wp_kses( $var, $allowed_html );
+			$var = htmlspecialchars_decode( $var ); // we need special characters to be left alone.
+		}
+
+		return $var;
 	}
+}
+
+/**
+ * Sanitizes an array of tags while preserving special characters.
+ *
+ * @since  3.38.15
+ *
+ * @param  array $tags   The tags.
+ * @return array The tags.
+ */
+function wpf_clean_tags( $tags ) {
+
+	if ( ! is_array( $tags ) ) {
+		$tags = array( $tags );
+	}
+
+	$tags = array_filter( $tags ); // Remove any empties.
+
+	$tags = array_map( 'sanitize_text_field', $tags ); // Tags should be treated as an array of strings.
+
+	$tags = array_map( 'htmlspecialchars_decode', $tags ); // sanitize_text_field removes HTML special characters so we'll add them back.
+
+	return $tags;
+
 }
 
 

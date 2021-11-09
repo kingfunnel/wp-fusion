@@ -249,6 +249,11 @@ class WP_Fusion_Options {
 
 		foreach ( $settings as $id => $setting ) {
 
+			if ( empty( $this->post_data[ $id ] ) && 'hidden' === $setting['type'] ) {
+				// Don't erase saved values with empty hidden fields.
+				unset( $this->post_data[ $id ] );
+			}
+
 			if ( isset( $this->post_data[ $id ] ) && ! isset( $setting['subfields'] ) ) {
 
 				$this->post_data[ $id ] = $this->validate_options( $id, $this->post_data[ $id ], $setting );
@@ -1450,7 +1455,6 @@ class WP_Fusion_Options {
 
 		$args = array(
 			'choices'    => array(),
-			'allow_null' => false,
 		);
 
 		return $args;
@@ -1466,7 +1470,11 @@ class WP_Fusion_Options {
 	private function show_field_select( $id, $field, $subfield_id = null ) {
 
 		if ( ! isset( $field['allow_null'] ) ) {
-			$field['allow_null'] = false;
+			if ( empty( $field['std'] ) ) {
+				$field['allow_null'] = true;
+			} else {
+				$field['allow_null'] = false;
+			}
 		}
 
 		if ( ! isset( $field['placeholder'] ) ) {
@@ -1970,6 +1978,22 @@ class WP_Fusion_Options {
 
 		wp_editor( stripslashes( stripslashes( html_entity_decode( $this->options[ $id ] ) ) ), $id, $settings );
 	}
+
+	/**
+	 * Validate editor field.
+	 *
+	 * @since  3.38.15
+	 *
+	 * @param  mixed $input   The HTML content.
+	 * @param  bool  $setting The setting.
+	 * @return mixed HTML content.
+	 */
+	public function validate_field_editor( $input, $setting = false ) {
+
+		return wp_kses_post( $input );
+
+	}
+
 
 	/**
 	 *

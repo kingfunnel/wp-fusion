@@ -7,6 +7,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Profile_Builder extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'profile-builder';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Profile builder';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = 'https://wpfusion.com/documentation/membership/profile-builder-pro/';
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -15,8 +40,6 @@ class WPF_Profile_Builder extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'profile-builder';
 
 		// Profile updates
 		add_filter( 'wpf_user_update', array( $this, 'profile_update' ), 10, 2 );
@@ -38,11 +61,11 @@ class WPF_Profile_Builder extends WPF_Integrations_Base {
 	public function profile_update( $user_meta, $user_id ) {
 
 		$field_map = array(
-			'email' 	=> 'user_email',
-			'passw1' 	=> 'user_pass',
-			'website'	=> 'user_url'
+			'email'   => 'user_email',
+			'passw1'  => 'user_pass',
+			'website' => 'user_url',
 		);
-		
+
 		$user_meta = $this->map_meta_fields( $user_meta, $field_map );
 
 		return $user_meta;
@@ -64,7 +87,7 @@ class WPF_Profile_Builder extends WPF_Integrations_Base {
 		return $post_types;
 
 	}
-	
+
 
 	/**
 	 * Adds Profile Builder field group to meta fields list
@@ -75,8 +98,11 @@ class WPF_Profile_Builder extends WPF_Integrations_Base {
 
 	public function add_meta_field_group( $field_groups ) {
 
-		if( !isset( $field_groups['profile_builder'] ) ) {
-			$field_groups['profile_builder'] = array( 'title' => 'Profile Builder', 'fields' => array() );
+		if ( ! isset( $field_groups['profile_builder'] ) ) {
+			$field_groups['profile_builder'] = array(
+				'title'  => 'Profile Builder',
+				'fields' => array(),
+			);
 		}
 
 		return $field_groups;
@@ -94,17 +120,21 @@ class WPF_Profile_Builder extends WPF_Integrations_Base {
 
 		$fields = get_option( 'wppb_manage_fields', array() );
 
-		foreach( $fields as $field ) {
+		foreach ( $fields as $field ) {
 
-			if( empty( $field['meta-name'] ) ) {
+			if ( empty( $field['meta-name'] ) ) {
 				continue;
 			}
 
-			if( $field['field'] == 'Checkbox' ) {
+			if ( $field['field'] == 'Checkbox' ) {
 				$field['field'] = 'checkboxes';
 			}
 
-			$meta_fields[ $field['meta-name'] ] = array( 'label' => $field['field-title'], 'type' => strtolower( $field['field'] ), 'group' => 'profile_builder');
+			$meta_fields[ $field['meta-name'] ] = array(
+				'label' => $field['field-title'],
+				'type'  => strtolower( $field['field'] ),
+				'group' => 'profile_builder',
+			);
 
 		}
 
@@ -114,4 +144,4 @@ class WPF_Profile_Builder extends WPF_Integrations_Base {
 
 }
 
-new WPF_Profile_Builder;
+new WPF_Profile_Builder();

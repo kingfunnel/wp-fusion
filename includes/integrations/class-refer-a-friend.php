@@ -8,6 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPF_Refer_A_Friend extends WPF_Integrations_Base {
 
 	/**
+	 * The slug for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $slug
+	 */
+
+	public $slug = 'refer-a-friend';
+
+	/**
+	 * The plugin name for WP Fusion's module tracking.
+	 *
+	 * @since 3.38.14
+	 * @var string $name
+	 */
+	public $name = 'Refer a friend';
+
+	/**
+	 * The link to the documentation on the WP Fusion website.
+	 *
+	 * @since 3.38.14
+	 * @var string $docs_url
+	 */
+	public $docs_url = false;
+
+	/**
 	 * Gets things started
 	 *
 	 * @access  public
@@ -16,8 +41,6 @@ class WPF_Refer_A_Friend extends WPF_Integrations_Base {
 	 */
 
 	public function init() {
-
-		$this->slug = 'refer-a-friend';
 
 		add_filter( 'wpf_meta_field_groups', array( $this, 'add_meta_field_group' ) );
 		add_filter( 'wpf_meta_fields', array( $this, 'set_contact_field_names' ) );

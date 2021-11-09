@@ -6,8 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class WPF_WPEP extends WPEP_Content_Library_Integration {
 
-	public $service_name 	= 'WP Fusion';
-	public $options_prefix  = 'wpep_wpf_';
+	public $service_name   = 'WP Fusion';
+	public $options_prefix = 'wpep_wpf_';
 
 	/**
 	 * Gets things started
@@ -48,8 +48,11 @@ class WPF_WPEP extends WPEP_Content_Library_Integration {
 
 	public function add_meta_field_group( $field_groups ) {
 
-		if( !isset( $field_groups['wpep'] ) ) {
-			$field_groups['wpep'] = array( 'title' => 'eLearnCommerce', 'fields' => array() );
+		if ( ! isset( $field_groups['wpep'] ) ) {
+			$field_groups['wpep'] = array(
+				'title'  => 'eLearnCommerce',
+				'fields' => array(),
+			);
 		}
 
 		return $field_groups;
@@ -65,7 +68,11 @@ class WPF_WPEP extends WPEP_Content_Library_Integration {
 
 	public function prepare_meta_fields( $meta_fields ) {
 
-		$meta_fields[ WPEP_USER_META_AUTO_LOGIN_TOKEN ] = array( 'label' => 'Auto Login Token', 'type' => 'text', 'group' => 'wpep' );
+		$meta_fields[ WPEP_USER_META_AUTO_LOGIN_TOKEN ] = array(
+			'label' => 'Auto Login Token',
+			'type'  => 'text',
+			'group' => 'wpep',
+		);
 
 		return $meta_fields;
 
@@ -101,7 +108,7 @@ class WPF_WPEP extends WPEP_Content_Library_Integration {
 
 			if ( $user_token === '' ) {
 
-				$salt = wpep_get_setting( 'auto-login-link-salt' );
+				$salt       = wpep_get_setting( 'auto-login-link-salt' );
 				$user_token = sha1( $salt . wpep_generate_random_token( 32 ) );
 				update_user_meta( $user_id, WPEP_USER_META_AUTO_LOGIN_TOKEN, $user_token );
 
@@ -112,7 +119,6 @@ class WPF_WPEP extends WPEP_Content_Library_Integration {
 				$update_data[ WPEP_USER_META_AUTO_LOGIN_TOKEN ] = $user_token;
 
 			}
-
 		}
 
 		return $update_data;
@@ -129,7 +135,7 @@ class WPF_WPEP extends WPEP_Content_Library_Integration {
 
 	public function has_access( $post_id ) {
 
-		if( ! wp_fusion()->access->user_can_access( $post_id ) ) {
+		if ( ! wp_fusion()->access->user_can_access( $post_id ) ) {
 			return false;
 		} else {
 			return true;
@@ -147,14 +153,13 @@ class WPF_WPEP extends WPEP_Content_Library_Integration {
 
 	public function get_sell_text( $post_id = 0 ) {
 
-		if( ! $this->has_access( $post_id ) ) {
+		if ( ! $this->has_access( $post_id ) ) {
 
 			$settings = get_post_meta( $post_id, 'wpf-settings', true );
 
-			if( ! empty( $settings['restricted_button_text'] ) ) {
+			if ( ! empty( $settings['restricted_button_text'] ) ) {
 				return $settings['restricted_button_text'];
 			}
-
 		}
 
 		return $this->sell_button_text;
@@ -171,14 +176,13 @@ class WPF_WPEP extends WPEP_Content_Library_Integration {
 
 	public function apply_tags_wpep_complete( $key, $progress, $course_id, $section_id, $lesson_id, $user_id, $updated ) {
 
-		if( $key == 'course_completed' && $progress == 1 ) {
+		if ( $key == 'course_completed' && $progress == 1 ) {
 
 			$wpf_settings = get_post_meta( $course_id, 'wpf-settings', true );
 
 			if ( ! empty( $wpf_settings['apply_tags_wpep'] ) ) {
 				wp_fusion()->user->apply_tags( $wpf_settings['apply_tags_wpep'], $user_id );
 			}
-
 		}
 
 	}
@@ -203,17 +207,23 @@ class WPF_WPEP extends WPEP_Content_Library_Integration {
 
 		echo '<p><label for="wpf-apply-tags-wpep"><small>Apply these tags when marked complete:</small></label>';
 
-		wpf_render_tag_multiselect( array( 'setting' => $settings['apply_tags_wpep'], 'meta_name' => 'wpf-settings', 'field_id' => 'apply_tags_wpep' ) );
+		wpf_render_tag_multiselect(
+			array(
+				'setting'   => $settings['apply_tags_wpep'],
+				'meta_name' => 'wpf-settings',
+				'field_id'  => 'apply_tags_wpep',
+			)
+		);
 
 		echo '</p>';
 
 		echo '<p><label for="wpf-restricted-course-message"><small>Button text to display when course is restricted:</small></label>';
 
-		if( !isset( $settings['restricted_button_text'] ) ) {
+		if ( ! isset( $settings['restricted_button_text'] ) ) {
 			$settings['restricted_button_text'] = '';
 		}
 
-		echo '<input type="text" id="wpf-restricted-course-message" placeholder="' . $this->sell_button_text . '" name="wpf-settings[restricted_button_text]" value="' . $settings['restricted_button_text']  . '">';
+		echo '<input type="text" id="wpf-restricted-course-message" placeholder="' . $this->sell_button_text . '" name="wpf-settings[restricted_button_text]" value="' . $settings['restricted_button_text'] . '">';
 
 		echo '</p>';
 
@@ -221,4 +231,4 @@ class WPF_WPEP extends WPEP_Content_Library_Integration {
 
 }
 
-new WPF_WPEP;
+new WPF_WPEP();

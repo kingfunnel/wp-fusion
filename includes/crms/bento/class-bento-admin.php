@@ -126,8 +126,8 @@ class WPF_Bento_Admin {
 		);
 
 		$new_settings['bento_api_key'] = array(
-			'title'   => __( 'API Key', 'wp-fusion' ),
-			'desc'    => __( 'Your API key can be found in your Bento account under Settings &raquo; Get your API key here &raquo; <strong>API Key (Combined)</strong>.', 'wp-fusion' ),
+			'title'       => __( 'API Key', 'wp-fusion' ),
+			'desc'        => __( 'Your API key can be found in your Bento account under Settings &raquo; Get your API key here &raquo; <strong>API Key (Combined)</strong>.', 'wp-fusion' ),
 			// https://app.bentonow.com/account/users/709/api_keys.
 			'section'     => 'setup',
 			'class'       => 'api_key',
@@ -149,7 +149,6 @@ class WPF_Bento_Admin {
 	 *
 	 * @return array The options.
 	 * @since  3.37.14
-	 *
 	 */
 
 	public function add_default_fields( $options ) {
